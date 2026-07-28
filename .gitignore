@@ -1,0 +1,21 @@
+# Python & Environment
+venv/
+*.pyc
+__pycache__/
+.pytest_cache/
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Raw Dataset & Large Archives (>100MB GitHub limit)
+Pure Naruto Hand Sign Data/
+*.zip
+prepared_dataset.zip
+cv_model/data/prepared_dataset.zip
+cv_model/data/prepared_dataset/
+
+# Local Training Runs & Temporary Outputs
+cv_model/training/runs/
+cv_model/training/dry_run_output/
+*.log
