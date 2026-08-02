@@ -49,15 +49,15 @@ To achieve real-time 60 FPS performance without frame dropping or lag, NarutoCV 
               │                                                                           │
    2. Trained Classifier (`best_model_A.onnx`)                                 2. Geometric Heuristic Engine
       YOLOv8n-cls model running in WebGL (13 classes)                             - Naruto Run Stance (Lean >25° + Arms back)
-              │                                                                   - Lightning Dodge (Fast lateral shift)
-   3. 5-Frame Debounce Consensus Filter                                           - Stone Defense (Crossed arms)
-      Emits validated hand seal when 80%+ consensus reached                       │
+              │                                                                   - Jumping (Hip height above baseline)
+   3. 5-Frame Evidence Filter                                                      - Bending Left / Right (Torso offset)
+      Emits one validated event per held hand seal                                 │
               │                                                                           │
               └─────────────────────────────────────┬─────────────────────────────────────┘
                                                     ▼
                                     ⚙️ JUTSU COMBO STATE MACHINE
                                 - Sequence Matcher (e.g. Tiger → Dragon → Horse)
-                                - 2.5s Inter-Seal Timeout & Interruption Handling
+                                - 3.0s Inter-Seal Timeout, Duplicate Suppression
                                 - Trigger Signals → Anime Canvas FX + Audio
 ```
 
@@ -127,17 +127,20 @@ $$\mathbf{p}_i = \begin{bmatrix} x_i \\ y_i \\ z_i \end{bmatrix}, \quad i \in \{
 
 - **Arms Extended Backward Condition:**
   Both wrists must be positioned behind hips in the $Z$-depth axis:
-  $$Z_{15} > Z_{23} + \delta_z \quad \text{and} \quad Z_{16} > Z_{24} + \delta_z \quad (\delta_z \approx 0.15)$$
+  $$Z_{15} > Z_{23} + \delta_z \quad \text{and} \quad Z_{16} > Z_{24} + \delta_z \quad (\delta_z \approx 0.05)$$
 
-#### 2. Lightning Dodge Detection
-- **Lateral Velocity ($V_{\text{dodge}}$):**
-  Measures the rate of change of the shoulder midpoint $X$-coordinate across time step $\Delta t$:
-  $$V_{\text{dodge}} = \frac{|X_{\text{shoulder}}(t) - X_{\text{shoulder}}(t - \Delta t)|}{\Delta t} > 1.2 \text{ m/s}$$
+#### 2. Jump Detection
+- **Hip Height Delta ($\Delta y_{\text{hip}}$):**
+  Compares the current hip midpoint against the rolling median standing baseline:
+  $$\Delta y_{\text{hip}} = \operatorname{median}(y_{\text{hip history}}) - y_{\text{hip current}} > 0.045$$
 
-#### 3. Stone Defense Stance Detection
-- **Crossed-Arm Distance ($d_{\text{crossed}}$):**
-  Calculated as distance between left wrist and right elbow, and right wrist and left elbow:
-  $$d_{\text{crossed}} = \|\mathbf{P}_{15} - \mathbf{P}_{14}\|_2 + \|\mathbf{P}_{16} - \mathbf{P}_{13}\|_2 < 0.25$$
+#### 3. Left / Right Bend Detection
+- **Torso Horizontal Offset ($\Delta x_{\text{torso}}$):**
+  Uses the normalized horizontal offset between shoulder and hip midpoints:
+  $$\Delta x_{\text{torso}} = x_{\text{shoulder}} - x_{\text{hip}}$$
+  Values above $0.06$ emit `bending_right`; values below $-0.06$ emit `bending_left`.
+
+Lightning and stone remain hand-seal attacks. They are not body movement labels and body movement events never gate or trigger attacks.
 
 ---
 
@@ -255,30 +258,31 @@ The web application runs `best_model_A.onnx` directly inside the browser using *
 
 ### 7.1 Master Jutsu Catalog
 
-| Jutsu Name | Element | Required Hand Seal / Movement Sequence | Special Timing & Behavior | Visual FX Animation |
+| Jutsu Name | Element | Required Hand Seal Sequence | Special Timing & Behavior | Visual FX Animation |
 |:---|:---:|:---|:---|:---|
-| **Homura (火炎)** | Fire 🔥 | `tiger` $\rightarrow$ `dragon` $\rightarrow$ `horse` | Standard 3-seal combo (Max 2.5s window between seals) | Fireball Eruption & Radial Flame Burst |
+| **Homura (火炎)** | Fire 🔥 | `tiger` $\rightarrow$ `dragon` $\rightarrow$ `horse` | Standard 3-seal combo (Max 3.0s window between seals) | Fireball Eruption & Radial Flame Burst |
 | **Shippū (疾風)** | Wind 🌪️ | `bird` $\rightarrow$ `ram` $\rightarrow$ `rat` | Standard 3-seal combo | Swirling Tornado & Wind Blade Cutting Particles |
-| **Ikazuchi (雷光)** | Lightning ⚡ | `dog` *(Single Seal)* | **Instant Action:** Single-seal trigger for quick evasive dodge | Chidori Lightning Discharge & Electric Sparks |
-| **Daichi (大地)** | Stone 🗿 | `monkey` $\rightarrow$ `boar` $\rightarrow$ `snake` | Defensive 3-seal combo; can combine with Crossed-Arm Stance | Earth Wall Shatter & Ground Crag Barriers |
+| **Ikazuchi (雷光)** | Lightning ⚡ | `dog` *(Single Seal)* | **Instant Action:** Single-seal attack trigger | Chidori Lightning Discharge & Electric Sparks |
+| **Daichi (大地)** | Stone 🗿 | `monkey` $\rightarrow$ `boar` $\rightarrow$ `snake` | Standard 3-seal attack combo | Earth Wall Shatter & Ground Crag Barriers |
 | **Ryūsui (流水)** | Water 🌊 | `ox` $\rightarrow$ `hare` | Fast 2-seal tactical combo | Water Vortex Ring & Expanding Wave Particles |
 
 ---
 
-### 7.2 5-Frame Debounce Consensus Filter
-To eliminate transient noise when a user transitions between hand positions, a **5-Frame Sliding Window Consensus Filter** buffers predictions:
+### 7.2 5-Frame Evidence Filter
+To eliminate transient noise when a user transitions between hand positions, a **5-frame evidence window** buffers accepted predictions:
 
 ```
 Frame t-4: [ TIGER ]
 Frame t-3: [ TIGER ]
-Frame t-2: [ TIGER ]  ──►  Sliding Window Buffer: [TIGER, TIGER, TIGER, TIGER, DRAGON]
-Frame t-1: [ TIGER ]        Consensus: TIGER (4/5 = 80%) ≥ 80% Threshold
-Frame t:   [ DRAGON ]       Output Event ──► EMIT "TIGER" SEAL
+Frame t-2: [ TIGER ]  ──►  Evidence reaches 3 accepted observations
+Frame t-1: [ TIGER ]        Stable label: TIGER
+Frame t:   [ DRAGON ]       Held TIGER does not emit a duplicate event
 ```
 
 - **Buffer Length:** 5 frames ($\approx 83\text{ ms}$ at 60 FPS)
-- **Consensus Threshold:** $\ge 80\%$ (at least 4 out of 5 frames must match)
-- **Confidence Cutoff:** Predictions with probability $< 0.70$ are treated as `zero` (no sign).
+- **Evidence Threshold:** 3 accepted observations by default; neutral calibration can raise a noisy class to 4.
+- **Neutral Reset:** Two consecutive `zero` observations clear old positive evidence, so the next sign must earn fresh votes.
+- **Confidence Cutoff:** Per-class confidence and margin thresholds are used instead of one global cutoff.
 
 ---
 
@@ -289,29 +293,29 @@ stateDiagram-v2
     [*] --> IDLE
 
     state "🔥 Homura (Fire Jutsu)" as Fire {
-        TIGER --> DRAGON: Valid Seal & T < 2.5s
-        DRAGON --> HORSE: Valid Seal & T < 2.5s
+        TIGER --> DRAGON: Valid Seal & T < 3.0s
+        DRAGON --> HORSE: Valid Seal & T < 3.0s
         HORSE --> CAST_FIRE: Trigger FX & Reset
     }
 
     state "🌪️ Shippū (Wind Jutsu)" as Wind {
-        BIRD --> RAM: Valid Seal & T < 2.5s
-        RAM --> RAT: Valid Seal & T < 2.5s
+        BIRD --> RAM: Valid Seal & T < 3.0s
+        RAM --> RAT: Valid Seal & T < 3.0s
         RAT --> CAST_WIND: Trigger FX & Reset
     }
 
-    state "⚡ Ikazuchi (Lightning Dodge)" as Lightning {
+    state "⚡ Ikazuchi (Lightning Attack)" as Lightning {
         DOG --> CAST_LIGHTNING: Instant Trigger & Reset
     }
 
-    state "🗿 Daichi (Stone Defense)" as Stone {
-        MONKEY --> BOAR: Valid Seal & T < 2.5s
-        BOAR --> SNAKE: Valid Seal & T < 2.5s
+    state "🗿 Daichi (Stone Attack)" as Stone {
+        MONKEY --> BOAR: Valid Seal & T < 3.0s
+        BOAR --> SNAKE: Valid Seal & T < 3.0s
         SNAKE --> CAST_STONE: Trigger FX & Reset
     }
 
     state "🌊 Ryūsui (Water Jutsu)" as Water {
-        OX --> HARE: Valid Seal & T < 2.5s
+        OX --> HARE: Valid Seal & T < 3.0s
         HARE --> CAST_WATER: Trigger FX & Reset
     }
 
@@ -321,10 +325,10 @@ stateDiagram-v2
     IDLE --> MONKEY: Detect Monkey
     IDLE --> OX: Detect Ox
 
-    Fire --> IDLE: Timeout (T > 2.5s) / Wrong Seal
-    Wind --> IDLE: Timeout (T > 2.5s) / Wrong Seal
-    Stone --> IDLE: Timeout (T > 2.5s) / Wrong Seal
-    Water --> IDLE: Timeout (T > 2.5s) / Wrong Seal
+    Fire --> IDLE: Timeout (T > 3.0s) / Three unmatched seals
+    Wind --> IDLE: Timeout (T > 3.0s) / Three unmatched seals
+    Stone --> IDLE: Timeout (T > 3.0s) / Three unmatched seals
+    Water --> IDLE: Timeout (T > 3.0s) / Three unmatched seals
 
     CAST_FIRE --> IDLE
     CAST_WIND --> IDLE
