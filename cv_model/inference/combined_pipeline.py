@@ -32,6 +32,7 @@ from .pipeline_config import (
     DEFAULT_PIPELINE_CONFIG,
     AttackQueueConfig,
     BodyMovementConfig,
+    HandFusionConfig,
     HandTemporalConfig,
     PipelineConfig,
 )
@@ -69,6 +70,7 @@ class Classification:
     confidence: float
     second_label: str
     second_confidence: float
+    probabilities: tuple[float, ...] = ()
 
     @property
     def margin(self) -> float:
@@ -85,6 +87,9 @@ class HandResult:
     classification_bbox: tuple[int, int, int, int]
     hand_bbox: Optional[tuple[int, int, int, int]]
     landmarks: tuple[tuple[tuple[float, float], ...], ...] = ()
+    center_prediction: Optional[Classification] = None
+    roi_prediction: Optional[Classification] = None
+    fusion_status: str = "center_only"
 
 
 @dataclass(frozen=True)
@@ -254,7 +259,7 @@ def _center_square_bbox(width: int, height: int) -> tuple[int, int, int, int]:
 
 
 class HandSignRecognizer:
-    """Training-matched ONNX classification plus MediaPipe visualization."""
+    """Training-matched ONNX classification with stabilized hand-ROI fusion."""
 
     def __init__(
         self,
@@ -262,6 +267,7 @@ class HandSignRecognizer:
         landmarker_path: Path = DEFAULT_HAND_LANDMARKER,
         confidence_threshold: Optional[float] = None,
         temporal_config: HandTemporalConfig = DEFAULT_PIPELINE_CONFIG.hand,
+        fusion_config: HandFusionConfig = DEFAULT_PIPELINE_CONFIG.hand_fusion,
     ) -> None:
         if not model_path.exists():
             raise FileNotFoundError(f"Hand-sign ONNX model not found: {model_path}")
@@ -289,6 +295,9 @@ class HandSignRecognizer:
         )
         self.landmarker = vision.HandLandmarker.create_from_options(options)
         self.filter = EvidenceHandFilter(temporal_config)
+        self.fusion_config = fusion_config
+        self._smoothed_hand_bbox: Optional[np.ndarray] = None
+        self._missing_hand_frames = 0
         self._last_timestamp_ms = -1
 
     @staticmethod
@@ -308,13 +317,57 @@ class HandSignRecognizer:
             self.session.run([self.output_name], {self.input_name: tensor})[0]
         ).reshape(-1)
         probabilities = output if np.isclose(output.sum(), 1.0, atol=1e-3) else _softmax(output)
-        ranking = np.argsort(probabilities)[::-1]
+        return self._classification_from_probabilities(probabilities)
+
+    def _classification_from_probabilities(
+        self, probabilities: Sequence[float]
+    ) -> Classification:
+        values = np.asarray(probabilities, dtype=np.float64).reshape(-1)
+        total = float(values.sum())
+        if total <= 0.0:
+            raise ValueError("classification probabilities must have a positive sum")
+        values = values / total
+        ranking = np.argsort(values)[::-1]
         first, second = int(ranking[0]), int(ranking[1])
         return Classification(
             label=self.classes[first],
-            confidence=float(probabilities[first]),
+            confidence=float(values[first]),
             second_label=self.classes[second],
-            second_confidence=float(probabilities[second]),
+            second_confidence=float(values[second]),
+            probabilities=tuple(float(value) for value in values),
+        )
+
+    def _smooth_hand_bbox(
+        self, bbox: tuple[int, int, int, int]
+    ) -> tuple[int, int, int, int]:
+        current = np.asarray(bbox, dtype=np.float64)
+        if self._smoothed_hand_bbox is None:
+            smoothed = current
+        else:
+            alpha = self.fusion_config.bbox_smoothing_alpha
+            smoothed = alpha * current + (1.0 - alpha) * self._smoothed_hand_bbox
+        self._smoothed_hand_bbox = smoothed
+        return tuple(int(round(value)) for value in smoothed)
+
+    def _fuse_predictions(
+        self, center: Classification, roi: Classification
+    ) -> Classification:
+        if not center.probabilities or not roi.probabilities:
+            return center
+        center_values = np.asarray(center.probabilities, dtype=np.float64)
+        roi_values = np.asarray(roi.probabilities, dtype=np.float64)
+        if center_values.shape != roi_values.shape:
+            raise ValueError("center and ROI predictions must have matching classes")
+        weight = self.fusion_config.center_weight
+        return self._classification_from_probabilities(
+            weight * center_values + (1.0 - weight) * roi_values
+        )
+
+    def _should_gate_without_hands(self, prediction: Classification) -> bool:
+        allowed = {"zero", *self.fusion_config.no_hand_fallback_labels}
+        return (
+            self._missing_hand_frames >= self.fusion_config.absence_grace_frames
+            and prediction.label not in allowed
         )
 
     def _accept(
@@ -396,26 +449,50 @@ class HandSignRecognizer:
         height, width = frame_bgr.shape[:2]
         classification_bbox = _center_square_bbox(width, height)
         cx1, cy1, cx2, cy2 = classification_bbox
-        prediction = self._classify_crop(frame_bgr[cy1:cy2, cx1:cx2])
+        center_prediction = self._classify_crop(frame_bgr[cy1:cy2, cx1:cx2])
 
         rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
         detected = self.landmarker.detect_for_video(
             mp_image, self._video_timestamp_ms(timestamp)
         )
-        accepted_label, rejection_reason = self._accept(
-            prediction, len(detected.hand_landmarks)
-        )
-        stable, emitted = self.filter.update(accepted_label)
+        detected_hands = len(detected.hand_landmarks)
+        prediction = center_prediction
+        roi_prediction = None
         hand_bbox = None
         if detected.hand_landmarks:
+            self._missing_hand_frames = 0
             points = [point for hand in detected.hand_landmarks for point in hand]
-            hand_bbox = _square_bbox(
+            raw_hand_bbox = _square_bbox(
                 [point.x for point in points],
                 [point.y for point in points],
                 width,
                 height,
             )
+            hand_bbox = self._smooth_hand_bbox(raw_hand_bbox)
+            hx1, hy1, hx2, hy2 = hand_bbox
+            if hx2 > hx1 and hy2 > hy1:
+                roi_prediction = self._classify_crop(frame_bgr[hy1:hy2, hx1:hx2])
+                prediction = self._fuse_predictions(center_prediction, roi_prediction)
+            if roi_prediction is None:
+                fusion_status = "center_only_invalid_roi"
+            elif center_prediction.label == roi_prediction.label:
+                fusion_status = "center_roi_agree"
+            else:
+                fusion_status = "center_roi_fused"
+        else:
+            self._missing_hand_frames += 1
+            if self._missing_hand_frames >= self.fusion_config.absence_grace_frames:
+                self._smoothed_hand_bbox = None
+                fusion_status = "center_no_hands_gated"
+            else:
+                fusion_status = "center_no_hands_grace"
+
+        if self._should_gate_without_hands(prediction):
+            accepted_label, rejection_reason = "zero", "no_hand_landmarks"
+        else:
+            accepted_label, rejection_reason = self._accept(prediction, detected_hands)
+        stable, emitted = self.filter.update(accepted_label)
         landmark_points = tuple(
             tuple((point.x, point.y) for point in hand)
             for hand in detected.hand_landmarks
@@ -429,10 +506,15 @@ class HandSignRecognizer:
             classification_bbox=classification_bbox,
             hand_bbox=hand_bbox,
             landmarks=landmark_points,
+            center_prediction=center_prediction,
+            roi_prediction=roi_prediction,
+            fusion_status=fusion_status,
         )
 
     def reset(self) -> None:
         self.filter.reset()
+        self._smoothed_hand_bbox = None
+        self._missing_hand_frames = 0
 
     def close(self) -> None:
         self.landmarker.close()
@@ -730,6 +812,7 @@ class CombinedNarutoPipeline:
             landmarker_path=Path(hand_landmarker),
             confidence_threshold=hand_confidence,
             temporal_config=config.hand,
+            fusion_config=config.hand_fusion,
         )
         self.body = BodyMovementRecognizer(Path(pose_model), config.body)
         self.attacks = AttackRecognizer(config=config.attacks)

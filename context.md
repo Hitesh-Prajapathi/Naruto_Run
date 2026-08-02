@@ -1,9 +1,9 @@
 # 🌀 NarutoCV — Master Architecture, History & Technical Context
 
 > **Project:** NarutoCV — Real-Time Computer Vision Jutsu & Gesture Recognition Engine  
-> **Version:** 1.1.0 (Production Blueprint & Asset Consolidation Phase)  
-> **Repository Root:** `/Users/hiteshprajapathi/Desktop/Naruto_Run_datacollection/`  
-> **Status:** Component 1 (Dataset Prep) & Component 2 (Model Training & Benchmark) ✅ COMPLETE  
+> **Version:** 1.2.0 (Locked Combined Recognition Baseline)
+> **Repository Root:** `/Users/hiteshprajapathi/Desktop/Naruto_Run/`
+> **Status:** Combined hand, body, and attack pipeline camera-tested and approved on 2026-08-02
 
 ---
 
@@ -42,15 +42,15 @@ To achieve real-time 60 FPS performance without frame dropping or lag, NarutoCV 
               ┌─────────────────────────────────────┴─────────────────────────────────────┐
               ▼                                                                           ▼
    📷 PIPELINE 1: Hand Sign Classification                                     🤸 PIPELINE 2: Body Movement Tracking
- (Focus: 224×224 Bounding Box Crop of Hands)                                   (Focus: Full Camera Field of View)
+ (Center frame + stabilized color hand ROI)                                    (Focus: Full Camera Field of View)
               │                                                                           │
-   1. MediaPipe Hands Task                                                     1. MediaPipe Pose (33 3D Joint Landmarks)
-      Extracts hand bounding box & 21 3D landmarks                                Calculates joint angles & spatial vectors
+   1. Center-square RGB view + MediaPipe Hands                                 1. MediaPipe Pose (33 3D Joint Landmarks)
+      Extract combined two-hand box and smooth it with EMA                         Calculates joint angles & spatial vectors
               │                                                                           │
-   2. Trained Classifier (`best_model_A.onnx`)                                 2. Geometric Heuristic Engine
-      YOLOv8n-cls model running in WebGL (13 classes)                             - Naruto Run Stance (Lean >25° + Arms back)
+   2. Trained Classifier on both RGB views                                     2. Geometric Heuristic Engine
+      Fuse class probabilities: 60% center + 40% hand ROI                         - Naruto Run Stance (Lean >25° + Arms back)
               │                                                                   - Jumping (Hip height above baseline)
-   3. 5-Frame Evidence Filter                                                      - Bending Left / Right (Torso offset)
+   3. Delayed no-hand guard + 5-frame evidence filter                              - Bending Left / Right (Torso offset)
       Emits one validated event per held hand seal                                 │
               │                                                                           │
               └─────────────────────────────────────┬─────────────────────────────────────┘
@@ -62,7 +62,7 @@ To achieve real-time 60 FPS performance without frame dropping or lag, NarutoCV 
 ```
 
 ### Why a Dual Pipeline Architecture?
-1. **Resolution & Spatial Focus:** Hand sign classification requires fine-grained finger overlap features extracted from a tight 224×224 crop. Body tracking requires a wide 1280×720 field of view to track shoulders, hips, and knees.
+1. **Resolution & Spatial Focus:** Hand sign classification keeps the training-matched center-square view and supplements it with a tight combined-hand ROI. Body tracking requires the wide camera field to track shoulders, hips, and knees.
 2. **Computational Heterogeneity:** 
    - Hand signs use a custom-trained **YOLOv8 Nano Classifier (`best_model_A.onnx`)** executed via WebGL ONNX Runtime.
    - Body movements use **MediaPipe Pose** with deterministic vector geometry (dot products, coordinate heuristics), consuming only $\sim 0.1\text{ ms}$ CPU time per frame without requiring neural network training.
@@ -223,26 +223,95 @@ Epoch 15/50 [==========] Early Stopping Triggered (Patience=10 reached, best mod
 
 The web application runs `best_model_A.onnx` directly inside the browser using **ONNX Runtime Web (`onnxruntime-web`)**.
 
+The live camera contract keeps inference and presentation separate: raw,
+unmirrored camera pixels are passed to the recognition pipelines, while only
+the displayed preview is mirrored for natural interaction. Hand and pose
+landmarks plus pixel bounding boxes are reflected horizontally before drawing
+so overlays remain aligned with the mirrored preview. This preserves the
+dataset rule that model inputs are never horizontally flipped.
+
+The current Python prototype uses two **color** classifier views. The
+training-matched center square is always evaluated. When MediaPipe finds one
+or two hands, their combined square bounding box is stabilized using an
+exponential moving average (`alpha=0.45`) and evaluated by the same ONNX
+classifier. Class probabilities are fused as `0.60 × center + 0.40 × ROI`
+before the existing per-label confidence/margin and temporal evidence filters.
+This is deliberately a fallback-assisted design rather than an ROI-only
+design: MediaPipe misses some valid poses, especially Hare and Boar.
+
+After three consecutive frames without hand landmarks, non-hand predictions
+are rejected as `no_hand_landmarks`. The first two missing frames are tolerated
+to avoid flicker from a brief detector dropout. Boar and Hare remain eligible
+for center-view recognition during absence because their detector recall is
+weak; `zero` remains the normal neutral class. The smoothed box is discarded
+after the third missing frame, so an old crop is never reused.
+
 ```
-    Webcam Video Stream (Image/Video Element)
+                  Raw Webcam Frame
+                 /                 \
+        Center Square        MediaPipe Hands
+            RGB              Combined Box + EMA
+             │                      │
+             └── ONNX RGB 224² ─────┘
                         │
-                        ▼
-   MediaPipe Hands (Crop Bounding Box)
+         60/40 Class-Probability Fusion
                         │
-                        ▼
-   HTML5 Canvas 2D Resize (224 × 224 × 3 RGB)
+       Per-Class Thresholds + No-Hand Guard
                         │
-                        ▼
-   Float32 Tensor Normalization: Tensor = (Pixel / 255.0)
-   Shape: [1, 3, 224, 224] (NCHW Format)
+             5-Frame Evidence Filter
                         │
-                        ▼
-   ort.InferenceSession.run({ images: inputTensor })
-   Execution Provider: WebGL / WebGPU / WASM
-                        │
-                        ▼
-   Softmax & ArgMax → Hand Sign Label + Confidence Score
+              Debounced Seal Event
 ```
+
+### Hybrid preprocessing validation (225-image held-out split)
+
+| Variant | Top-1 accuracy across all images | Decision |
+|:---|---:|:---|
+| Center-square RGB only | 98.67% | Preserve as the reliable base view |
+| Center RGB + color ROI fusion | **99.11%** | Adopt (`center_weight=0.60`) |
+| Grayscale ROI | 82.67% | Reject; discards useful model input information |
+| Immediate hard no-hand gate | 97.33% | Reject; detector misses valid hand signs |
+
+MediaPipe found hands in 88.0% of the split overall, but only 36.8% of Hare
+images and 66.7% of Boar images. Conditional on detection, the color ROI was
+highly accurate; the main ROI failure mode was detector absence, not the ONNX
+classifier. This evidence is why the implementation uses fusion and a delayed,
+class-aware absence guard instead of replacing the current classifier input.
+
+The implemented video-mode path was then run end to end on the same 225
+images: the fused raw prediction and the post-threshold accepted output both
+scored **223/225 (99.11%)**. Dog, Rat, Ram, Hare, and Boar were all 100% on
+this split. The previous center-only accepted output also reached 223/225
+because the Rat/Ram geometry resolver repaired its extra raw error; therefore,
+the claimed benefit of fusion is a less heuristic-dependent raw prediction and
+a stabilized live crop, not an inflated post-processing accuracy claim.
+
+On an Apple M1 Max, 75 timed Python frames through the combined hand and pose
+pipeline averaged 41.89 ms (51.51 ms p95); one additional ONNX crop inference
+averaged 2.39 ms. The current Python prototype therefore does not yet satisfy
+the browser blueprint's 25 ms target. Camera-mode profiling and scheduling are
+still required before making a production real-time performance claim.
+
+### Locked camera-tested baseline (2026-08-02)
+
+The user completed a live camera check and approved this recognition behavior
+as the baseline to preserve. The locked configuration includes:
+
+- raw, unmirrored frames for all inference and a mirrored display only;
+- center-square plus stabilized color hand-ROI probability fusion (`0.60/0.40`);
+- EMA hand-box smoothing (`alpha=0.45`);
+- a three-frame delayed no-hand guard with Boar and Hare fallbacks;
+- per-label confidence and margin thresholds plus the Rat/Ram resolver;
+- the five-frame hand evidence filter and one-event-per-held-sign behavior;
+- adjacent duplicate suppression, a maximum three-seal queue, timeout clearing,
+  one-noise-event combo recovery, and attack cooldowns;
+- body movement recognition running independently from hand-seal attacks.
+
+Treat these settings and behaviors as a regression baseline. Future work may
+integrate downstream consumers or add explicitly requested features, but must
+not retune or replace this recognition path unless the user explicitly reopens
+recognition changes. Run `./run_combined_tracker.command` for the approved live
+camera test and `./test_combined_pipeline.command` for regression validation.
 
 ### ONNX Model Metadata
 - **File Name:** `best_model_A.onnx`

@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import time
+from dataclasses import replace
 from pathlib import Path
 
 import cv2
@@ -39,6 +40,35 @@ HAND_CONNECTIONS = (
     (9, 13), (13, 14), (14, 15), (15, 16),
     (13, 17), (0, 17), (17, 18), (18, 19), (19, 20),
 )
+
+
+def _mirror_bbox(
+    bbox: tuple[int, int, int, int], width: int
+) -> tuple[int, int, int, int]:
+    x1, y1, x2, y2 = bbox
+    return width - x2, y1, width - x1, y2
+
+
+def _mirror_result_for_display(result: FrameResult, width: int) -> FrameResult:
+    """Mirror overlay geometry after recognition has processed the raw frame."""
+    hand = replace(
+        result.hand,
+        classification_bbox=_mirror_bbox(result.hand.classification_bbox, width),
+        hand_bbox=(
+            _mirror_bbox(result.hand.hand_bbox, width)
+            if result.hand.hand_bbox is not None
+            else None
+        ),
+        landmarks=tuple(
+            tuple((1.0 - x, y) for x, y in landmarks)
+            for landmarks in result.hand.landmarks
+        ),
+    )
+    body = replace(
+        result.body,
+        landmarks=tuple((1.0 - x, y) for x, y in result.body.landmarks),
+    )
+    return replace(result, hand=hand, body=body)
 
 
 def parse_args() -> argparse.Namespace:
@@ -105,7 +135,7 @@ def _draw_panel(
 ) -> None:
     height, width = frame.shape[:2]
     overlay = frame.copy()
-    cv2.rectangle(overlay, (12, 12), (min(760, width - 12), 260), (10, 10, 10), -1)
+    cv2.rectangle(overlay, (12, 12), (min(860, width - 12), 292), (10, 10, 10), -1)
     cv2.addWeighted(overlay, 0.68, frame, 0.32, 0, frame)
 
     hand = result.hand
@@ -116,9 +146,20 @@ def _draw_panel(
     )
     if hand.rejection_reason and hand.rejection_reason != "model_zero":
         raw_status += f"  REJECTED ({hand.rejection_reason})"
+    center = hand.center_prediction or hand.raw
+    roi_status = (
+        f"{hand.roi_prediction.label.upper()} {hand.roi_prediction.confidence * 100:.1f}%"
+        if hand.roi_prediction is not None
+        else "-"
+    )
     lines = [
         (f"HAND: {hand.stable_label.upper()}  ACCEPTED: {accepted}", (50, 255, 90)),
         (raw_status, (175, 235, 255)),
+        (
+            f"VIEWS: CENTER {center.label.upper()} {center.confidence * 100:.1f}%"
+            f"  ROI {roi_status}  [{hand.fusion_status}]",
+            (120, 220, 240),
+        ),
         (f"BODY: {result.body.stable_label.upper()}", (255, 190, 60)),
         ("SEALS: " + (" > ".join(result.seal_history).upper() or "-"), (230, 230, 230)),
         ("LAST ATTACK: " + (last_attack or "-"), (80, 120, 255)),
@@ -244,8 +285,9 @@ def main() -> int:
             if not ok:
                 print("Camera frame read failed.")
                 break
-            frame = cv2.flip(frame, 1)
             result = pipeline.process(frame)
+            frame = cv2.flip(frame, 1)
+            display_result = _mirror_result_for_display(result, frame.shape[1])
             now = time.perf_counter()
             calibrating = calibration_end > now
             if calibrating:
@@ -291,10 +333,10 @@ def main() -> int:
             if last_attack and now - last_attack_time > 4.0:
                 last_attack = ""
 
-            _draw_landmarks(frame, result)
+            _draw_landmarks(frame, display_result)
             _draw_panel(
                 frame,
-                result,
+                display_result,
                 smoothed_fps,
                 last_attack,
                 max(0.0, calibration_end - now),

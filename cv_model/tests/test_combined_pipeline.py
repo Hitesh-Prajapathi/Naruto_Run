@@ -13,10 +13,12 @@ from cv_model.inference.combined_pipeline import (
     CombinedNarutoPipeline,
     EvidenceHandFilter,
     HandResult,
+    HandSignRecognizer,
 )
 from cv_model.inference.pipeline_config import (
     AttackQueueConfig,
     BodyMovementConfig,
+    HandFusionConfig,
     HandTemporalConfig,
 )
 
@@ -40,6 +42,49 @@ class HandTemporalTests(unittest.TestCase):
         hand_filter = EvidenceHandFilter()
         emitted = [hand_filter.update("bird")[1] for _ in range(8)]
         self.assertEqual([item for item in emitted if item], ["bird"])
+
+
+class HandFusionTests(unittest.TestCase):
+    def make_recognizer(self, **config: object) -> HandSignRecognizer:
+        recognizer = object.__new__(HandSignRecognizer)
+        recognizer.classes = ("dog", "ox", "zero")
+        recognizer.fusion_config = HandFusionConfig(**config)
+        recognizer._smoothed_hand_bbox = None
+        recognizer._missing_hand_frames = 0
+        return recognizer
+
+    def test_probability_fusion_can_correct_center_view(self) -> None:
+        recognizer = self.make_recognizer(center_weight=0.60)
+        center = Classification("ox", 0.60, "dog", 0.30, (0.30, 0.60, 0.10))
+        roi = Classification("dog", 0.80, "ox", 0.15, (0.80, 0.15, 0.05))
+
+        fused = recognizer._fuse_predictions(center, roi)
+
+        self.assertEqual(fused.label, "dog")
+        self.assertAlmostEqual(fused.confidence, 0.50)
+        self.assertEqual(len(fused.probabilities), 3)
+
+    def test_hand_bbox_uses_exponential_smoothing(self) -> None:
+        recognizer = self.make_recognizer(bbox_smoothing_alpha=0.50)
+        self.assertEqual(recognizer._smooth_hand_bbox((0, 0, 100, 100)), (0, 0, 100, 100))
+        self.assertEqual(recognizer._smooth_hand_bbox((10, 20, 110, 120)), (5, 10, 105, 110))
+
+    def test_delayed_no_hand_gate_preserves_known_detector_fallbacks(self) -> None:
+        recognizer = self.make_recognizer(absence_grace_frames=3)
+        dog = Classification("dog", 0.90, "zero", 0.05)
+        hare = Classification("hare", 0.90, "zero", 0.05)
+
+        recognizer._missing_hand_frames = 2
+        self.assertFalse(recognizer._should_gate_without_hands(dog))
+        recognizer._missing_hand_frames = 3
+        self.assertTrue(recognizer._should_gate_without_hands(dog))
+        self.assertFalse(recognizer._should_gate_without_hands(hare))
+
+    def test_invalid_fusion_configuration_is_rejected(self) -> None:
+        with self.assertRaises(ValueError):
+            HandFusionConfig(center_weight=1.1)
+        with self.assertRaises(ValueError):
+            HandFusionConfig(absence_grace_frames=0)
 
 
 class AttackQueueTests(unittest.TestCase):

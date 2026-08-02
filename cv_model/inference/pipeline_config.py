@@ -24,6 +24,28 @@ class HandTemporalConfig:
 
 
 @dataclass(frozen=True)
+class HandFusionConfig:
+    """Validated dual-view hand-classification settings."""
+
+    center_weight: float = 0.60
+    bbox_smoothing_alpha: float = 0.45
+    absence_grace_frames: int = 3
+    no_hand_fallback_labels: tuple[str, ...] = ("boar", "hare")
+
+    def __post_init__(self) -> None:
+        if not 0.0 <= self.center_weight <= 1.0:
+            raise ValueError("center_weight must be between zero and one")
+        if not 0.0 < self.bbox_smoothing_alpha <= 1.0:
+            raise ValueError("bbox_smoothing_alpha must be greater than zero and at most one")
+        if self.absence_grace_frames < 1:
+            raise ValueError("absence_grace_frames must be positive")
+        if not self.no_hand_fallback_labels:
+            raise ValueError("no_hand_fallback_labels cannot be empty")
+        if len(set(self.no_hand_fallback_labels)) != len(self.no_hand_fallback_labels):
+            raise ValueError("no_hand_fallback_labels cannot contain duplicates")
+
+
+@dataclass(frozen=True)
 class BodyMovementConfig:
     consensus_window: int = 5
     consensus_votes: int = 3
@@ -72,6 +94,7 @@ class AttackQueueConfig:
 @dataclass(frozen=True)
 class PipelineConfig:
     hand: HandTemporalConfig = field(default_factory=HandTemporalConfig)
+    hand_fusion: HandFusionConfig = field(default_factory=HandFusionConfig)
     body: BodyMovementConfig = field(default_factory=BodyMovementConfig)
     attacks: AttackQueueConfig = field(default_factory=AttackQueueConfig)
 
