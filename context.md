@@ -1,9 +1,9 @@
 # 🌀 NarutoCV — Master Architecture, History & Technical Context
 
 > **Project:** NarutoCV — Real-Time Computer Vision Jutsu & Gesture Recognition Engine  
-> **Version:** 1.2.0 (Locked Combined Recognition Baseline)
+> **Version:** 1.4.0 (Locked Recognition + Output/Event Runtime V1)
 > **Repository Root:** `/Users/hiteshprajapathi/Desktop/Naruto_Run/`
-> **Status:** Combined hand, body, and attack pipeline camera-tested and approved on 2026-08-02
+> **Status:** Camera-approved recognition with versioned output, events, and runtime control
 
 ---
 
@@ -313,6 +313,111 @@ not retune or replace this recognition path unless the user explicitly reopens
 recognition changes. Run `./run_combined_tracker.command` for the approved live
 camera test and `./test_combined_pipeline.command` for regression validation.
 
+### Versioned backend output contract (V1)
+
+`cv_model/inference/output_schema.py` converts an internal `FrameResult` into
+the stable, JSON-safe `PipelineOutputV1` contract. The adapter does not modify
+recognition state or decisions. It only reads the completed frame result.
+
+```json
+{
+  "schema_version": "1.0.0",
+  "session_id": "camera-test-001",
+  "frame_id": 42,
+  "captured_at_ms": 123456,
+  "processing_ms": 41.25,
+  "hand": {
+    "accepted_label": "rat",
+    "stable_label": "rat",
+    "emitted_seal": "rat",
+    "fusion_status": "center_roi_fused"
+  },
+  "body": {
+    "stable_label": "jumping",
+    "emitted_movement": "jumping"
+  },
+  "queue": {"seals": [], "accepted_seal": "rat"},
+  "attack": {
+    "name": "shippu",
+    "display_name": "SHIPPU / WIND",
+    "recognized_at_ms": 123456
+  }
+}
+```
+
+The abbreviated example omits the required prediction, metric, queue-state,
+and optional geometry fields for readability. The authoritative machine
+contract is `cv_model/schemas/pipeline_output_v1.schema.json`.
+
+- `PipelineOutputSerializer.to_dict()` returns plain JSON-compatible values.
+- `PipelineOutputSerializer.to_json()` produces compact, deterministic JSON.
+- `include_geometry=False` is the compact default. When enabled, normalized
+  hand/pose landmarks and pixel bounding boxes are included.
+- Missing ROI predictions, emitted events, geometry, and attacks are explicit
+  `null` values rather than omitted fields.
+- Non-finite numeric values and unexpected object fields are rejected.
+- A major version change is required for breaking field changes. Minor versions
+  may add backward-compatible fields; patch versions may correct validation or
+  documentation without changing the contract.
+
+The V1 frame serializer defines serialization only. It does not print, save,
+or transmit outputs. Sparse in-process event dispatch is handled by the next
+layer; external transport remains a future pipeline stage.
+
+### Unified event dispatcher
+
+`cv_model/inference/events.py` converts each validated `PipelineOutputV1` frame
+into sparse external events. Event production is edge-triggered by the locked
+pipeline result; it does not perform a second recognition decision.
+
+| Event | Emission condition |
+|:---|:---|
+| `HAND_SEAL` | The attack queue accepts a newly emitted stable hand seal |
+| `BODY_MOVEMENT` | The body evidence filter emits a movement transition |
+| `ATTACK_TRIGGERED` | The hand-seal sequence matcher recognizes an attack |
+| `QUEUE_CLEARED` | Timeout, maximum length, cooldown, or attack completion clears the queue |
+| `PIPELINE_RESET` | Manual reset, calibration transition, or camera recovery resets state |
+
+Frame events have deterministic order: hand seal, body movement, attack, then
+queue clearing. Every event carries schema version `1.0.0`, a session-scoped
+event ID and sequence, frame ID, capture timestamp, event type, and typed
+payload. The machine contract is
+`cv_model/schemas/pipeline_event_v1.schema.json`.
+
+Subscribers may listen to all events or selected event types. Delivery is
+synchronous to preserve order, but subscriber failures are isolated: one
+consumer cannot stop recognition or prevent other consumers from receiving the
+event. Failures are returned in a `DispatchReport` for explicit handling.
+
+### Runtime pipeline controller
+
+`cv_model/inference/runtime.py` owns the operational lifecycle around the
+locked `CombinedNarutoPipeline`:
+
+- lazy model creation and explicit `CREATED → RUNNING → CLOSED` lifecycle;
+- session IDs plus monotonic frame IDs and capture timestamps;
+- V1 serialization and sparse event dispatch for every processed frame;
+- manual reset events and clean, idempotent shutdown;
+- timed or explicit neutral calibration with event suppression while samples
+  are collected, followed by a `calibration_complete` reset event;
+- consecutive camera-failure counting and recognition-state recovery after the
+  configured threshold (three failures by default);
+- callback subscription and unsubscription through the event dispatcher.
+
+The camera tester now runs frames and reset/calibration commands through this
+controller. It still supplies the original raw frame to the same locked
+recognizer and mirrors only the display. The runtime adds orchestration and
+external outputs; it does not change thresholds, fusion, evidence, body rules,
+attack sequences, or queue behavior.
+
+No network, file, WebSocket, or frontend transport is implemented at this
+stage. Those consumers can now attach to the stable event callback contract.
+
+The controller/event integration was verified with the full automated suite
+and a real model-backed smoke test. Three consecutive held-out Dog frames
+produced the locked evidence transition followed by `HAND_SEAL`,
+`ATTACK_TRIGGERED`, and `QUEUE_CLEARED` in the documented order.
+
 ### ONNX Model Metadata
 - **File Name:** `best_model_A.onnx`
 - **File Size:** $5.83\text{ MB}$
@@ -413,12 +518,26 @@ stateDiagram-v2
 All trained weights, notebooks, scripts, and datasets are organized under `cv_model/`:
 
 ```
-Naruto_Run_datacollection/
+Naruto_Run/
 ├── context.md                             # 👈 THIS DOCUMENT (Master Architecture & Context)
 ├── implementation_plan.md                 # Original architecture breakdown & execution strategy
 ├── Pure Naruto Hand Sign Data/            # Original raw dataset (2,245 images)
 │
 └── cv_model/
+    ├── inference/
+    │   ├── combined_pipeline.py            # Locked hand, body, queue, and attack pipeline
+    │   ├── pipeline_config.py              # Validated recognition configuration
+    │   ├── output_schema.py                # Versioned JSON-safe PipelineOutputV1 adapter
+    │   ├── events.py                       # Sparse typed events and isolated callbacks
+    │   └── runtime.py                      # Lifecycle, calibration, recovery, and dispatch
+    ├── schemas/
+    │   ├── pipeline_output_v1.schema.json  # Authoritative V1 frame contract
+    │   └── pipeline_event_v1.schema.json   # Authoritative V1 event contract
+    ├── tests/
+    │   ├── test_combined_pipeline.py       # Recognition and state-machine regressions
+    │   ├── test_display_mirroring.py       # Display-only reflection contract
+    │   ├── test_output_schema.py           # V1 golden and validation tests
+    │   └── test_events_runtime.py          # Dispatcher and controller regressions
     ├── data/
     │   ├── prepare_dataset.py             # Local dataset prep & augmentation script
     │   ├── prepared_dataset/              # 80/10/10 split dataset folder (train/val/test)

@@ -17,6 +17,7 @@ from inference.combined_pipeline import (
     CombinedNarutoPipeline,
     FrameResult,
 )
+from inference.runtime import PipelineRuntimeController
 
 
 POSE_CONNECTIONS = (
@@ -245,22 +246,25 @@ def _draw_panel(
 def main() -> int:
     args = parse_args()
     print("Loading hand-sign and pose models...")
-    pipeline = CombinedNarutoPipeline(
-        hand_model=args.hand_model,
-        hand_landmarker=args.hand_landmarker,
-        pose_model=args.pose_model,
-        hand_confidence=args.hand_confidence,
+    runtime = PipelineRuntimeController(
+        pipeline_factory=lambda: CombinedNarutoPipeline(
+            hand_model=args.hand_model,
+            hand_landmarker=args.hand_landmarker,
+            pose_model=args.pose_model,
+            hand_confidence=args.hand_confidence,
+        )
     )
+    runtime.start()
     if args.self_check:
         print("Self-check passed: hand classifier, hand detector, and pose detector loaded.")
-        pipeline.close()
+        runtime.close()
         return 0
 
     camera = cv2.VideoCapture(args.camera)
     camera.set(cv2.CAP_PROP_FRAME_WIDTH, args.width)
     camera.set(cv2.CAP_PROP_FRAME_HEIGHT, args.height)
     if not camera.isOpened():
-        pipeline.close()
+        runtime.close()
         print(f"Error: camera {args.camera} could not be opened.")
         return 2
 
@@ -275,30 +279,36 @@ def main() -> int:
     last_attack = ""
     last_attack_time = 0.0
     screenshot_index = 1
-    calibration_end = 0.0
-    calibration_samples = []
+    consecutive_read_failures = 0
     window_name = "NarutoCV - Combined Camera Test"
 
     try:
         while camera.isOpened():
             ok, frame = camera.read()
             if not ok:
-                print("Camera frame read failed.")
-                break
-            result = pipeline.process(frame)
+                consecutive_read_failures += 1
+                recovery = runtime.handle_capture_failure()
+                if recovery.events:
+                    print("Camera recovery reset recognition state.")
+                if consecutive_read_failures >= runtime.config.capture_failure_reset_threshold:
+                    print("Camera frame read failed repeatedly; closing tester.")
+                    break
+                print("Camera frame read failed; retrying.")
+                continue
+            consecutive_read_failures = 0
+            runtime_frame = runtime.process_frame(frame)
+            result = runtime_frame.result
             frame = cv2.flip(frame, 1)
             display_result = _mirror_result_for_display(result, frame.shape[1])
             now = time.perf_counter()
-            calibrating = calibration_end > now
-            if calibrating:
-                calibration_samples.append(result.hand.raw)
-                pipeline.hand.filter.reset()
-                pipeline.attacks.reset()
-            elif calibration_end > 0:
-                adjustments = pipeline.hand.calibrate_neutral(calibration_samples)
-                pipeline.reset()
-                calibration_end = 0.0
-                calibration_samples = []
+            calibrating = runtime_frame.calibration_active
+            calibration_completed = any(
+                event["event_type"] == "PIPELINE_RESET"
+                and event["payload"].get("reason") == "calibration_complete"
+                for event in runtime_frame.dispatch.events
+            )
+            if calibration_completed:
+                adjustments = runtime_frame.calibration_adjustments
                 if adjustments:
                     formatted = ", ".join(
                         f"{label}(conf={values[0]:.3f},margin={values[1]:.3f})"
@@ -308,7 +318,11 @@ def main() -> int:
                 else:
                     print("Neutral calibration complete; no false labels needed adjustment.")
             instant_fps = 1.0 / max(now - previous, 1e-6)
-            smoothed_fps = instant_fps if smoothed_fps == 0 else 0.9 * smoothed_fps + 0.1 * instant_fps
+            smoothed_fps = (
+                instant_fps
+                if smoothed_fps == 0
+                else 0.9 * smoothed_fps + 0.1 * instant_fps
+            )
             previous = now
 
             if result.hand.emitted_seal and not calibrating:
@@ -339,20 +353,18 @@ def main() -> int:
                 display_result,
                 smoothed_fps,
                 last_attack,
-                max(0.0, calibration_end - now),
+                runtime_frame.calibration_remaining_ms / 1000.0,
             )
             cv2.imshow(window_name, frame)
             key = cv2.waitKey(1) & 0xFF
             if key in (ord("q"), 27):
                 break
             if key == ord("r"):
-                pipeline.reset()
+                runtime.reset(reason="manual")
                 last_attack = ""
                 print("Recognition state reset.")
             if key == ord("c"):
-                pipeline.reset()
-                calibration_samples = []
-                calibration_end = time.perf_counter() + 4.0
+                runtime.begin_neutral_calibration(duration_seconds=4.0)
                 print(
                     "Neutral calibration started: stand normally and move through "
                     "non-sign hand poses for four seconds."
@@ -364,7 +376,7 @@ def main() -> int:
                 print(f"Screenshot saved: {output}")
     finally:
         camera.release()
-        pipeline.close()
+        runtime.close()
         cv2.destroyAllWindows()
     return 0
 
