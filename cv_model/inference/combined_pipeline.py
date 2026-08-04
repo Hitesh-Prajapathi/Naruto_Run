@@ -13,7 +13,7 @@ import math
 import time
 import urllib.request
 from collections import Counter, deque
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Deque, Optional, Sequence
 
@@ -90,6 +90,7 @@ class HandResult:
     center_prediction: Optional[Classification] = None
     roi_prediction: Optional[Classification] = None
     fusion_status: str = "center_only"
+    timings_ms: dict[str, float] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -99,6 +100,7 @@ class BodyResult:
     emitted_movement: Optional[str]
     metrics: dict[str, float]
     landmarks: tuple[tuple[float, float], ...] = ()
+    timings_ms: dict[str, float] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -129,6 +131,7 @@ class FrameResult:
     seal_history: tuple[str, ...]
     queue_update: QueueUpdate
     processing_ms: float
+    timings_ms: dict[str, float] = field(default_factory=dict)
 
 
 class ConsensusFilter:
@@ -308,16 +311,31 @@ class HandSignRecognizer:
                 return tuple(str(parsed[index]) for index in sorted(parsed))
         return FALLBACK_HAND_CLASSES
 
-    def _classify_crop(self, crop_bgr: np.ndarray) -> Classification:
+    def _classify_crop_timed(
+        self, crop_bgr: np.ndarray
+    ) -> tuple[Classification, dict[str, float]]:
+        started = time.perf_counter()
         rgb = cv2.cvtColor(crop_bgr, cv2.COLOR_BGR2RGB)
         resized = cv2.resize(rgb, (224, 224), interpolation=cv2.INTER_AREA)
         tensor = resized.astype(np.float32) / 255.0
         tensor = np.transpose(tensor, (2, 0, 1))[None, ...]
+        inference_started = time.perf_counter()
         output = np.asarray(
             self.session.run([self.output_name], {self.input_name: tensor})[0]
         ).reshape(-1)
+        inference_finished = time.perf_counter()
         probabilities = output if np.isclose(output.sum(), 1.0, atol=1e-3) else _softmax(output)
-        return self._classification_from_probabilities(probabilities)
+        prediction = self._classification_from_probabilities(probabilities)
+        finished = time.perf_counter()
+        return prediction, {
+            "preprocess_ms": (inference_started - started) * 1000.0,
+            "onnx_ms": (inference_finished - inference_started) * 1000.0,
+            "postprocess_ms": (finished - inference_finished) * 1000.0,
+        }
+
+    def _classify_crop(self, crop_bgr: np.ndarray) -> Classification:
+        prediction, _timings = self._classify_crop_timed(crop_bgr)
+        return prediction
 
     def _classification_from_probabilities(
         self, probabilities: Sequence[float]
@@ -446,19 +464,26 @@ class HandSignRecognizer:
     def process(
         self, frame_bgr: np.ndarray, timestamp: Optional[float] = None
     ) -> HandResult:
+        started = time.perf_counter()
         height, width = frame_bgr.shape[:2]
         classification_bbox = _center_square_bbox(width, height)
         cx1, cy1, cx2, cy2 = classification_bbox
-        center_prediction = self._classify_crop(frame_bgr[cy1:cy2, cx1:cx2])
+        center_prediction, center_timings = self._classify_crop_timed(
+            frame_bgr[cy1:cy2, cx1:cx2]
+        )
 
+        hand_preprocess_started = time.perf_counter()
         rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
+        hand_detection_started = time.perf_counter()
         detected = self.landmarker.detect_for_video(
             mp_image, self._video_timestamp_ms(timestamp)
         )
+        hand_detection_finished = time.perf_counter()
         detected_hands = len(detected.hand_landmarks)
         prediction = center_prediction
         roi_prediction = None
+        roi_timings = {"preprocess_ms": 0.0, "onnx_ms": 0.0, "postprocess_ms": 0.0}
         hand_bbox = None
         if detected.hand_landmarks:
             self._missing_hand_frames = 0
@@ -472,7 +497,9 @@ class HandSignRecognizer:
             hand_bbox = self._smooth_hand_bbox(raw_hand_bbox)
             hx1, hy1, hx2, hy2 = hand_bbox
             if hx2 > hx1 and hy2 > hy1:
-                roi_prediction = self._classify_crop(frame_bgr[hy1:hy2, hx1:hx2])
+                roi_prediction, roi_timings = self._classify_crop_timed(
+                    frame_bgr[hy1:hy2, hx1:hx2]
+                )
                 prediction = self._fuse_predictions(center_prediction, roi_prediction)
             if roi_prediction is None:
                 fusion_status = "center_only_invalid_roi"
@@ -497,6 +524,32 @@ class HandSignRecognizer:
             tuple((point.x, point.y) for point in hand)
             for hand in detected.hand_landmarks
         )
+        finished = time.perf_counter()
+        measured_ms = (
+            sum(center_timings.values())
+            + (hand_detection_started - hand_preprocess_started) * 1000.0
+            + (hand_detection_finished - hand_detection_started) * 1000.0
+            + sum(roi_timings.values())
+        )
+        hand_total_ms = (finished - started) * 1000.0
+        timings_ms = {
+            "hand_center_preprocess_ms": center_timings["preprocess_ms"],
+            "hand_center_onnx_ms": center_timings["onnx_ms"],
+            "hand_center_postprocess_ms": center_timings["postprocess_ms"],
+            "hand_landmarker_preprocess_ms": (
+                hand_detection_started - hand_preprocess_started
+            )
+            * 1000.0,
+            "hand_landmarker_ms": (
+                hand_detection_finished - hand_detection_started
+            )
+            * 1000.0,
+            "hand_roi_preprocess_ms": roi_timings["preprocess_ms"],
+            "hand_roi_onnx_ms": roi_timings["onnx_ms"],
+            "hand_roi_postprocess_ms": roi_timings["postprocess_ms"],
+            "hand_postprocess_ms": max(0.0, hand_total_ms - measured_ms),
+            "hand_total_ms": hand_total_ms,
+        }
         return HandResult(
             raw=prediction,
             accepted_label=accepted_label,
@@ -509,6 +562,7 @@ class HandSignRecognizer:
             center_prediction=center_prediction,
             roi_prediction=roi_prediction,
             fusion_status=fusion_status,
+            timings_ms=timings_ms,
         )
 
     def reset(self) -> None:
@@ -563,15 +617,33 @@ class BodyMovementRecognizer:
         self._last_timestamp_ms = -1
 
     def process(self, frame_bgr: np.ndarray, timestamp: float) -> BodyResult:
+        started = time.perf_counter()
         rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
+        detection_started = time.perf_counter()
         timestamp_ms = max(int(timestamp * 1000), self._last_timestamp_ms + 1)
         self._last_timestamp_ms = timestamp_ms
         detected = self.landmarker.detect_for_video(mp_image, timestamp_ms)
+        detection_finished = time.perf_counter()
         if not detected.pose_landmarks:
             stable, emitted = self.filter.update("idle")
             self.previous_time = timestamp
-            return BodyResult("idle", stable, emitted, {})
+            finished = time.perf_counter()
+            return BodyResult(
+                "idle",
+                stable,
+                emitted,
+                {},
+                timings_ms={
+                    "pose_preprocess_ms": (detection_started - started) * 1000.0,
+                    "pose_landmarker_ms": (
+                        detection_finished - detection_started
+                    )
+                    * 1000.0,
+                    "body_postprocess_ms": (finished - detection_finished) * 1000.0,
+                    "body_total_ms": (finished - started) * 1000.0,
+                },
+            )
 
         landmarks = detected.pose_landmarks[0]
         world = detected.pose_world_landmarks[0] if detected.pose_world_landmarks else landmarks
@@ -631,7 +703,21 @@ class BodyMovementRecognizer:
             "crossed_distance": crossed_distance,
         }
         landmark_points = tuple((point.x, point.y) for point in landmarks)
-        return BodyResult(raw_label, stable, emitted, metrics, landmark_points)
+        finished = time.perf_counter()
+        return BodyResult(
+            raw_label,
+            stable,
+            emitted,
+            metrics,
+            landmark_points,
+            timings_ms={
+                "pose_preprocess_ms": (detection_started - started) * 1000.0,
+                "pose_landmarker_ms": (detection_finished - detection_started)
+                * 1000.0,
+                "body_postprocess_ms": (finished - detection_finished) * 1000.0,
+                "body_total_ms": (finished - started) * 1000.0,
+            },
+        )
 
     def classify_metrics(
         self,
@@ -822,9 +908,25 @@ class CombinedNarutoPipeline:
         now = time.monotonic() if timestamp is None else timestamp
         hand_result = self.hand.process(frame_bgr, now)
         body_result = self.body.process(frame_bgr, now)
+        attack_started = time.perf_counter()
         queue_update = self.attacks.update_detailed(hand_result.emitted_seal, now)
+        attack_finished = time.perf_counter()
         attack = queue_update.attack
         processing_ms = (time.perf_counter() - started) * 1000.0
+        attack_queue_ms = (attack_finished - attack_started) * 1000.0
+        timings_ms = {
+            **hand_result.timings_ms,
+            **body_result.timings_ms,
+            "attack_queue_ms": attack_queue_ms,
+            "pipeline_overhead_ms": max(
+                0.0,
+                processing_ms
+                - hand_result.timings_ms.get("hand_total_ms", 0.0)
+                - body_result.timings_ms.get("body_total_ms", 0.0)
+                - attack_queue_ms,
+            ),
+            "recognition_total_ms": processing_ms,
+        }
         return FrameResult(
             hand=hand_result,
             body=body_result,
@@ -832,6 +934,7 @@ class CombinedNarutoPipeline:
             seal_history=queue_update.queue,
             queue_update=queue_update,
             processing_ms=processing_ms,
+            timings_ms=timings_ms,
         )
 
     def reset(self) -> None:

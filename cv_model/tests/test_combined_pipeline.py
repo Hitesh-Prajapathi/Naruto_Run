@@ -212,6 +212,8 @@ class CombinedPipelineIsolationTests(unittest.TestCase):
         self.assertIsNone(results[0].attack)
         self.assertIsNone(results[1].attack)
         self.assertEqual(results[2].attack.name, "shippu")
+        self.assertIn("attack_queue_ms", results[2].timings_ms)
+        self.assertIn("recognition_total_ms", results[2].timings_ms)
 
         movement_only = object.__new__(CombinedNarutoPipeline)
         movement_only.hand = _FakeHandRecognizer([None])

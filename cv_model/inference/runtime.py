@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import time
+import threading
 import uuid
 from dataclasses import dataclass, field
 from enum import Enum
+from functools import wraps
 from typing import Any, Callable, Iterable, Optional, Protocol
 
 from .events import (
@@ -42,6 +44,17 @@ class RecognitionPipeline(Protocol):
 PipelineFactory = Callable[[], RecognitionPipeline]
 
 
+def _serialized_operation(method: Callable[..., Any]) -> Callable[..., Any]:
+    """Prevent capture-worker processing from racing runtime commands."""
+
+    @wraps(method)
+    def wrapped(self: PipelineRuntimeController, *args: Any, **kwargs: Any) -> Any:
+        with self._operation_lock:
+            return method(self, *args, **kwargs)
+
+    return wrapped
+
+
 @dataclass(frozen=True)
 class RuntimeConfig:
     include_geometry: bool = False
@@ -71,6 +84,7 @@ class RuntimeFrame:
     calibration_adjustments: dict[str, tuple[float, float]] = field(
         default_factory=dict
     )
+    timings_ms: dict[str, float] = field(default_factory=dict)
 
 
 def _default_pipeline_factory() -> RecognitionPipeline:
@@ -103,6 +117,7 @@ class PipelineRuntimeController:
         if not self.session_id:
             raise ValueError("session_id cannot be empty")
         self._pipeline_factory = pipeline_factory or _default_pipeline_factory
+        self._operation_lock = threading.RLock()
         self._pipeline: Optional[RecognitionPipeline] = None
         self._state = RuntimeState.CREATED
         self._next_frame_id = 0
@@ -134,6 +149,7 @@ class PipelineRuntimeController:
     def last_calibration_adjustments(self) -> dict[str, tuple[float, float]]:
         return dict(self._last_calibration_adjustments)
 
+    @_serialized_operation
     def start(self) -> PipelineRuntimeController:
         if self._state == RuntimeState.CLOSED:
             raise RuntimeStateError("a closed runtime cannot be restarted")
@@ -184,9 +200,11 @@ class PipelineRuntimeController:
         )
         return CalibrationOutcome(dict(adjustments), dispatch)
 
+    @_serialized_operation
     def process_frame(
         self, frame: Any, *, captured_at_ms: Optional[int] = None
     ) -> RuntimeFrame:
+        runtime_started = time.perf_counter()
         self._require_running()
         timestamp_ms = self._timestamp_ms(captured_at_ms)
         completed = CalibrationOutcome()
@@ -198,13 +216,17 @@ class PipelineRuntimeController:
 
         frame_id = self._next_frame_id
         self._next_frame_id += 1
+        recognition_started = time.perf_counter()
         result = self.pipeline.process(frame, timestamp_ms / 1000.0)
+        recognition_finished = time.perf_counter()
+        serialization_started = time.perf_counter()
         output = self.serializer.to_dict(
             result,
             session_id=self.session_id,
             frame_id=frame_id,
             captured_at_ms=timestamp_ms,
         )
+        serialization_finished = time.perf_counter()
         self._capture_failures = 0
 
         if self.calibration_active:
@@ -214,11 +236,33 @@ class PipelineRuntimeController:
         else:
             frame_dispatch = self.dispatcher.dispatch_frame(output)
         dispatch = combine_dispatch_reports(completed.dispatch, frame_dispatch)
+        runtime_finished = time.perf_counter()
         remaining = (
             max(0, self._calibration_deadline_ms - timestamp_ms)
             if self._calibration_deadline_ms is not None
             else 0
         )
+        recognition_ms = (recognition_finished - recognition_started) * 1000.0
+        serialization_ms = (
+            serialization_finished - serialization_started
+        ) * 1000.0
+        runtime_total_ms = (runtime_finished - runtime_started) * 1000.0
+        timings_ms = {
+            **getattr(result, "timings_ms", {}),
+            "runtime_recognition_ms": recognition_ms,
+            "serialization_ms": serialization_ms,
+            "event_derivation_ms": dispatch.derivation_ms,
+            "callback_delivery_ms": dispatch.callback_delivery_ms,
+            "event_dispatch_total_ms": dispatch.total_ms,
+            "runtime_overhead_ms": max(
+                0.0,
+                runtime_total_ms
+                - recognition_ms
+                - serialization_ms
+                - dispatch.total_ms,
+            ),
+            "runtime_total_ms": runtime_total_ms,
+        }
         return RuntimeFrame(
             result=result,
             output=output,
@@ -226,8 +270,10 @@ class PipelineRuntimeController:
             calibration_active=self.calibration_active,
             calibration_remaining_ms=remaining,
             calibration_adjustments=completed.adjustments,
+            timings_ms=timings_ms,
         )
 
+    @_serialized_operation
     def reset(
         self,
         *,
@@ -248,6 +294,7 @@ class PipelineRuntimeController:
             reason=reason,
         )
 
+    @_serialized_operation
     def begin_neutral_calibration(
         self,
         *,
@@ -277,6 +324,7 @@ class PipelineRuntimeController:
             reason="calibration_started",
         )
 
+    @_serialized_operation
     def finish_neutral_calibration(
         self, *, captured_at_ms: Optional[int] = None
     ) -> CalibrationOutcome:
@@ -285,6 +333,7 @@ class PipelineRuntimeController:
             raise RuntimeStateError("neutral calibration is not active")
         return self._complete_calibration(self._timestamp_ms(captured_at_ms))
 
+    @_serialized_operation
     def cancel_neutral_calibration(
         self, *, captured_at_ms: Optional[int] = None
     ) -> DispatchReport:
@@ -302,6 +351,7 @@ class PipelineRuntimeController:
             reason="calibration_cancelled",
         )
 
+    @_serialized_operation
     def handle_capture_failure(
         self, *, captured_at_ms: Optional[int] = None
     ) -> DispatchReport:
@@ -321,6 +371,7 @@ class PipelineRuntimeController:
             reason="camera_recovery",
         )
 
+    @_serialized_operation
     def close(self) -> None:
         if self._state == RuntimeState.CLOSED:
             return

@@ -18,6 +18,7 @@ from inference.combined_pipeline import (
     FrameResult,
 )
 from inference.runtime import PipelineRuntimeController
+from inference.scheduler import LatestFrameScheduler
 
 
 POSE_CONNECTIONS = (
@@ -133,10 +134,12 @@ def _draw_panel(
     fps: float,
     last_attack: str,
     calibration_remaining: float,
+    performance: dict[str, float],
+    dropped_frames: int,
 ) -> None:
     height, width = frame.shape[:2]
     overlay = frame.copy()
-    cv2.rectangle(overlay, (12, 12), (min(860, width - 12), 292), (10, 10, 10), -1)
+    cv2.rectangle(overlay, (12, 12), (min(960, width - 12), 325), (10, 10, 10), -1)
     cv2.addWeighted(overlay, 0.68, frame, 0.32, 0, frame)
 
     hand = result.hand
@@ -165,6 +168,15 @@ def _draw_panel(
         ("SEALS: " + (" > ".join(result.seal_history).upper() or "-"), (230, 230, 230)),
         ("LAST ATTACK: " + (last_attack or "-"), (80, 120, 255)),
         (f"FPS: {fps:.1f}   PIPELINE: {result.processing_ms:.1f} ms", (190, 190, 190)),
+        (
+            "PERF: "
+            f"HAND {performance.get('hand_total_ms', 0.0):.1f} ms  "
+            f"POSE {performance.get('body_total_ms', 0.0):.1f} ms  "
+            f"RUNTIME {performance.get('runtime_total_ms', 0.0):.1f} ms  "
+            f"E2E {performance.get('scheduler_end_to_end_ms', 0.0):.1f} ms  "
+            f"DROPPED {dropped_frames}",
+            (175, 175, 255),
+        ),
     ]
     y = 42
     for text, color in lines:
@@ -243,6 +255,14 @@ def _draw_panel(
     )
 
 
+def _quiesce_for_runtime_command(scheduler: LatestFrameScheduler) -> None:
+    """Prevent pre-command frames/results from crossing a state boundary."""
+    scheduler.clear_pending()
+    if not scheduler.wait_until_idle(timeout=2.0):
+        raise TimeoutError("recognition worker did not reach the command boundary")
+    scheduler.poll_result()
+
+
 def main() -> int:
     args = parse_args()
     print("Loading hand-sign and pose models...")
@@ -281,6 +301,7 @@ def main() -> int:
     screenshot_index = 1
     consecutive_read_failures = 0
     window_name = "NarutoCV - Combined Camera Test"
+    scheduler = LatestFrameScheduler(runtime).start()
 
     try:
         while camera.isOpened():
@@ -296,7 +317,19 @@ def main() -> int:
                 print("Camera frame read failed; retrying.")
                 continue
             consecutive_read_failures = 0
-            runtime_frame = runtime.process_frame(frame)
+            scheduler.submit(frame)
+            scheduled = scheduler.poll_result()
+            if scheduled is None:
+                key = cv2.waitKey(1) & 0xFF
+                if key in (ord("q"), 27):
+                    break
+                continue
+            if scheduled.error is not None:
+                print(f"Scheduled recognition failed: {scheduled.error}")
+                break
+            runtime_frame = scheduled.runtime_frame
+            assert runtime_frame is not None
+            frame = scheduled.frame
             result = runtime_frame.result
             frame = cv2.flip(frame, 1)
             display_result = _mirror_result_for_display(result, frame.shape[1])
@@ -354,16 +387,25 @@ def main() -> int:
                 smoothed_fps,
                 last_attack,
                 runtime_frame.calibration_remaining_ms / 1000.0,
+                {
+                    **runtime_frame.timings_ms,
+                    "scheduler_queue_wait_ms": scheduled.queue_wait_ms,
+                    "scheduler_worker_ms": scheduled.worker_elapsed_ms,
+                    "scheduler_end_to_end_ms": scheduled.end_to_end_ms,
+                },
+                scheduler.stats().dropped_frames,
             )
             cv2.imshow(window_name, frame)
             key = cv2.waitKey(1) & 0xFF
             if key in (ord("q"), 27):
                 break
             if key == ord("r"):
+                _quiesce_for_runtime_command(scheduler)
                 runtime.reset(reason="manual")
                 last_attack = ""
                 print("Recognition state reset.")
             if key == ord("c"):
+                _quiesce_for_runtime_command(scheduler)
                 runtime.begin_neutral_calibration(duration_seconds=4.0)
                 print(
                     "Neutral calibration started: stand normally and move through "
@@ -376,6 +418,15 @@ def main() -> int:
                 print(f"Screenshot saved: {output}")
     finally:
         camera.release()
+        scheduler.stop()
+        scheduler_stats = scheduler.stats()
+        print(
+            "Scheduler: "
+            f"submitted={scheduler_stats.submitted_frames}, "
+            f"processed={scheduler_stats.processed_frames}, "
+            f"dropped={scheduler_stats.dropped_frames}, "
+            f"failed={scheduler_stats.failed_frames}"
+        )
         runtime.close()
         cv2.destroyAllWindows()
     return 0

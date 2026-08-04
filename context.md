@@ -1,9 +1,9 @@
 # 🌀 NarutoCV — Master Architecture, History & Technical Context
 
 > **Project:** NarutoCV — Real-Time Computer Vision Jutsu & Gesture Recognition Engine  
-> **Version:** 1.4.0 (Locked Recognition + Output/Event Runtime V1)
+> **Version:** 1.5.0 (Latest-Frame Runtime + Performance Instrumentation)
 > **Repository Root:** `/Users/hiteshprajapathi/Desktop/Naruto_Run/`
-> **Status:** Camera-approved recognition with versioned output, events, and runtime control
+> **Status:** Locked recognition with versioned events, latest-frame scheduling, and phase timings
 
 ---
 
@@ -418,6 +418,57 @@ and a real model-backed smoke test. Three consecutive held-out Dog frames
 produced the locked evidence transition followed by `HAND_SEAL`,
 `ATTACK_TRIGGERED`, and `QUEUE_CLEARED` in the documented order.
 
+### Latest-frame scheduler
+
+`cv_model/inference/scheduler.py` separates camera capture from recognition
+using one processing worker and a one-slot pending-frame mailbox. While a frame
+is being processed, each newly captured frame replaces the older pending frame.
+The worker therefore receives the freshest available input instead of working
+through a stale FIFO backlog.
+
+- MediaPipe and ONNX still run sequentially on one worker, preserving their
+  state and the locked recognition order.
+- Reset and calibration commands are serialized against frame processing.
+- Reset/calibration commands quiesce the worker, then discard pending and
+  completed pre-command data so an old image cannot cross the state boundary.
+- Worker exceptions are returned as failed scheduled results without silently
+  terminating the scheduler.
+- Shutdown may discard or drain the final pending frame and waits for the
+  active recognition call to finish safely.
+- Scheduler statistics expose submitted, processed, dropped, failed, and
+  superseded-result counts plus pending/processing state.
+
+The camera tester now displays scheduled results using the exact raw frame that
+produced each recognition output. Display mirroring remains presentation-only.
+It prints final scheduler counts when the camera window closes.
+
+### Detailed performance instrumentation
+
+Timing is observational only and uses `time.perf_counter()`. It does not alter
+confidence, thresholds, evidence, queueing, or attack recognition.
+
+| Layer | Available measurements |
+|:---|:---|
+| Hand classifier | Center/ROI preprocessing, ONNX execution, and postprocessing |
+| Hand detector | MediaPipe input preparation and Hand Landmarker execution |
+| Body pipeline | Pose preparation, Pose Landmarker, geometry postprocessing, total |
+| Recognition | Hand total, body total, attack queue, pipeline overhead, total |
+| Runtime | Recognition wrapper, V1 serialization, event derivation, callbacks, overhead, total |
+| Scheduler | Queue wait, worker elapsed time, capture-to-result end-to-end time |
+
+Core phase values are stored in `FrameResult.timings_ms`; serialization and
+callback values are added to `RuntimeFrame.timings_ms`; scheduler latency is
+carried by `ScheduledResult`. The live panel shows hand, pose, runtime,
+end-to-end latency, and cumulative dropped frames. The reproducible aggregate
+benchmark command remains the next separate implementation step.
+
+A real-model scheduler smoke check rapidly submitted ten held-out Dog frames.
+The one-slot mailbox processed the newest frame and counted nine replacements
+as dropped instead of building a backlog. That single processed frame measured
+3.72 ms center ONNX, 2.50 ms ROI ONNX, 31.56 ms Hand Landmarker, 10.28 ms Pose
+Landmarker, 0.06 ms serialization, and 49.25 ms total runtime. These are a
+single-run wiring check, not an aggregate performance benchmark.
+
 ### ONNX Model Metadata
 - **File Name:** `best_model_A.onnx`
 - **File Size:** $5.83\text{ MB}$
@@ -529,7 +580,8 @@ Naruto_Run/
     │   ├── pipeline_config.py              # Validated recognition configuration
     │   ├── output_schema.py                # Versioned JSON-safe PipelineOutputV1 adapter
     │   ├── events.py                       # Sparse typed events and isolated callbacks
-    │   └── runtime.py                      # Lifecycle, calibration, recovery, and dispatch
+    │   ├── runtime.py                      # Lifecycle, calibration, recovery, and dispatch
+    │   └── scheduler.py                    # Latest-frame mailbox and processing worker
     ├── schemas/
     │   ├── pipeline_output_v1.schema.json  # Authoritative V1 frame contract
     │   └── pipeline_event_v1.schema.json   # Authoritative V1 event contract
@@ -537,7 +589,8 @@ Naruto_Run/
     │   ├── test_combined_pipeline.py       # Recognition and state-machine regressions
     │   ├── test_display_mirroring.py       # Display-only reflection contract
     │   ├── test_output_schema.py           # V1 golden and validation tests
-    │   └── test_events_runtime.py          # Dispatcher and controller regressions
+    │   ├── test_events_runtime.py          # Dispatcher and controller regressions
+    │   └── test_scheduler_instrumentation.py # Frame dropping and timing regressions
     ├── data/
     │   ├── prepare_dataset.py             # Local dataset prep & augmentation script
     │   ├── prepared_dataset/              # 80/10/10 split dataset folder (train/val/test)

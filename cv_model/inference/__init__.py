@@ -26,6 +26,13 @@ from .runtime import (
     RuntimeState,
     RuntimeStateError,
 )
+from .scheduler import (
+    LatestFrameScheduler,
+    ScheduledResult,
+    SchedulerState,
+    SchedulerStateError,
+    SchedulerStats,
+)
 
 __all__ = (
     "SCHEMA_VERSION",
@@ -44,4 +51,9 @@ __all__ = (
     "RuntimeFrame",
     "RuntimeState",
     "RuntimeStateError",
+    "LatestFrameScheduler",
+    "ScheduledResult",
+    "SchedulerState",
+    "SchedulerStateError",
+    "SchedulerStats",
 )

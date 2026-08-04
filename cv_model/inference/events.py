@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import threading
+import time
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Callable, Iterable, Mapping, Optional, TypedDict
@@ -43,6 +44,9 @@ class DispatchFailure:
 class DispatchReport:
     events: tuple[PipelineEventV1, ...] = ()
     failures: tuple[DispatchFailure, ...] = ()
+    derivation_ms: float = 0.0
+    callback_delivery_ms: float = 0.0
+    total_ms: float = 0.0
 
     @property
     def succeeded(self) -> bool:
@@ -53,6 +57,11 @@ def combine_dispatch_reports(*reports: DispatchReport) -> DispatchReport:
     return DispatchReport(
         events=tuple(event for report in reports for event in report.events),
         failures=tuple(failure for report in reports for failure in report.failures),
+        derivation_ms=sum(report.derivation_ms for report in reports),
+        callback_delivery_ms=sum(
+            report.callback_delivery_ms for report in reports
+        ),
+        total_ms=sum(report.total_ms for report in reports),
     )
 
 
@@ -112,11 +121,17 @@ class PipelineEventDispatcher:
             "payload": dict(payload),
         }
 
-    def _deliver(self, events: Iterable[PipelineEventV1]) -> DispatchReport:
+    def _deliver(
+        self,
+        events: Iterable[PipelineEventV1],
+        *,
+        derivation_ms: float = 0.0,
+    ) -> DispatchReport:
         event_tuple = tuple(events)
         failures: list[DispatchFailure] = []
         with self._lock:
             subscriptions = tuple(self._subscriptions.items())
+        delivery_started = time.perf_counter()
         for event in event_tuple:
             event_type = PipelineEventType(event["event_type"])
             for subscription_id, (callback, selected) in subscriptions:
@@ -128,10 +143,18 @@ class PipelineEventDispatcher:
                     failures.append(
                         DispatchFailure(subscription_id, event_type, error)
                     )
-        return DispatchReport(event_tuple, tuple(failures))
+        callback_delivery_ms = (time.perf_counter() - delivery_started) * 1000.0
+        return DispatchReport(
+            events=event_tuple,
+            failures=tuple(failures),
+            derivation_ms=derivation_ms,
+            callback_delivery_ms=callback_delivery_ms,
+            total_ms=derivation_ms + callback_delivery_ms,
+        )
 
     def dispatch_frame(self, output: PipelineOutputV1) -> DispatchReport:
         """Emit sparse events in HAND, BODY, ATTACK, QUEUE order."""
+        started = time.perf_counter()
         validate_pipeline_output_v1(output)
         common = {
             "session_id": output["session_id"],
@@ -196,7 +219,8 @@ class PipelineEventDispatcher:
                 )
             )
 
-        return self._deliver(events)
+        derivation_ms = (time.perf_counter() - started) * 1000.0
+        return self._deliver(events, derivation_ms=derivation_ms)
 
     def dispatch_reset(
         self,
@@ -206,6 +230,7 @@ class PipelineEventDispatcher:
         captured_at_ms: int,
         reason: str,
     ) -> DispatchReport:
+        started = time.perf_counter()
         if not reason:
             raise ValueError("reset reason cannot be empty")
         event = self._new_event(
@@ -215,4 +240,5 @@ class PipelineEventDispatcher:
             captured_at_ms=captured_at_ms,
             payload={"reason": reason},
         )
-        return self._deliver((event,))
+        derivation_ms = (time.perf_counter() - started) * 1000.0
+        return self._deliver((event,), derivation_ms=derivation_ms)
