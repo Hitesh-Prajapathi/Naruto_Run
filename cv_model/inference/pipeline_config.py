@@ -78,7 +78,6 @@ class AttackQueueConfig:
     seal_timeout: float = 3.0
     trigger_cooldown: float = 2.0
     max_seals: int = 3
-    max_noise_events: int = 1
 
     def __post_init__(self) -> None:
         if self.seal_timeout <= 0:
@@ -87,8 +86,6 @@ class AttackQueueConfig:
             raise ValueError("trigger_cooldown cannot be negative")
         if self.max_seals < 1:
             raise ValueError("max_seals must be positive")
-        if not 0 <= self.max_noise_events < self.max_seals:
-            raise ValueError("max_noise_events must be between zero and max_seals - 1")
 
 
 @dataclass(frozen=True)

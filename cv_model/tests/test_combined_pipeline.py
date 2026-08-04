@@ -164,6 +164,20 @@ class AttackQueueTests(unittest.TestCase):
                 self.assertEqual(event.name, definition.name)
                 self.assertEqual(recognizer.seal_labels, ())
 
+    def test_leading_noise_cannot_be_skipped_to_trigger_an_attack(self) -> None:
+        recognizer = AttackRecognizer()
+
+        self.assertIsNone(recognizer.update("ox", 1.0))
+        self.assertIsNone(recognizer.update("hare", 1.1))
+        self.assertEqual(recognizer.seal_labels, ("ox", "hare"))
+
+    def test_out_of_order_two_seal_combo_does_not_trigger(self) -> None:
+        recognizer = AttackRecognizer()
+
+        self.assertIsNone(recognizer.update("horse", 1.0))
+        self.assertIsNone(recognizer.update("tiger", 1.1))
+        self.assertEqual(recognizer.seal_labels, ("horse", "tiger"))
+
     def test_adjacent_duplicate_is_ignored(self) -> None:
         recognizer = AttackRecognizer()
         recognizer.update_detailed("ram", 1.0)

@@ -8,7 +8,6 @@ frontend integration) can consume.
 from __future__ import annotations
 
 import ast
-import itertools
 import math
 import time
 import urllib.request
@@ -783,7 +782,6 @@ class AttackRecognizer:
                 seal_timeout=seal_timeout,
                 trigger_cooldown=config.trigger_cooldown,
                 max_seals=config.max_seals,
-                max_noise_events=config.max_noise_events,
             )
         longest_attack = max(len(attack.seals) for attack in ATTACKS)
         if config.max_seals < longest_attack:
@@ -797,25 +795,13 @@ class AttackRecognizer:
         return tuple(label for label, _ in self.seals)
 
     def _sequence_matches(self, attack: AttackDefinition) -> bool:
-        if len(self.seals) < len(attack.seals):
-            return False
         events = list(self.seals)
-        # Allow one debounced but incorrect transition between intentional
-        # seals. This recovers a real combo without changing seal order.
-        for indexes in itertools.combinations(range(len(events)), len(attack.seals)):
-            selected = [events[index] for index in indexes]
-            if tuple(label for label, _ in selected) != attack.seals:
-                continue
-            noise_events = indexes[-1] - indexes[0] + 1 - len(indexes)
-            if noise_events > self.config.max_noise_events:
-                continue
-            if all(
-                selected[index][1] - selected[index - 1][1]
-                <= self.config.seal_timeout
-                for index in range(1, len(selected))
-            ):
-                return True
-        return False
+        if tuple(label for label, _ in events) != attack.seals:
+            return False
+        return all(
+            events[index][1] - events[index - 1][1] <= self.config.seal_timeout
+            for index in range(1, len(events))
+        )
 
     def _trigger(
         self, attack: AttackDefinition, now: float

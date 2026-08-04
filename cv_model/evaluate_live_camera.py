@@ -466,6 +466,12 @@ def main() -> int:
                     )
                     if latest is not None:
                         last_output = latest
+                    if (
+                        args.mode == "attack"
+                        and isinstance(evaluator, AttackAttemptEvaluator)
+                        and evaluator.complete
+                    ):
+                        action_ends_at_ms = now_ms
                 if now_ms >= action_ends_at_ms:
                     if not scheduler.wait_until_idle(timeout=5.0):
                         raise TimeoutError("recognition worker did not finish the attempt")

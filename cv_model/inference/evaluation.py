@@ -362,7 +362,7 @@ class AttackAttemptEvaluator:
         return ATTACK_SEALS[self.expected_attack]
 
     def record(self, output: Mapping[str, Any], *, phase: str = "action") -> None:
-        if phase != "action":
+        if phase != "action" or self.attacks_observed:
             return
         hand = output["hand"]
         queue = output["queue"]
@@ -383,10 +383,16 @@ class AttackAttemptEvaluator:
 
     def _matched_prefix_length(self) -> int:
         matched = 0
-        for observed in self.accepted_seals:
-            if matched < len(self.expected_seals) and observed == self.expected_seals[matched]:
-                matched += 1
+        for expected, observed in zip(self.expected_seals, self.accepted_seals):
+            if observed != expected:
+                break
+            matched += 1
         return matched
+
+    @property
+    def complete(self) -> bool:
+        """The first attack result terminates a guided attempt."""
+        return bool(self.attacks_observed)
 
     def finish(self) -> dict[str, Any]:
         success = self.expected_attack in self.attacks_observed

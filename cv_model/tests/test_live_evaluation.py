@@ -204,6 +204,27 @@ class LabelAttemptEvaluatorTests(unittest.TestCase):
 
 
 class AttackAttemptEvaluatorTests(unittest.TestCase):
+    def test_first_attack_terminates_attempt_recording(self) -> None:
+        attempt = AttackAttemptEvaluator("ikazuchi", 1)
+        attempt.record(
+            _output(
+                hand_raw="hare", hand_accepted="hare", hand_stable="hare",
+                hand_emitted="hare", accepted_seal="hare", attack="ikazuchi",
+            )
+        )
+        attempt.record(
+            _output(
+                hand_raw="dog", hand_accepted="dog", hand_stable="dog",
+                hand_emitted="dog", accepted_seal="dog", attack="shippu",
+            )
+        )
+
+        result = attempt.finish()
+
+        self.assertTrue(attempt.complete)
+        self.assertEqual(result["accepted_seals"], ["hare"])
+        self.assertEqual(result["attacks_observed"], ["ikazuchi"])
+
     def test_successful_attack_preserves_accepted_sequence_and_queue_details(self) -> None:
         attempt = AttackAttemptEvaluator("shippu", 1)
         attempt.record(

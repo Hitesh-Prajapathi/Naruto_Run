@@ -304,7 +304,7 @@ as the baseline to preserve. The locked configuration includes:
 - per-label confidence and margin thresholds plus the Rat/Ram resolver;
 - the five-frame hand evidence filter and one-event-per-held-sign behavior;
 - adjacent duplicate suppression, a maximum three-seal queue, timeout clearing,
-  one-noise-event combo recovery, and attack cooldowns;
+  exact-order combo matching, and attack cooldowns;
 - body movement recognition running independently from hand-seal attacks.
 
 Treat these settings and behaviors as a regression baseline. Future work may
@@ -608,6 +608,19 @@ Dodge (`hare`), Water (`snake > dragon`), Sand (`monkey > ox`), and Wind
 not require a breaking migration. Display names and evaluator instructions use
 the new English attack names. The catalog is protected by an exact regression
 test in addition to the generic every-sequence matcher test.
+
+Attack ordering is strict: the complete current queue must exactly equal an
+attack sequence. Leading, inserted, reversed, or skipped seals cannot be
+discarded as noise to produce a match. Guided attack evaluation also ends on
+the first observed attack instead of continuing to collect repeated seals for
+the remainder of the ten-second action window. This prevents a later correct
+subsequence from turning a wrong-order attempt into a reported pass.
+
+The corrected strict-order live validation completed on 2026-08-04 with
+**15/15 successful attempts (100%)**: three attempts each for Fire Attack,
+Lightning Dodge, Water Attack, Sand Attack, and Wind Attack. There were no
+reported failure reasons. The local metadata-only evidence is stored under
+`reports/final-attack-v2-*`; report artifacts remain outside version control.
 
 Hand-sign evaluation:
 
