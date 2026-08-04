@@ -392,22 +392,27 @@ class HandSignRecognizer:
         self, prediction: Classification, detected_hands: int
     ) -> tuple[str, Optional[str]]:
         # Rat and Ram are the model's dominant live-camera confusion pair.
-        # Proper Ram images contain tightly overlapping palms and consistently
-        # collapse to one MediaPipe hand; Rat usually exposes two separate
-        # hands. Keep very-high-confidence Ram intact, otherwise use this
-        # geometry to recover Rat before applying scalar thresholds.
-        if (
-            prediction.label == "ram"
-            and detected_hands >= 2
-            and prediction.confidence < 0.985
-        ):
-            return "rat", "resolved_ram_to_rat_two_hands"
+        # Do not use the detected-hand count alone: the camera evaluator showed
+        # genuine Ram alternating between one and two detected hands.  Resolve
+        # only when the model itself exposes meaningful Rat probability.
         if (
             prediction.label == "ram"
             and prediction.second_label == "rat"
             and prediction.second_confidence >= 0.12
         ):
             return "rat", "resolved_ram_to_rat_pair_probability"
+
+        # In the recorded camera trials, genuine lower-confidence Dog frames
+        # consistently had Hare, Monkey, or Ox as runner-up.  Tiger frames
+        # misclassified as Dog instead had Snake (or Boar) as runner-up.  Keep
+        # the original strict floor for those unsafe pairings while allowing
+        # the camera-tested Dog cluster to use its calibrated lower threshold.
+        if (
+            prediction.label == "dog"
+            and prediction.confidence < 0.80
+            and prediction.second_label not in {"hare", "monkey", "ox"}
+        ):
+            return "zero", "dog_pair_guard"
 
         confidence_threshold = (
             self.confidence_override
@@ -756,11 +761,11 @@ class AttackDefinition:
 
 
 ATTACKS = (
-    AttackDefinition("homura", "HOMURA / FIRE", ("tiger", "dragon", "horse")),
-    AttackDefinition("shippu", "SHIPPU / WIND", ("bird", "ram", "rat")),
-    AttackDefinition("ikazuchi", "IKAZUCHI / LIGHTNING", ("dog",)),
-    AttackDefinition("daichi", "DAICHI / STONE", ("monkey", "boar", "snake")),
-    AttackDefinition("ryusui", "RYUSUI / WATER", ("ox", "hare")),
+    AttackDefinition("homura", "FIRE ATTACK", ("tiger", "horse")),
+    AttackDefinition("ikazuchi", "LIGHTNING DODGE", ("hare",)),
+    AttackDefinition("ryusui", "WATER ATTACK", ("snake", "dragon")),
+    AttackDefinition("daichi", "SAND ATTACK", ("monkey", "ox")),
+    AttackDefinition("shippu", "WIND ATTACK", ("dog", "rat")),
 )
 
 

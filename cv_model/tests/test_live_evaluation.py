@@ -206,24 +206,19 @@ class LabelAttemptEvaluatorTests(unittest.TestCase):
 class AttackAttemptEvaluatorTests(unittest.TestCase):
     def test_successful_attack_preserves_accepted_sequence_and_queue_details(self) -> None:
         attempt = AttackAttemptEvaluator("shippu", 1)
-        for seal in ("bird", "ram"):
-            attempt.record(
-                _output(
-                    hand_raw=seal,
-                    hand_accepted=seal,
-                    hand_stable=seal,
-                    hand_emitted=seal,
-                    accepted_seal=seal,
-                )
-            )
         attempt.record(
             _output(
-                hand_raw="rat",
-                hand_accepted="rat",
-                hand_stable="rat",
-                hand_emitted="rat",
-                accepted_seal="rat",
-                attack="shippu",
+                hand_raw="dog",
+                hand_accepted="dog",
+                hand_stable="dog",
+                hand_emitted="dog",
+                accepted_seal="dog",
+            )
+        )
+        attempt.record(
+            _output(
+                hand_raw="rat", hand_accepted="rat", hand_stable="rat",
+                hand_emitted="rat", accepted_seal="rat", attack="shippu",
             )
         )
 
@@ -231,7 +226,7 @@ class AttackAttemptEvaluatorTests(unittest.TestCase):
 
         self.assertTrue(result["success"])
         self.assertIsNone(result["failure_reason"])
-        self.assertEqual(result["accepted_seals"], ["bird", "ram", "rat"])
+        self.assertEqual(result["accepted_seals"], ["dog", "rat"])
         self.assertEqual(result["missing_expected_seals"], [])
 
     def test_timeout_failure_is_explained_and_aggregated(self) -> None:
@@ -253,7 +248,7 @@ class AttackAttemptEvaluatorTests(unittest.TestCase):
         summary = session.summary()
 
         self.assertEqual(result["failure_reason"], "seal_timeout")
-        self.assertEqual(result["missing_expected_seals"], ["dragon", "horse"])
+        self.assertEqual(result["missing_expected_seals"], ["horse"])
         self.assertEqual(
             summary["metrics"]["homura"]["failure_reasons"],
             {"seal_timeout": 1},
@@ -263,11 +258,11 @@ class AttackAttemptEvaluatorTests(unittest.TestCase):
         attempt = AttackAttemptEvaluator("ikazuchi", 1)
         attempt.record(
             _output(
-                hand_raw="dog",
-                hand_accepted="dog",
-                hand_stable="dog",
-                hand_emitted="dog",
-                accepted_seal="dog",
+                hand_raw="hare",
+                hand_accepted="hare",
+                hand_stable="hare",
+                hand_emitted="hare",
+                accepted_seal="hare",
                 attack="ikazuchi",
             )
         )
@@ -288,7 +283,7 @@ class AttackAttemptEvaluatorTests(unittest.TestCase):
                 rows = list(csv.DictReader(csv_file))
 
         self.assertEqual(saved_summary["attempt_count"], 1)
-        self.assertEqual(rows[0]["expected_sequence"], "dog")
+        self.assertEqual(rows[0]["expected_sequence"], "hare")
         self.assertNotIn("frame", rows[0]["details_json"])
 
 

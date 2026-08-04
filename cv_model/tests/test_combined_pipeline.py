@@ -87,7 +87,72 @@ class HandFusionTests(unittest.TestCase):
             HandFusionConfig(absence_grace_frames=0)
 
 
+class HandAcceptanceCalibrationTests(unittest.TestCase):
+    def make_recognizer(self) -> HandSignRecognizer:
+        recognizer = object.__new__(HandSignRecognizer)
+        recognizer.confidence_override = None
+        recognizer.confidence_thresholds = {
+            "dog": 0.68,
+            "dragon": 0.50,
+            "ram": 0.92,
+            "rat": 0.45,
+            "zero": 0.45,
+        }
+        recognizer.margin_thresholds = {
+            "dog": 0.40,
+            "dragon": 0.20,
+            "ram": 0.55,
+            "rat": 0.05,
+            "zero": 0.05,
+        }
+        return recognizer
+
+    def test_lower_confidence_dog_requires_camera_validated_runner_up(self) -> None:
+        recognizer = self.make_recognizer()
+
+        accepted = Classification("dog", 0.70, "hare", 0.12)
+        tiger_confusion = Classification("dog", 0.70, "snake", 0.12)
+
+        self.assertEqual(recognizer._accept(accepted, 2), ("dog", None))
+        self.assertEqual(
+            recognizer._accept(tiger_confusion, 1), ("zero", "dog_pair_guard")
+        )
+
+    def test_dragon_uses_live_camera_confidence_range(self) -> None:
+        recognizer = self.make_recognizer()
+        dragon = Classification("dragon", 0.52, "monkey", 0.25)
+
+        self.assertEqual(recognizer._accept(dragon, 2), ("dragon", None))
+
+    def test_two_detected_hands_do_not_rewrite_clear_ram(self) -> None:
+        recognizer = self.make_recognizer()
+        ram = Classification("ram", 0.97, "dog", 0.01)
+
+        self.assertEqual(recognizer._accept(ram, 2), ("ram", None))
+
+    def test_ambiguous_ram_rat_pair_still_recovers_rat(self) -> None:
+        recognizer = self.make_recognizer()
+        ambiguous = Classification("ram", 0.80, "rat", 0.14)
+
+        self.assertEqual(
+            recognizer._accept(ambiguous, 2),
+            ("rat", "resolved_ram_to_rat_pair_probability"),
+        )
+
+
 class AttackQueueTests(unittest.TestCase):
+    def test_authoritative_attack_catalog(self) -> None:
+        self.assertEqual(
+            [(attack.display_name, attack.seals) for attack in ATTACKS],
+            [
+                ("FIRE ATTACK", ("tiger", "horse")),
+                ("LIGHTNING DODGE", ("hare",)),
+                ("WATER ATTACK", ("snake", "dragon")),
+                ("SAND ATTACK", ("monkey", "ox")),
+                ("WIND ATTACK", ("dog", "rat")),
+            ],
+        )
+
     def test_every_attack_sequence(self) -> None:
         for definition in ATTACKS:
             with self.subTest(attack=definition.name):
@@ -124,15 +189,15 @@ class AttackQueueTests(unittest.TestCase):
 
     def test_attack_cooldown_is_reported(self) -> None:
         recognizer = AttackRecognizer()
-        self.assertIsNotNone(recognizer.update_detailed("dog", 1.0).attack)
-        update = recognizer.update_detailed("dog", 1.5)
+        self.assertIsNotNone(recognizer.update_detailed("hare", 1.0).attack)
+        update = recognizer.update_detailed("hare", 1.5)
         self.assertTrue(update.cooldown_suppressed)
         self.assertIsNone(update.attack)
         self.assertEqual(update.queue, ())
 
     def test_invalid_queue_configuration_is_rejected(self) -> None:
         with self.assertRaises(ValueError):
-            AttackRecognizer(config=AttackQueueConfig(max_seals=2))
+            AttackRecognizer(config=AttackQueueConfig(max_seals=1))
 
 
 class BodyMovementTests(unittest.TestCase):
@@ -201,19 +266,18 @@ class _FakeBodyRecognizer:
 class CombinedPipelineIsolationTests(unittest.TestCase):
     def test_body_events_never_gate_or_trigger_attacks(self) -> None:
         pipeline = object.__new__(CombinedNarutoPipeline)
-        pipeline.hand = _FakeHandRecognizer(["bird", "ram", "rat"])
+        pipeline.hand = _FakeHandRecognizer(["dog", "rat"])
         pipeline.body = _FakeBodyRecognizer(
-            ["jumping", "naruto_run", "bending_left"]
+            ["jumping", "naruto_run"]
         )
         pipeline.attacks = AttackRecognizer()
         frame = np.zeros((2, 2, 3), dtype=np.uint8)
 
-        results = [pipeline.process(frame, 1.0 + index * 0.1) for index in range(3)]
+        results = [pipeline.process(frame, 1.0 + index * 0.1) for index in range(2)]
         self.assertIsNone(results[0].attack)
-        self.assertIsNone(results[1].attack)
-        self.assertEqual(results[2].attack.name, "shippu")
-        self.assertIn("attack_queue_ms", results[2].timings_ms)
-        self.assertIn("recognition_total_ms", results[2].timings_ms)
+        self.assertEqual(results[1].attack.name, "shippu")
+        self.assertIn("attack_queue_ms", results[1].timings_ms)
+        self.assertIn("recognition_total_ms", results[1].timings_ms)
 
         movement_only = object.__new__(CombinedNarutoPipeline)
         movement_only.hand = _FakeHandRecognizer([None])

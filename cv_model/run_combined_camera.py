@@ -303,7 +303,8 @@ def main() -> int:
 
     print("Combined camera tester started.")
     print("Attacks use hand signs only:")
-    print("  tiger>dragon>horse, bird>ram>rat, dog, monkey>boar>snake, ox>hare")
+    print("  fire=tiger>horse, lightning_dodge=hare, water=snake>dragon")
+    print("  sand=monkey>ox, wind=dog>rat")
     print("Body movements are detected separately and never gate attacks.")
     print("Press Q in the camera window to quit.")
 

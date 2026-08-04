@@ -154,7 +154,13 @@ class PipelineRuntimeController:
         if self._state == RuntimeState.CLOSED:
             raise RuntimeStateError("a closed runtime cannot be restarted")
         if self._state == RuntimeState.CREATED:
-            self._pipeline = self._pipeline_factory()
+            try:
+                self._pipeline = self._pipeline_factory()
+            except Exception as error:
+                self._pipeline = None
+                raise RuntimeError(
+                    "failed to initialize the recognition pipeline"
+                ) from error
             self._state = RuntimeState.RUNNING
         return self
 
@@ -395,12 +401,16 @@ class PipelineRuntimeController:
     def close(self) -> None:
         if self._state == RuntimeState.CLOSED:
             return
-        if self._pipeline is not None:
-            self._pipeline.close()
-        self._pipeline = None
-        self._calibration_deadline_ms = None
-        self._calibration_samples = []
-        self._state = RuntimeState.CLOSED
+        try:
+            if self._pipeline is not None:
+                self._pipeline.close()
+        finally:
+            # Closing is terminal even when a native model releases with an
+            # exception.  Never retain a half-closed pipeline or allow reuse.
+            self._pipeline = None
+            self._calibration_deadline_ms = None
+            self._calibration_samples = []
+            self._state = RuntimeState.CLOSED
 
     def __enter__(self) -> PipelineRuntimeController:
         return self.start()

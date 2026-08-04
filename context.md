@@ -1,7 +1,7 @@
 # 🌀 NarutoCV — Master Architecture, History & Technical Context
 
 > **Project:** NarutoCV — Real-Time Computer Vision Jutsu & Gesture Recognition Engine  
-> **Version:** 1.7.1 (Phase-Isolated Guided Evaluation)
+> **Version:** 1.9.0 (Revised Attack Catalog and Runtime Hardening)
 > **Repository Root:** `/Users/hiteshprajapathi/Desktop/Naruto_Run/`
 > **Status:** Locked recognition with measurable live label and attack evaluation
 
@@ -339,7 +339,7 @@ recognition state or decisions. It only reads the completed frame result.
   "queue": {"seals": [], "accepted_seal": "rat"},
   "attack": {
     "name": "shippu",
-    "display_name": "SHIPPU / WIND",
+    "display_name": "WIND ATTACK",
     "recognized_at_ms": 123456
   }
 }
@@ -412,6 +412,20 @@ attack sequences, or queue behavior.
 
 No network, file, WebSocket, or frontend transport is implemented at this
 stage. Those consumers can now attach to the stable event callback contract.
+
+### Runtime hardening boundary (step 7)
+
+The backend runtime boundary is complete through step 7. Model initialization
+failures now raise a clear `failed to initialize the recognition pipeline`
+error while leaving the controller in `CREATED`, allowing an explicit retry.
+Shutdown is terminal and clears native pipeline references even if a model's
+close operation raises; a second close remains safe. Existing hardening also
+covers serialized reset/calibration operations, recovery after repeated camera
+read failures, worker exception reporting without killing later scheduling,
+subscriber failure isolation, and immediate metadata-report flushing.
+
+Transport, frontend integration, and simulation remain explicitly out of scope
+after this boundary.
 
 The controller/event integration was verified with the full automated suite
 and a real model-backed smoke test. Three consecutive held-out Dog frames
@@ -488,6 +502,14 @@ The standard 30-second benchmark command is:
   --summary-json reports/benchmark.json
 ```
 
+The final step-6 benchmark on 2026-08-04 ran for 30.05 seconds after a
+three-second warmup. It submitted 903 frames, processed 901, dropped 2
+(`0.2%`), and had zero failures. Effective throughput was `29.98 FPS`.
+Recognition latency was 31.20 ms mean and 31.52 ms p95; scheduler end-to-end
+latency was 31.81 ms mean and 34.84 ms p95. The complete aggregate is stored
+in `reports/final-step6-benchmark.json`. This meets the 30 FPS prototype goal,
+but not the original aspirational browser target of at most 25 ms per frame.
+
 The measured elapsed time includes final worker drainage so effective FPS is
 not inflated by leaving the final captured frame unfinished. Warmup scheduler
 counts and timings are excluded from the aggregate result.
@@ -544,8 +566,48 @@ Evaluation protocol V1.1 isolates preparation from action:
 
 The original 39-attempt V1.0 hand report exposed preparation latching and
 mixed-phase aggregates, so it remains useful as a diagnostic baseline but is
-not valid for selecting exact threshold values. A V1.1 hand rerun is required
-before evidence-based recognition tuning.
+not valid for selecting exact threshold values. The completed phase-isolated
+V1.1 rerun is stored in `reports/hand-v1.1-rerun-*` and is the evidence source
+for the final targeted calibration below.
+
+### Final Dog, Dragon, and Ram calibration (2026-08-04)
+
+The user explicitly reopened recognition tuning for one final targeted pass.
+Only Dog, Dragon, and the Ram/Rat resolver changed; all other label thresholds,
+fusion settings, temporal evidence, queue behavior, and body recognition remain
+at the approved baseline.
+
+- **Dog:** the base confidence floor is `0.68` with margin `0.40`, but Dog
+  predictions below `0.80` are accepted only when the runner-up is Hare,
+  Monkey, or Ox. In the V1.1 frames, genuine low-confidence Dog used these
+  runner-ups, while the persistent Tiger-to-Dog confusion used Snake. This
+  recovers all three Dog attempts without accepting the recorded Tiger cluster.
+- **Dragon:** confidence is `0.50` and margin is `0.20`. Dragon was already the
+  dominant raw result in attempts 2 and 3 but could never reach its former
+  `0.85/0.50` gate. No non-Dragon action attempt passed the new joint gate in
+  the recorded V1.1 session. Attempt 1 remains unrecoverable because its raw
+  output was genuinely unstable rather than merely threshold-rejected.
+- **Ram:** detected-hand count no longer rewrites Ram to Rat. Genuine Ram was
+  observed with both one and two detected hands, so that geometry rule caused
+  the first event to be Rat in two attempts. Ram-to-Rat recovery now requires
+  Rat itself to be the runner-up with probability at least `0.12`.
+
+An offline sequential replay through the real five-frame evidence filter raised
+first-event correctness from **30/39 to 34/39 (87.2%)** with no wrong first
+events. Targeted replay results were Dog `3/3`, Dragon `2/3`, and Ram `3/3`.
+This is recorded-session evidence, not a replacement for the final live camera
+check. Unit regressions cover the Dog pair guard, Dragon live-confidence range,
+clear two-hand Ram, and ambiguous Ram/Rat recovery.
+
+### Revised attack catalog (2026-08-04)
+
+The authoritative hand-seal attacks are now Fire (`tiger > horse`), Lightning
+Dodge (`hare`), Water (`snake > dragon`), Sand (`monkey > ox`), and Wind
+(`dog > rat`). Internal event IDs remain `homura`, `ikazuchi`, `ryusui`,
+`daichi`, and `shippu` respectively so the versioned event/output contracts do
+not require a breaking migration. Display names and evaluator instructions use
+the new English attack names. The catalog is protected by an exact regression
+test in addition to the generic every-sequence matcher test.
 
 Hand-sign evaluation:
 
@@ -572,8 +634,8 @@ are not body labels.
 ### Guided attack-sequence diagnostics
 
 Attack mode evaluates the authoritative hand-seal catalog: `homura`
-(`tiger > dragon > horse`), `shippu` (`bird > ram > rat`), `ikazuchi` (`dog`),
-`daichi` (`monkey > boar > snake`), and `ryusui` (`ox > hare`). The overlay
+(`tiger > horse`), `ikazuchi` (`hare`), `ryusui` (`snake > dragon`), `daichi`
+(`monkey > ox`), and `shippu` (`dog > rat`). The overlay
 explicitly instructs the user to return to neutral between seals so the locked
 edge-triggered hand filter can produce fresh events.
 
@@ -611,11 +673,11 @@ the resulting per-label evidence demonstrates a specific change is beneficial.
 
 | Jutsu Name | Element | Required Hand Seal Sequence | Special Timing & Behavior | Visual FX Animation |
 |:---|:---:|:---|:---|:---|
-| **Homura (火炎)** | Fire 🔥 | `tiger` $\rightarrow$ `dragon` $\rightarrow$ `horse` | Standard 3-seal combo (Max 3.0s window between seals) | Fireball Eruption & Radial Flame Burst |
-| **Shippū (疾風)** | Wind 🌪️ | `bird` $\rightarrow$ `ram` $\rightarrow$ `rat` | Standard 3-seal combo | Swirling Tornado & Wind Blade Cutting Particles |
-| **Ikazuchi (雷光)** | Lightning ⚡ | `dog` *(Single Seal)* | **Instant Action:** Single-seal attack trigger | Chidori Lightning Discharge & Electric Sparks |
-| **Daichi (大地)** | Stone 🗿 | `monkey` $\rightarrow$ `boar` $\rightarrow$ `snake` | Standard 3-seal attack combo | Earth Wall Shatter & Ground Crag Barriers |
-| **Ryūsui (流水)** | Water 🌊 | `ox` $\rightarrow$ `hare` | Fast 2-seal tactical combo | Water Vortex Ring & Expanding Wave Particles |
+| **Fire Attack** | Fire 🔥 | `tiger` $\rightarrow$ `horse` | Two-seal combo (Max 3.0s window between seals) | Deferred until simulation work |
+| **Lightning Dodge** | Lightning ⚡ | `hare` *(Single Seal)* | Instant single-seal trigger | Deferred until simulation work |
+| **Water Attack** | Water 🌊 | `snake` $\rightarrow$ `dragon` | Two-seal combo | Deferred until simulation work |
+| **Sand Attack** | Sand 🏜️ | `monkey` $\rightarrow$ `ox` | Two-seal combo | Deferred until simulation work |
+| **Wind Attack** | Wind 🌪️ | `dog` $\rightarrow$ `rat` | Two-seal combo | Deferred until simulation work |
 
 ---
 
@@ -643,48 +705,45 @@ Frame t:   [ DRAGON ]       Held TIGER does not emit a duplicate event
 stateDiagram-v2
     [*] --> IDLE
 
-    state "🔥 Homura (Fire Jutsu)" as Fire {
-        TIGER --> DRAGON: Valid Seal & T < 3.0s
-        DRAGON --> HORSE: Valid Seal & T < 3.0s
+    state "🔥 Fire Attack" as Fire {
+        TIGER --> HORSE: Valid Seal & T < 3.0s
         HORSE --> CAST_FIRE: Trigger FX & Reset
     }
 
-    state "🌪️ Shippū (Wind Jutsu)" as Wind {
-        BIRD --> RAM: Valid Seal & T < 3.0s
-        RAM --> RAT: Valid Seal & T < 3.0s
+    state "🌪️ Wind Attack" as Wind {
+        DOG --> RAT: Valid Seal & T < 3.0s
         RAT --> CAST_WIND: Trigger FX & Reset
     }
 
-    state "⚡ Ikazuchi (Lightning Attack)" as Lightning {
-        DOG --> CAST_LIGHTNING: Instant Trigger & Reset
+    state "⚡ Lightning Dodge" as Lightning {
+        HARE --> CAST_LIGHTNING: Instant Trigger & Reset
     }
 
-    state "🗿 Daichi (Stone Attack)" as Stone {
-        MONKEY --> BOAR: Valid Seal & T < 3.0s
-        BOAR --> SNAKE: Valid Seal & T < 3.0s
-        SNAKE --> CAST_STONE: Trigger FX & Reset
+    state "🏜️ Sand Attack" as Sand {
+        MONKEY --> OX: Valid Seal & T < 3.0s
+        OX --> CAST_SAND: Trigger FX & Reset
     }
 
-    state "🌊 Ryūsui (Water Jutsu)" as Water {
-        OX --> HARE: Valid Seal & T < 3.0s
-        HARE --> CAST_WATER: Trigger FX & Reset
+    state "🌊 Water Attack" as Water {
+        SNAKE --> DRAGON: Valid Seal & T < 3.0s
+        DRAGON --> CAST_WATER: Trigger FX & Reset
     }
 
     IDLE --> TIGER: Detect Tiger
-    IDLE --> BIRD: Detect Bird
     IDLE --> DOG: Detect Dog
     IDLE --> MONKEY: Detect Monkey
-    IDLE --> OX: Detect Ox
+    IDLE --> HARE: Detect Hare
+    IDLE --> SNAKE: Detect Snake
 
     Fire --> IDLE: Timeout (T > 3.0s) / Three unmatched seals
     Wind --> IDLE: Timeout (T > 3.0s) / Three unmatched seals
-    Stone --> IDLE: Timeout (T > 3.0s) / Three unmatched seals
+    Sand --> IDLE: Timeout (T > 3.0s) / Three unmatched seals
     Water --> IDLE: Timeout (T > 3.0s) / Three unmatched seals
 
     CAST_FIRE --> IDLE
     CAST_WIND --> IDLE
     CAST_LIGHTNING --> IDLE
-    CAST_STONE --> IDLE
+    CAST_SAND --> IDLE
     CAST_WATER --> IDLE
 ```
 

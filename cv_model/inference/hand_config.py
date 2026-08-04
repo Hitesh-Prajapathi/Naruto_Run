@@ -9,8 +9,11 @@ confirmation.
 HAND_CONFIDENCE_THRESHOLDS = {
     "bird": 0.70,
     "boar": 0.80,
-    "dog": 0.80,
-    "dragon": 0.85,
+    # Dog needs a lower floor when its runner-up is one of the camera-tested
+    # Dog confusions.  A paired guard in HandSignRecognizer keeps the common
+    # Tiger -> Dog confusion on the original 0.80 threshold.
+    "dog": 0.68,
+    "dragon": 0.50,
     "hare": 0.32,
     "horse": 0.88,
     "monkey": 0.68,
@@ -26,7 +29,7 @@ HAND_MARGIN_THRESHOLDS = {
     "bird": 0.25,
     "boar": 0.35,
     "dog": 0.40,
-    "dragon": 0.50,
+    "dragon": 0.20,
     "hare": 0.02,
     "horse": 0.50,
     "monkey": 0.25,

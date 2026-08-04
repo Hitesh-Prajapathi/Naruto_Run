@@ -257,6 +257,52 @@ class PipelineRuntimeControllerTests(unittest.TestCase):
         with self.assertRaises(RuntimeStateError):
             runtime.start()
 
+    def test_model_initialization_failure_is_clear_and_retryable(self) -> None:
+        pipeline = _FakePipeline()
+        attempts = iter((RuntimeError("model missing"), pipeline))
+
+        def factory() -> _FakePipeline:
+            result = next(attempts)
+            if isinstance(result, Exception):
+                raise result
+            return result
+
+        runtime = PipelineRuntimeController(
+            pipeline_factory=factory,
+            session_id="startup-recovery-test",
+        )
+
+        with self.assertRaisesRegex(
+            RuntimeError, "failed to initialize the recognition pipeline"
+        ):
+            runtime.start()
+        self.assertEqual(runtime.state, RuntimeState.CREATED)
+
+        runtime.start()
+        self.assertEqual(runtime.state, RuntimeState.RUNNING)
+        runtime.close()
+
+    def test_close_failure_still_leaves_terminal_clean_state(self) -> None:
+        pipeline = _FakePipeline()
+
+        def fail_close() -> None:
+            pipeline.close_count += 1
+            raise RuntimeError("native close failed")
+
+        pipeline.close = fail_close  # type: ignore[method-assign]
+        runtime = PipelineRuntimeController(
+            pipeline_factory=lambda: pipeline,
+            session_id="close-failure-test",
+        ).start()
+
+        with self.assertRaisesRegex(RuntimeError, "native close failed"):
+            runtime.close()
+        self.assertEqual(runtime.state, RuntimeState.CLOSED)
+        with self.assertRaises(RuntimeStateError):
+            _ = runtime.pipeline
+        runtime.close()
+        self.assertEqual(pipeline.close_count, 1)
+
     def test_manual_reset_is_dispatched(self) -> None:
         runtime, pipeline = self.make_runtime()
         received = []
