@@ -33,6 +33,14 @@ from .scheduler import (
     SchedulerStateError,
     SchedulerStats,
 )
+from .diagnostics import (
+    DIAGNOSTICS_VERSION,
+    BenchmarkCollector,
+    SessionDiagnosticsRecorder,
+    build_frame_diagnostic,
+    format_benchmark_summary,
+    scheduled_timings_ms,
+)
 
 __all__ = (
     "SCHEMA_VERSION",
@@ -56,4 +64,10 @@ __all__ = (
     "SchedulerState",
     "SchedulerStateError",
     "SchedulerStats",
+    "DIAGNOSTICS_VERSION",
+    "BenchmarkCollector",
+    "SessionDiagnosticsRecorder",
+    "build_frame_diagnostic",
+    "format_benchmark_summary",
+    "scheduled_timings_ms",
 )

@@ -1,9 +1,9 @@
 # 🌀 NarutoCV — Master Architecture, History & Technical Context
 
 > **Project:** NarutoCV — Real-Time Computer Vision Jutsu & Gesture Recognition Engine  
-> **Version:** 1.5.0 (Latest-Frame Runtime + Performance Instrumentation)
+> **Version:** 1.6.0 (Live Benchmark + Metadata Diagnostics)
 > **Repository Root:** `/Users/hiteshprajapathi/Desktop/Naruto_Run/`
-> **Status:** Locked recognition with versioned events, latest-frame scheduling, and phase timings
+> **Status:** Locked recognition with scheduling, phase timings, benchmarks, and session reports
 
 ---
 
@@ -459,8 +459,7 @@ confidence, thresholds, evidence, queueing, or attack recognition.
 Core phase values are stored in `FrameResult.timings_ms`; serialization and
 callback values are added to `RuntimeFrame.timings_ms`; scheduler latency is
 carried by `ScheduledResult`. The live panel shows hand, pose, runtime,
-end-to-end latency, and cumulative dropped frames. The reproducible aggregate
-benchmark command remains the next separate implementation step.
+end-to-end latency, and cumulative dropped frames.
 
 A real-model scheduler smoke check rapidly submitted ten held-out Dog frames.
 The one-slot mailbox processed the newest frame and counted nine replacements
@@ -468,6 +467,53 @@ as dropped instead of building a backlog. That single processed frame measured
 3.72 ms center ONNX, 2.50 ms ROI ONNX, 31.56 ms Hand Landmarker, 10.28 ms Pose
 Landmarker, 0.06 ms serialization, and 49.25 ms total runtime. These are a
 single-run wiring check, not an aggregate performance benchmark.
+
+### Reproducible live-camera benchmark
+
+`cv_model/benchmark_live_camera.py` runs the same locked runtime and
+latest-frame scheduler without the display/rendering cost. It performs a
+configurable unmeasured warmup followed by a bounded measurement window and
+reports:
+
+- submitted, processed, dropped, failed, superseded, and collected frames;
+- capture FPS, effective processed FPS, and dropped-frame rate;
+- count, mean, median, p95, and maximum for every available runtime and
+  scheduler timing field.
+
+The standard 30-second benchmark command is:
+
+```bash
+.venv/bin/python cv_model/benchmark_live_camera.py \
+  --warmup 3 --duration 30 \
+  --summary-json reports/benchmark.json
+```
+
+The measured elapsed time includes final worker drainage so effective FPS is
+not inflated by leaving the final captured frame unfinished. Warmup scheduler
+counts and timings are excluded from the aggregate result.
+
+### Metadata-only live session reports
+
+Both the interactive camera tester and benchmark command accept
+`--report-jsonl` and `--report-csv`. For example:
+
+```bash
+.venv/bin/python cv_model/run_combined_camera.py \
+  --report-jsonl reports/camera-session.jsonl \
+  --report-csv reports/camera-session.csv
+```
+
+Each processed-frame record contains timestamps and identifiers, raw/accepted/
+stable hand labels, confidence and margin, body labels, emitted hand/body
+events, queue contents and transition flags, attacks, all phase timings, and
+cumulative scheduler counts. Writers flush each record immediately and append
+a final session-summary row. JSONL preserves nested values; CSV provides flat
+analysis columns plus compact JSON for complete timings and events.
+
+Reports never include frames, crops, landmark images, screenshots, or a test
+dataset. Recognition settings and decision logic remain unchanged. The next
+pipeline step is the user-guided camera accuracy evaluation mode, using these
+records to compute label-specific errors before changing locked thresholds.
 
 ### ONNX Model Metadata
 - **File Name:** `best_model_A.onnx`
@@ -581,7 +627,9 @@ Naruto_Run/
     │   ├── output_schema.py                # Versioned JSON-safe PipelineOutputV1 adapter
     │   ├── events.py                       # Sparse typed events and isolated callbacks
     │   ├── runtime.py                      # Lifecycle, calibration, recovery, and dispatch
-    │   └── scheduler.py                    # Latest-frame mailbox and processing worker
+    │   ├── scheduler.py                    # Latest-frame mailbox and processing worker
+    │   └── diagnostics.py                  # Benchmarks and metadata-only report writers
+    ├── benchmark_live_camera.py            # Bounded aggregate camera benchmark command
     ├── schemas/
     │   ├── pipeline_output_v1.schema.json  # Authoritative V1 frame contract
     │   └── pipeline_event_v1.schema.json   # Authoritative V1 event contract
@@ -590,7 +638,8 @@ Naruto_Run/
     │   ├── test_display_mirroring.py       # Display-only reflection contract
     │   ├── test_output_schema.py           # V1 golden and validation tests
     │   ├── test_events_runtime.py          # Dispatcher and controller regressions
-    │   └── test_scheduler_instrumentation.py # Frame dropping and timing regressions
+    │   ├── test_scheduler_instrumentation.py # Frame dropping and timing regressions
+    │   └── test_diagnostics.py             # Aggregate statistics and report regressions
     ├── data/
     │   ├── prepare_dataset.py             # Local dataset prep & augmentation script
     │   ├── prepared_dataset/              # 80/10/10 split dataset folder (train/val/test)

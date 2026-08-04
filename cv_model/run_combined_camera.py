@@ -17,6 +17,7 @@ from inference.combined_pipeline import (
     CombinedNarutoPipeline,
     FrameResult,
 )
+from inference.diagnostics import SessionDiagnosticsRecorder, scheduled_timings_ms
 from inference.runtime import PipelineRuntimeController
 from inference.scheduler import LatestFrameScheduler
 
@@ -89,6 +90,18 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--hand-model", type=Path, default=DEFAULT_HAND_MODEL)
     parser.add_argument("--hand-landmarker", type=Path, default=DEFAULT_HAND_LANDMARKER)
     parser.add_argument("--pose-model", type=Path, default=DEFAULT_POSE_MODEL)
+    parser.add_argument(
+        "--report-jsonl",
+        type=Path,
+        default=None,
+        help="Optional metadata-only per-frame JSONL diagnostics report.",
+    )
+    parser.add_argument(
+        "--report-csv",
+        type=Path,
+        default=None,
+        help="Optional metadata-only per-frame CSV diagnostics report.",
+    )
     parser.add_argument(
         "--self-check",
         action="store_true",
@@ -301,6 +314,23 @@ def main() -> int:
     screenshot_index = 1
     consecutive_read_failures = 0
     window_name = "NarutoCV - Combined Camera Test"
+    try:
+        recorder = (
+            SessionDiagnosticsRecorder(
+                jsonl_path=args.report_jsonl,
+                csv_path=args.report_csv,
+            )
+            if args.report_jsonl is not None or args.report_csv is not None
+            else None
+        )
+    except Exception:
+        camera.release()
+        runtime.close()
+        raise
+    if args.report_jsonl is not None:
+        print(f"JSONL diagnostics: {args.report_jsonl.resolve()}")
+    if args.report_csv is not None:
+        print(f"CSV diagnostics: {args.report_csv.resolve()}")
     scheduler = LatestFrameScheduler(runtime).start()
 
     try:
@@ -329,6 +359,9 @@ def main() -> int:
                 break
             runtime_frame = scheduled.runtime_frame
             assert runtime_frame is not None
+            scheduler_stats = scheduler.stats()
+            if recorder is not None:
+                recorder.record(scheduled, scheduler_stats)
             frame = scheduled.frame
             result = runtime_frame.result
             frame = cv2.flip(frame, 1)
@@ -387,13 +420,8 @@ def main() -> int:
                 smoothed_fps,
                 last_attack,
                 runtime_frame.calibration_remaining_ms / 1000.0,
-                {
-                    **runtime_frame.timings_ms,
-                    "scheduler_queue_wait_ms": scheduled.queue_wait_ms,
-                    "scheduler_worker_ms": scheduled.worker_elapsed_ms,
-                    "scheduler_end_to_end_ms": scheduled.end_to_end_ms,
-                },
-                scheduler.stats().dropped_frames,
+                scheduled_timings_ms(scheduled),
+                scheduler_stats.dropped_frames,
             )
             cv2.imshow(window_name, frame)
             key = cv2.waitKey(1) & 0xFF
@@ -427,6 +455,19 @@ def main() -> int:
             f"dropped={scheduler_stats.dropped_frames}, "
             f"failed={scheduler_stats.failed_frames}"
         )
+        if recorder is not None:
+            recorder.close(
+                summary={
+                    "session_id": runtime.session_id,
+                    "scheduler": {
+                        "submitted_frames": scheduler_stats.submitted_frames,
+                        "processed_frames": scheduler_stats.processed_frames,
+                        "dropped_frames": scheduler_stats.dropped_frames,
+                        "failed_frames": scheduler_stats.failed_frames,
+                        "superseded_results": scheduler_stats.superseded_results,
+                    },
+                }
+            )
         runtime.close()
         cv2.destroyAllWindows()
     return 0
