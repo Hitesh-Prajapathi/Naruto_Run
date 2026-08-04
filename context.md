@@ -1,9 +1,9 @@
 # 🌀 NarutoCV — Master Architecture, History & Technical Context
 
 > **Project:** NarutoCV — Real-Time Computer Vision Jutsu & Gesture Recognition Engine  
-> **Version:** 1.6.0 (Live Benchmark + Metadata Diagnostics)
+> **Version:** 1.7.0 (Guided Live Accuracy + Attack Diagnostics)
 > **Repository Root:** `/Users/hiteshprajapathi/Desktop/Naruto_Run/`
-> **Status:** Locked recognition with scheduling, phase timings, benchmarks, and session reports
+> **Status:** Locked recognition with measurable live label and attack evaluation
 
 ---
 
@@ -511,9 +511,72 @@ a final session-summary row. JSONL preserves nested values; CSV provides flat
 analysis columns plus compact JSON for complete timings and events.
 
 Reports never include frames, crops, landmark images, screenshots, or a test
-dataset. Recognition settings and decision logic remain unchanged. The next
-pipeline step is the user-guided camera accuracy evaluation mode, using these
-records to compute label-specific errors before changing locked thresholds.
+dataset. Recognition settings and decision logic remain unchanged. The guided
+evaluation mode below uses these records to compute label-specific errors
+before any locked threshold is changed.
+
+### Guided live-camera accuracy evaluation
+
+`cv_model/evaluate_live_camera.py` adds a keyboard-guided, trial-level camera
+protocol. It does not create a dataset and never writes frames. Each attempt
+starts from reset recognition state, shows a neutral preparation interval, and
+then opens a timed action interval. The user presses Space to start each trial;
+Q or Escape stops and preserves completed partial results.
+
+The evaluator uses emitted hand/body events for non-neutral trial success
+rather than treating every frame of a held gesture as an independent correct
+sample. It separately retains raw, accepted, and stable counts, rejection
+reasons, target confidence/margin distributions, and detection latency. The
+aggregate report provides trial-level precision, recall, false positives,
+misses, and confusion counts for each selected label.
+
+Hand-sign evaluation:
+
+```bash
+.venv/bin/python cv_model/evaluate_live_camera.py \
+  --mode hand --labels all --attempts 3 \
+  --summary-json reports/hand-accuracy.json \
+  --attempts-csv reports/hand-attempts.csv
+```
+
+Body-movement evaluation supports only the implemented body catalog: `idle`,
+`jumping`, `naruto_run`, `bending_left`, and `bending_right`. `naruto_run`
+means a forward torso lean with both arms held behind the torso. It is not a
+hand sign or an attack. `dodge`, `stone`, `daichi`, and the other jutsu names
+are not body labels.
+
+```bash
+.venv/bin/python cv_model/evaluate_live_camera.py \
+  --mode body --labels all --attempts 3 \
+  --summary-json reports/body-accuracy.json \
+  --attempts-csv reports/body-attempts.csv
+```
+
+### Guided attack-sequence diagnostics
+
+Attack mode evaluates the authoritative hand-seal catalog: `homura`
+(`tiger > dragon > horse`), `shippu` (`bird > ram > rat`), `ikazuchi` (`dog`),
+`daichi` (`monkey > boar > snake`), and `ryusui` (`ox > hare`). The overlay
+explicitly instructs the user to return to neutral between seals so the locked
+edge-triggered hand filter can produce fresh events.
+
+```bash
+.venv/bin/python cv_model/evaluate_live_camera.py \
+  --mode attack --labels all --attempts 3 \
+  --summary-json reports/attack-accuracy.json \
+  --attempts-csv reports/attack-attempts.csv
+```
+
+Each failed attack attempt is assigned an evidence-backed reason when
+available: `wrong_attack`, `cooldown_suppressed`, `max_length_cleared`,
+`seal_timeout`, `no_seals_recognized`, or `incomplete_sequence`. The report
+also preserves expected/missing seals, emitted seals, queue-accepted seals,
+dominant raw predictions, rejection counts, and every queue transition count.
+
+All modes may additionally enable `--report-jsonl` and `--report-csv` for the
+existing per-frame metadata diagnostics. Aggregate tuning is deliberately not
+automatic: thresholds remain locked until the user completes these trials and
+the resulting per-label evidence demonstrates a specific change is beneficial.
 
 ### ONNX Model Metadata
 - **File Name:** `best_model_A.onnx`
@@ -628,8 +691,10 @@ Naruto_Run/
     │   ├── events.py                       # Sparse typed events and isolated callbacks
     │   ├── runtime.py                      # Lifecycle, calibration, recovery, and dispatch
     │   ├── scheduler.py                    # Latest-frame mailbox and processing worker
-    │   └── diagnostics.py                  # Benchmarks and metadata-only report writers
+    │   ├── diagnostics.py                  # Benchmarks and metadata-only report writers
+    │   └── evaluation.py                   # Trial accuracy and attack failure analysis
     ├── benchmark_live_camera.py            # Bounded aggregate camera benchmark command
+    ├── evaluate_live_camera.py             # Guided hand/body/attack camera evaluator
     ├── schemas/
     │   ├── pipeline_output_v1.schema.json  # Authoritative V1 frame contract
     │   └── pipeline_event_v1.schema.json   # Authoritative V1 event contract
@@ -639,7 +704,8 @@ Naruto_Run/
     │   ├── test_output_schema.py           # V1 golden and validation tests
     │   ├── test_events_runtime.py          # Dispatcher and controller regressions
     │   ├── test_scheduler_instrumentation.py # Frame dropping and timing regressions
-    │   └── test_diagnostics.py             # Aggregate statistics and report regressions
+    │   ├── test_diagnostics.py             # Aggregate statistics and report regressions
+    │   └── test_live_evaluation.py          # Trial metrics and attack diagnosis regressions
     ├── data/
     │   ├── prepare_dataset.py             # Local dataset prep & augmentation script
     │   ├── prepared_dataset/              # 80/10/10 split dataset folder (train/val/test)
