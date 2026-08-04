@@ -14,7 +14,7 @@ from typing import Any, Callable, Mapping, Optional
 from .scheduler import ScheduledResult, SchedulerStats
 
 
-DIAGNOSTICS_VERSION = "1.0.0"
+DIAGNOSTICS_VERSION = "1.1.0"
 RUNTIME_TIMING_KEYS = (
     "hand_center_preprocess_ms",
     "hand_center_onnx_ms",
@@ -182,6 +182,7 @@ def build_frame_diagnostic(
     scheduler_stats: SchedulerStats,
     *,
     recorded_at_ms: Optional[int] = None,
+    evaluation_context: Optional[Mapping[str, Any]] = None,
 ) -> dict[str, Any]:
     """Create a JSON-safe metadata record without retaining a camera image."""
     if scheduled.error is not None:
@@ -210,6 +211,9 @@ def build_frame_diagnostic(
         "events": [dict(event) for event in runtime_frame.dispatch.events],
         "timings_ms": scheduled_timings_ms(scheduled),
         "scheduler": asdict(scheduler_stats),
+        "evaluation": (
+            dict(evaluation_context) if evaluation_context is not None else None
+        ),
     }
 
 
@@ -222,6 +226,10 @@ CSV_FIELDS = (
     "capture_sequence",
     "captured_at_ms",
     "processing_ms",
+    "evaluation_mode",
+    "evaluation_target",
+    "evaluation_attempt_index",
+    "evaluation_phase",
     "hand_raw_label",
     "hand_raw_confidence",
     "hand_raw_margin",
@@ -260,6 +268,7 @@ def _csv_frame(record: Mapping[str, Any]) -> dict[str, Any]:
     attack = record["attack"] or {}
     scheduler = record["scheduler"]
     events = record["events"]
+    evaluation = record["evaluation"] or {}
     row = {
         "record_type": "frame",
         "diagnostics_version": record["diagnostics_version"],
@@ -269,6 +278,10 @@ def _csv_frame(record: Mapping[str, Any]) -> dict[str, Any]:
         "capture_sequence": record["capture_sequence"],
         "captured_at_ms": record["captured_at_ms"],
         "processing_ms": record["processing_ms"],
+        "evaluation_mode": evaluation.get("mode"),
+        "evaluation_target": evaluation.get("target"),
+        "evaluation_attempt_index": evaluation.get("attempt_index"),
+        "evaluation_phase": evaluation.get("phase"),
         "hand_raw_label": raw["label"],
         "hand_raw_confidence": raw["confidence"],
         "hand_raw_margin": raw["margin"],
@@ -348,6 +361,8 @@ class SessionDiagnosticsRecorder:
         self,
         scheduled: ScheduledResult,
         scheduler_stats: SchedulerStats,
+        *,
+        evaluation_context: Optional[Mapping[str, Any]] = None,
     ) -> dict[str, Any]:
         if self._closed:
             raise RuntimeError("diagnostics recorder is closed")
@@ -355,6 +370,7 @@ class SessionDiagnosticsRecorder:
             scheduled,
             scheduler_stats,
             recorded_at_ms=self.clock_ms(),
+            evaluation_context=evaluation_context,
         )
         if self._jsonl_file is not None:
             self._jsonl_file.write(json.dumps(record, separators=(",", ":")) + "\n")

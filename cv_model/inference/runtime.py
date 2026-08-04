@@ -295,6 +295,26 @@ class PipelineRuntimeController:
         )
 
     @_serialized_operation
+    def reset_hand_temporal_state(
+        self,
+        *,
+        reason: str = "hand_temporal_reset",
+        captured_at_ms: Optional[int] = None,
+    ) -> DispatchReport:
+        """Reset hand evidence and attack queue without clearing body history."""
+        self._require_running()
+        if not reason:
+            raise ValueError("reset reason cannot be empty")
+        timestamp_ms = self._timestamp_ms(captured_at_ms)
+        self._reset_hand_calibration_state()
+        return self.dispatcher.dispatch_reset(
+            session_id=self.session_id,
+            frame_id=self._next_frame_id,
+            captured_at_ms=timestamp_ms,
+            reason=reason,
+        )
+
+    @_serialized_operation
     def begin_neutral_calibration(
         self,
         *,

@@ -1,7 +1,7 @@
 # 🌀 NarutoCV — Master Architecture, History & Technical Context
 
 > **Project:** NarutoCV — Real-Time Computer Vision Jutsu & Gesture Recognition Engine  
-> **Version:** 1.7.0 (Guided Live Accuracy + Attack Diagnostics)
+> **Version:** 1.7.1 (Phase-Isolated Guided Evaluation)
 > **Repository Root:** `/Users/hiteshprajapathi/Desktop/Naruto_Run/`
 > **Status:** Locked recognition with measurable live label and attack evaluation
 
@@ -529,6 +529,23 @@ sample. It separately retains raw, accepted, and stable counts, rejection
 reasons, target confidence/margin distributions, and detection latency. The
 aggregate report provides trial-level precision, recall, false positives,
 misses, and confusion counts for each selected label.
+
+Evaluation protocol V1.1 isolates preparation from action:
+
+- the target and its instruction stay hidden until the action interval;
+- pending preparation frames finish before the action boundary;
+- hand temporal evidence and the attack queue reset at that boundary without
+  clearing body history, preserving the jump baseline;
+- preparation false events remain a separate negative-control measurement;
+- confidence, margin, and rejection distributions use action frames only;
+- every optional JSONL/CSV frame carries mode, target, attempt index, and phase;
+- first-event correctness, eventual target detection, unexpected events, and
+  consecutive duplicate emissions are reported separately.
+
+The original 39-attempt V1.0 hand report exposed preparation latching and
+mixed-phase aggregates, so it remains useful as a diagnostic baseline but is
+not valid for selecting exact threshold values. A V1.1 hand rerun is required
+before evidence-based recognition tuning.
 
 Hand-sign evaluation:
 

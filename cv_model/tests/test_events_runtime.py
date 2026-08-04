@@ -269,6 +269,23 @@ class PipelineRuntimeControllerTests(unittest.TestCase):
         self.assertEqual(report.events[0]["payload"], {"reason": "manual"})
         self.assertEqual(received, list(report.events))
 
+    def test_hand_temporal_reset_preserves_body_pipeline_state(self) -> None:
+        runtime, pipeline = self.make_runtime()
+        runtime.start()
+
+        report = runtime.reset_hand_temporal_state(
+            reason="evaluation_action_boundary",
+            captured_at_ms=75,
+        )
+
+        self.assertEqual(pipeline.hand.filter.reset_count, 1)
+        self.assertEqual(pipeline.attacks.reset_count, 1)
+        self.assertEqual(pipeline.reset_count, 0)
+        self.assertEqual(
+            report.events[0]["payload"],
+            {"reason": "evaluation_action_boundary"},
+        )
+
     def test_capture_failure_threshold_resets_recognition_state(self) -> None:
         runtime, pipeline = self.make_runtime(failure_threshold=2)
         runtime.start()

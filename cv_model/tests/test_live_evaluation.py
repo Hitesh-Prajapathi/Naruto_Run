@@ -70,7 +70,13 @@ class LabelAttemptEvaluatorTests(unittest.TestCase):
     def test_hand_attempt_records_event_success_latency_and_threshold_evidence(self) -> None:
         attempt = LabelAttemptEvaluator("hand", "dog", 1, action_started_at_ms=1100)
         attempt.record(
-            _output(hand_raw="ox", hand_accepted="ox", hand_stable="ox", hand_emitted="ox"),
+            _output(
+                hand_raw="dog",
+                hand_accepted="dog",
+                hand_stable="dog",
+                hand_emitted="dog",
+                hand_rejection="confidence<0.80",
+            ),
             phase="prepare",
         )
         attempt.record(
@@ -89,8 +95,65 @@ class LabelAttemptEvaluatorTests(unittest.TestCase):
         self.assertTrue(result["success"])
         self.assertEqual(result["system_prediction"], "dog")
         self.assertEqual(result["detection_latency_ms"], 150)
-        self.assertEqual(result["prepare_false_positive_events"], ["ox"])
+        self.assertEqual(result["prepare_false_positive_events"], ["dog"])
         self.assertEqual(result["expected_confidence"]["count"], 1)
+        self.assertEqual(result["rejection_reasons"], {})
+
+    def test_first_event_and_eventual_detection_are_reported_separately(self) -> None:
+        attempt = LabelAttemptEvaluator("hand", "bird", 1, action_started_at_ms=1000)
+        attempt.record(
+            _output(
+                captured_at_ms=1100,
+                hand_raw="horse",
+                hand_accepted="horse",
+                hand_stable="horse",
+                hand_emitted="horse",
+            ),
+            phase="action",
+        )
+        attempt.record(
+            _output(
+                captured_at_ms=1200,
+                hand_raw="bird",
+                hand_accepted="bird",
+                hand_stable="bird",
+                hand_emitted="bird",
+            ),
+            phase="action",
+        )
+        attempt.record(
+            _output(
+                captured_at_ms=1300,
+                hand_raw="bird",
+                hand_accepted="bird",
+                hand_stable="bird",
+                hand_emitted="bird",
+            ),
+            phase="action",
+        )
+
+        result = attempt.finish()
+
+        self.assertFalse(result["first_event_success"])
+        self.assertTrue(result["target_event_detected"])
+        self.assertEqual(result["unexpected_action_events"], ["horse"])
+        self.assertEqual(result["duplicate_emissions"], 1)
+
+    def test_action_start_can_be_reanchored_after_temporal_reset(self) -> None:
+        attempt = LabelAttemptEvaluator("hand", "dog", 1, action_started_at_ms=1000)
+        attempt.start_action(2000)
+        attempt.record(
+            _output(
+                captured_at_ms=2250,
+                hand_raw="dog",
+                hand_accepted="dog",
+                hand_stable="dog",
+                hand_emitted="dog",
+            ),
+            phase="action",
+        )
+
+        self.assertEqual(attempt.finish()["detection_latency_ms"], 250)
 
     def test_hand_session_reports_confusion_precision_and_recall(self) -> None:
         dog = LabelAttemptEvaluator("hand", "dog", 1, action_started_at_ms=1000)
@@ -125,6 +188,7 @@ class LabelAttemptEvaluatorTests(unittest.TestCase):
         self.assertEqual(summary["metrics"]["dog"]["recall"], 1.0)
         self.assertEqual(summary["metrics"]["rat"]["recall"], 0.0)
         self.assertEqual(summary["metrics"]["ram"]["false_positives"], 1)
+        self.assertEqual(summary["metrics"]["dog"]["eventual_recall"], 1.0)
 
     def test_neutral_body_attempt_uses_stable_idle_prediction(self) -> None:
         attempt = LabelAttemptEvaluator("body", "idle", 1, action_started_at_ms=1000)

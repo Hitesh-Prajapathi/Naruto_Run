@@ -191,11 +191,17 @@ def _draw_status(
     else:
         phase_text = f"PERFORM NOW: {remaining_seconds:.1f}s"
         phase_color = (70, 255, 100)
+    target_text = label.upper() if phase == "action" else "HIDDEN UNTIL ACTION"
+    instruction = (
+        _instruction(mode, label)
+        if phase == "action"
+        else "Stay neutral; do not form a sign or movement yet"
+    )
     lines = [
-        (f"MODE: {mode.upper()}   TARGET: {label.upper()}", (255, 255, 255)),
+        (f"MODE: {mode.upper()}   TARGET: {target_text}", (255, 255, 255)),
         (f"ATTEMPT: {attempt_index}/{attempts_per_label}", (220, 220, 220)),
         (phase_text, phase_color),
-        (_instruction(mode, label), (200, 235, 255)),
+        (instruction, (200, 235, 255)),
     ]
     if last_output is not None:
         hand = last_output["hand"]
@@ -262,6 +268,9 @@ def _record_scheduled(
     action_ends_at_ms: int,
     scheduler: LatestFrameScheduler,
     recorder: Optional[SessionDiagnosticsRecorder],
+    mode: str,
+    target: str,
+    attempt_index: int,
 ) -> Optional[dict[str, Any]]:
     if scheduled is None:
         return None
@@ -269,9 +278,18 @@ def _record_scheduled(
         raise RuntimeError(f"scheduled recognition failed: {scheduled.error}")
     runtime_frame = scheduled.runtime_frame
     assert runtime_frame is not None
-    if recorder is not None:
-        recorder.record(scheduled, scheduler.stats())
     phase = "prepare" if scheduled.captured_at_ms < action_started_at_ms else "action"
+    if recorder is not None:
+        recorder.record(
+            scheduled,
+            scheduler.stats(),
+            evaluation_context={
+                "mode": mode,
+                "target": target,
+                "attempt_index": attempt_index,
+                "phase": phase,
+            },
+        )
     if scheduled.captured_at_ms <= action_ends_at_ms:
         evaluator.record(runtime_frame.output, phase=phase)
     return runtime_frame.output
@@ -295,18 +313,24 @@ def _print_summary(summary: dict[str, Any]) -> None:
                 f"{rate:8} {failures}"
             )
         return
-    print("label          attempts  TP  FP  FN  precision  recall")
+    print("label          attempts  first  eventual  FP  duplicates  false-event")
     for label, metric in summary["metrics"].items():
         if not metric["attempts"] and not metric["false_positives"]:
             continue
-        precision = (
-            f"{metric['precision']:.1%}" if metric["precision"] is not None else "-"
+        first_recall = (
+            f"{metric['first_event_recall']:.1%}"
+            if metric["first_event_recall"] is not None
+            else "-"
         )
-        recall = f"{metric['recall']:.1%}" if metric["recall"] is not None else "-"
+        eventual_recall = (
+            f"{metric['eventual_recall']:.1%}"
+            if metric["eventual_recall"] is not None
+            else "-"
+        )
         print(
-            f"{label:14} {metric['attempts']:8d} {metric['true_positives']:3d} "
-            f"{metric['false_positives']:3d} {metric['false_negatives']:3d} "
-            f"{precision:9} {recall:7}"
+            f"{label:14} {metric['attempts']:8d} {first_recall:7} "
+            f"{eventual_recall:8} {metric['false_positives']:3d} "
+            f"{metric['duplicate_emissions']:10d} {metric['false_event_rate']:10.1%}"
         )
     print("Confusion:")
     for expected, predictions in summary["confusion"].items():
@@ -392,18 +416,56 @@ def main() -> int:
             label, attempt_index = work[work_index]
 
             if phase != "ready":
-                scheduler.submit(frame, captured_at_ms=now_ms)
-                latest = _record_scheduled(
-                    scheduler.poll_result(),
-                    evaluator=evaluator,
-                    action_started_at_ms=action_started_at_ms,
-                    action_ends_at_ms=action_ends_at_ms,
-                    scheduler=scheduler,
-                    recorder=recorder,
+                crossed_action_boundary = (
+                    phase == "prepare" and now_ms >= action_started_at_ms
                 )
-                if latest is not None:
-                    last_output = latest
-                phase = "prepare" if now_ms < action_started_at_ms else "action"
+                if crossed_action_boundary:
+                    if not scheduler.wait_until_idle(timeout=5.0):
+                        raise TimeoutError(
+                            "recognition worker did not finish preparation"
+                        )
+                    latest = _record_scheduled(
+                        scheduler.poll_result(),
+                        evaluator=evaluator,
+                        action_started_at_ms=action_started_at_ms,
+                        action_ends_at_ms=action_ends_at_ms,
+                        scheduler=scheduler,
+                        recorder=recorder,
+                        mode=args.mode,
+                        target=label,
+                        attempt_index=attempt_index,
+                    )
+                    if latest is not None:
+                        last_output = latest
+                    reset_at_ms = int(time.monotonic() * 1000.0)
+                    runtime.reset_hand_temporal_state(
+                        reason="evaluation_action_boundary",
+                        captured_at_ms=reset_at_ms,
+                    )
+                    action_started_at_ms = int(time.monotonic() * 1000.0)
+                    action_ends_at_ms = action_started_at_ms + int(
+                        round(args.action_seconds * 1000.0)
+                    )
+                    if isinstance(evaluator, LabelAttemptEvaluator):
+                        evaluator.start_action(action_started_at_ms)
+                    phase = "action"
+                    last_output = None
+                    now_ms = action_started_at_ms
+                else:
+                    scheduler.submit(frame, captured_at_ms=now_ms)
+                    latest = _record_scheduled(
+                        scheduler.poll_result(),
+                        evaluator=evaluator,
+                        action_started_at_ms=action_started_at_ms,
+                        action_ends_at_ms=action_ends_at_ms,
+                        scheduler=scheduler,
+                        recorder=recorder,
+                        mode=args.mode,
+                        target=label,
+                        attempt_index=attempt_index,
+                    )
+                    if latest is not None:
+                        last_output = latest
                 if now_ms >= action_ends_at_ms:
                     if not scheduler.wait_until_idle(timeout=5.0):
                         raise TimeoutError("recognition worker did not finish the attempt")
@@ -414,6 +476,9 @@ def main() -> int:
                         action_ends_at_ms=action_ends_at_ms,
                         scheduler=scheduler,
                         recorder=recorder,
+                        mode=args.mode,
+                        target=label,
+                        attempt_index=attempt_index,
                     )
                     if latest is not None:
                         last_output = latest
@@ -421,6 +486,8 @@ def main() -> int:
                     session.add(result)
                     if result["success"]:
                         last_result = "PASS: target recognized"
+                    elif result.get("target_event_detected"):
+                        last_result = "MISS: wrong event emitted before target"
                     elif args.mode == "attack":
                         last_result = f"MISS: {result['failure_reason']}"
                     else:

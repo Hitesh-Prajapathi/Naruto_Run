@@ -157,12 +157,19 @@ class SessionDiagnosticsRecorderTests(unittest.TestCase):
             _scheduled(),
             _stats(),
             recorded_at_ms=9999,
+            evaluation_context={
+                "mode": "hand",
+                "target": "dog",
+                "attempt_index": 2,
+                "phase": "action",
+            },
         )
 
         self.assertEqual(record["hand"]["emitted_seal"], "dog")
         self.assertEqual(record["attack"]["name"], "ikazuchi")
         self.assertEqual(record["events"][0]["event_type"], "HAND_SEAL")
         self.assertEqual(record["timings_ms"]["scheduler_end_to_end_ms"], 24.0)
+        self.assertEqual(record["evaluation"]["target"], "dog")
         self.assertNotIn("frame", record)
 
     def test_jsonl_and_csv_are_streamed_with_session_summaries(self) -> None:
@@ -175,7 +182,16 @@ class SessionDiagnosticsRecorderTests(unittest.TestCase):
                 csv_path=csv_path,
                 clock_ms=lambda: 5000,
             )
-            recorder.record(_scheduled(), _stats())
+            recorder.record(
+                _scheduled(),
+                _stats(),
+                evaluation_context={
+                    "mode": "hand",
+                    "target": "dog",
+                    "attempt_index": 1,
+                    "phase": "action",
+                },
+            )
             recorder.close(summary={"processed": 1})
 
             jsonl_records = [
@@ -193,6 +209,8 @@ class SessionDiagnosticsRecorderTests(unittest.TestCase):
             ["frame", "session_summary"],
         )
         self.assertEqual(csv_records[0]["hand_raw_label"], "dog")
+        self.assertEqual(csv_records[0]["evaluation_target"], "dog")
+        self.assertEqual(csv_records[0]["evaluation_phase"], "action")
         self.assertEqual(csv_records[0]["runtime_total_ms"], "20.0")
         self.assertEqual(csv_records[0]["scheduler_end_to_end_ms"], "24.0")
         self.assertEqual(json.loads(csv_records[1]["summary_json"]), {"processed": 1})
