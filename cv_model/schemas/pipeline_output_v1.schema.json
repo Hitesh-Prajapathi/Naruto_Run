@@ -1,0 +1,209 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://narutocv.local/schemas/pipeline_output_v1.schema.json",
+  "title": "NarutoCV Pipeline Output V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "session_id",
+    "frame_id",
+    "captured_at_ms",
+    "processing_ms",
+    "hand",
+    "body",
+    "queue",
+    "attack"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "session_id": {"type": "string", "minLength": 1},
+    "frame_id": {"type": "integer", "minimum": 0},
+    "captured_at_ms": {"type": "integer", "minimum": 0},
+    "processing_ms": {"type": "number", "minimum": 0},
+    "hand": {"$ref": "#/$defs/hand"},
+    "body": {"$ref": "#/$defs/body"},
+    "queue": {"$ref": "#/$defs/queue"},
+    "attack": {
+      "oneOf": [
+        {"type": "null"},
+        {"$ref": "#/$defs/attack"}
+      ]
+    }
+  },
+  "$defs": {
+    "nullableString": {
+      "type": ["string", "null"]
+    },
+    "prediction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "label",
+        "confidence",
+        "second_label",
+        "second_confidence",
+        "margin"
+      ],
+      "properties": {
+        "label": {"type": "string"},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "second_label": {"type": "string"},
+        "second_confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "margin": {"type": "number", "minimum": 0, "maximum": 1}
+      }
+    },
+    "bbox": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "prefixItems": [
+        {"type": "integer"},
+        {"type": "integer"},
+        {"type": "integer"},
+        {"type": "integer"}
+      ],
+      "items": false
+    },
+    "point": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "prefixItems": [
+        {"type": "number"},
+        {"type": "number"}
+      ],
+      "items": false
+    },
+    "handGeometry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["classification_bbox", "hand_bbox", "landmarks"],
+      "properties": {
+        "classification_bbox": {"$ref": "#/$defs/bbox"},
+        "hand_bbox": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "#/$defs/bbox"}
+          ]
+        },
+        "landmarks": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {"$ref": "#/$defs/point"}
+          }
+        }
+      }
+    },
+    "bodyGeometry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["landmarks"],
+      "properties": {
+        "landmarks": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/point"}
+        }
+      }
+    },
+    "hand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "raw",
+        "center",
+        "roi",
+        "accepted_label",
+        "rejection_reason",
+        "stable_label",
+        "emitted_seal",
+        "fusion_status",
+        "detected_hand_count",
+        "geometry"
+      ],
+      "properties": {
+        "raw": {"$ref": "#/$defs/prediction"},
+        "center": {"$ref": "#/$defs/prediction"},
+        "roi": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "#/$defs/prediction"}
+          ]
+        },
+        "accepted_label": {"type": "string"},
+        "rejection_reason": {"$ref": "#/$defs/nullableString"},
+        "stable_label": {"type": "string"},
+        "emitted_seal": {"$ref": "#/$defs/nullableString"},
+        "fusion_status": {"type": "string"},
+        "detected_hand_count": {"type": "integer", "minimum": 0, "maximum": 2},
+        "geometry": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "#/$defs/handGeometry"}
+          ]
+        }
+      }
+    },
+    "body": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "raw_label",
+        "stable_label",
+        "emitted_movement",
+        "metrics",
+        "geometry"
+      ],
+      "properties": {
+        "raw_label": {"type": "string"},
+        "stable_label": {"type": "string"},
+        "emitted_movement": {"$ref": "#/$defs/nullableString"},
+        "metrics": {
+          "type": "object",
+          "additionalProperties": {"type": "number"}
+        },
+        "geometry": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "#/$defs/bodyGeometry"}
+          ]
+        }
+      }
+    },
+    "queue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "seals",
+        "accepted_seal",
+        "duplicate_ignored",
+        "timeout_cleared",
+        "max_length_cleared",
+        "cooldown_suppressed"
+      ],
+      "properties": {
+        "seals": {
+          "type": "array",
+          "maxItems": 3,
+          "items": {"type": "string"}
+        },
+        "accepted_seal": {"$ref": "#/$defs/nullableString"},
+        "duplicate_ignored": {"type": "boolean"},
+        "timeout_cleared": {"type": "boolean"},
+        "max_length_cleared": {"type": "boolean"},
+        "cooldown_suppressed": {"type": "boolean"}
+      }
+    },
+    "attack": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "display_name", "recognized_at_ms"],
+      "properties": {
+        "name": {"type": "string"},
+        "display_name": {"type": "string"},
+        "recognized_at_ms": {"type": "integer", "minimum": 0}
+      }
+    }
+  }
+}

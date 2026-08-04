@@ -1,9 +1,9 @@
 # 🌀 NarutoCV — Master Architecture, History & Technical Context
 
 > **Project:** NarutoCV — Real-Time Computer Vision Jutsu & Gesture Recognition Engine  
-> **Version:** 1.1.0 (Production Blueprint & Asset Consolidation Phase)  
-> **Repository Root:** `/Users/hiteshprajapathi/Desktop/Naruto_Run_datacollection/`  
-> **Status:** Component 1 (Dataset Prep) & Component 2 (Model Training & Benchmark) ✅ COMPLETE  
+> **Version:** 1.9.0 (Revised Attack Catalog and Runtime Hardening)
+> **Repository Root:** `/Users/hiteshprajapathi/Desktop/Naruto_Run/`
+> **Status:** Locked recognition with measurable live label and attack evaluation
 
 ---
 
@@ -42,27 +42,27 @@ To achieve real-time 60 FPS performance without frame dropping or lag, NarutoCV 
               ┌─────────────────────────────────────┴─────────────────────────────────────┐
               ▼                                                                           ▼
    📷 PIPELINE 1: Hand Sign Classification                                     🤸 PIPELINE 2: Body Movement Tracking
- (Focus: 224×224 Bounding Box Crop of Hands)                                   (Focus: Full Camera Field of View)
+ (Center frame + stabilized color hand ROI)                                    (Focus: Full Camera Field of View)
               │                                                                           │
-   1. MediaPipe Hands Task                                                     1. MediaPipe Pose (33 3D Joint Landmarks)
-      Extracts hand bounding box & 21 3D landmarks                                Calculates joint angles & spatial vectors
+   1. Center-square RGB view + MediaPipe Hands                                 1. MediaPipe Pose (33 3D Joint Landmarks)
+      Extract combined two-hand box and smooth it with EMA                         Calculates joint angles & spatial vectors
               │                                                                           │
-   2. Trained Classifier (`best_model_A.onnx`)                                 2. Geometric Heuristic Engine
-      YOLOv8n-cls model running in WebGL (13 classes)                             - Naruto Run Stance (Lean >25° + Arms back)
-              │                                                                   - Lightning Dodge (Fast lateral shift)
-   3. 5-Frame Debounce Consensus Filter                                           - Stone Defense (Crossed arms)
-      Emits validated hand seal when 80%+ consensus reached                       │
+   2. Trained Classifier on both RGB views                                     2. Geometric Heuristic Engine
+      Fuse class probabilities: 60% center + 40% hand ROI                         - Naruto Run Stance (Lean >25° + Arms back)
+              │                                                                   - Jumping (Hip height above baseline)
+   3. Delayed no-hand guard + 5-frame evidence filter                              - Bending Left / Right (Torso offset)
+      Emits one validated event per held hand seal                                 │
               │                                                                           │
               └─────────────────────────────────────┬─────────────────────────────────────┘
                                                     ▼
                                     ⚙️ JUTSU COMBO STATE MACHINE
                                 - Sequence Matcher (e.g. Tiger → Dragon → Horse)
-                                - 2.5s Inter-Seal Timeout & Interruption Handling
+                                - 3.0s Inter-Seal Timeout, Duplicate Suppression
                                 - Trigger Signals → Anime Canvas FX + Audio
 ```
 
 ### Why a Dual Pipeline Architecture?
-1. **Resolution & Spatial Focus:** Hand sign classification requires fine-grained finger overlap features extracted from a tight 224×224 crop. Body tracking requires a wide 1280×720 field of view to track shoulders, hips, and knees.
+1. **Resolution & Spatial Focus:** Hand sign classification keeps the training-matched center-square view and supplements it with a tight combined-hand ROI. Body tracking requires the wide camera field to track shoulders, hips, and knees.
 2. **Computational Heterogeneity:** 
    - Hand signs use a custom-trained **YOLOv8 Nano Classifier (`best_model_A.onnx`)** executed via WebGL ONNX Runtime.
    - Body movements use **MediaPipe Pose** with deterministic vector geometry (dot products, coordinate heuristics), consuming only $\sim 0.1\text{ ms}$ CPU time per frame without requiring neural network training.
@@ -127,17 +127,20 @@ $$\mathbf{p}_i = \begin{bmatrix} x_i \\ y_i \\ z_i \end{bmatrix}, \quad i \in \{
 
 - **Arms Extended Backward Condition:**
   Both wrists must be positioned behind hips in the $Z$-depth axis:
-  $$Z_{15} > Z_{23} + \delta_z \quad \text{and} \quad Z_{16} > Z_{24} + \delta_z \quad (\delta_z \approx 0.15)$$
+  $$Z_{15} > Z_{23} + \delta_z \quad \text{and} \quad Z_{16} > Z_{24} + \delta_z \quad (\delta_z \approx 0.05)$$
 
-#### 2. Lightning Dodge Detection
-- **Lateral Velocity ($V_{\text{dodge}}$):**
-  Measures the rate of change of the shoulder midpoint $X$-coordinate across time step $\Delta t$:
-  $$V_{\text{dodge}} = \frac{|X_{\text{shoulder}}(t) - X_{\text{shoulder}}(t - \Delta t)|}{\Delta t} > 1.2 \text{ m/s}$$
+#### 2. Jump Detection
+- **Hip Height Delta ($\Delta y_{\text{hip}}$):**
+  Compares the current hip midpoint against the rolling median standing baseline:
+  $$\Delta y_{\text{hip}} = \operatorname{median}(y_{\text{hip history}}) - y_{\text{hip current}} > 0.045$$
 
-#### 3. Stone Defense Stance Detection
-- **Crossed-Arm Distance ($d_{\text{crossed}}$):**
-  Calculated as distance between left wrist and right elbow, and right wrist and left elbow:
-  $$d_{\text{crossed}} = \|\mathbf{P}_{15} - \mathbf{P}_{14}\|_2 + \|\mathbf{P}_{16} - \mathbf{P}_{13}\|_2 < 0.25$$
+#### 3. Left / Right Bend Detection
+- **Torso Horizontal Offset ($\Delta x_{\text{torso}}$):**
+  Uses the normalized horizontal offset between shoulder and hip midpoints:
+  $$\Delta x_{\text{torso}} = x_{\text{shoulder}} - x_{\text{hip}}$$
+  Values above $0.06$ emit `bending_right`; values below $-0.06$ emit `bending_left`.
+
+Lightning and stone remain hand-seal attacks. They are not body movement labels and body movement events never gate or trigger attacks.
 
 ---
 
@@ -220,26 +223,452 @@ Epoch 15/50 [==========] Early Stopping Triggered (Patience=10 reached, best mod
 
 The web application runs `best_model_A.onnx` directly inside the browser using **ONNX Runtime Web (`onnxruntime-web`)**.
 
+The live camera contract keeps inference and presentation separate: raw,
+unmirrored camera pixels are passed to the recognition pipelines, while only
+the displayed preview is mirrored for natural interaction. Hand and pose
+landmarks plus pixel bounding boxes are reflected horizontally before drawing
+so overlays remain aligned with the mirrored preview. This preserves the
+dataset rule that model inputs are never horizontally flipped.
+
+The current Python prototype uses two **color** classifier views. The
+training-matched center square is always evaluated. When MediaPipe finds one
+or two hands, their combined square bounding box is stabilized using an
+exponential moving average (`alpha=0.45`) and evaluated by the same ONNX
+classifier. Class probabilities are fused as `0.60 × center + 0.40 × ROI`
+before the existing per-label confidence/margin and temporal evidence filters.
+This is deliberately a fallback-assisted design rather than an ROI-only
+design: MediaPipe misses some valid poses, especially Hare and Boar.
+
+After three consecutive frames without hand landmarks, non-hand predictions
+are rejected as `no_hand_landmarks`. The first two missing frames are tolerated
+to avoid flicker from a brief detector dropout. Boar and Hare remain eligible
+for center-view recognition during absence because their detector recall is
+weak; `zero` remains the normal neutral class. The smoothed box is discarded
+after the third missing frame, so an old crop is never reused.
+
 ```
-    Webcam Video Stream (Image/Video Element)
+                  Raw Webcam Frame
+                 /                 \
+        Center Square        MediaPipe Hands
+            RGB              Combined Box + EMA
+             │                      │
+             └── ONNX RGB 224² ─────┘
                         │
-                        ▼
-   MediaPipe Hands (Crop Bounding Box)
+         60/40 Class-Probability Fusion
                         │
-                        ▼
-   HTML5 Canvas 2D Resize (224 × 224 × 3 RGB)
+       Per-Class Thresholds + No-Hand Guard
                         │
-                        ▼
-   Float32 Tensor Normalization: Tensor = (Pixel / 255.0)
-   Shape: [1, 3, 224, 224] (NCHW Format)
+             5-Frame Evidence Filter
                         │
-                        ▼
-   ort.InferenceSession.run({ images: inputTensor })
-   Execution Provider: WebGL / WebGPU / WASM
-                        │
-                        ▼
-   Softmax & ArgMax → Hand Sign Label + Confidence Score
+              Debounced Seal Event
 ```
+
+### Hybrid preprocessing validation (225-image held-out split)
+
+| Variant | Top-1 accuracy across all images | Decision |
+|:---|---:|:---|
+| Center-square RGB only | 98.67% | Preserve as the reliable base view |
+| Center RGB + color ROI fusion | **99.11%** | Adopt (`center_weight=0.60`) |
+| Grayscale ROI | 82.67% | Reject; discards useful model input information |
+| Immediate hard no-hand gate | 97.33% | Reject; detector misses valid hand signs |
+
+MediaPipe found hands in 88.0% of the split overall, but only 36.8% of Hare
+images and 66.7% of Boar images. Conditional on detection, the color ROI was
+highly accurate; the main ROI failure mode was detector absence, not the ONNX
+classifier. This evidence is why the implementation uses fusion and a delayed,
+class-aware absence guard instead of replacing the current classifier input.
+
+The implemented video-mode path was then run end to end on the same 225
+images: the fused raw prediction and the post-threshold accepted output both
+scored **223/225 (99.11%)**. Dog, Rat, Ram, Hare, and Boar were all 100% on
+this split. The previous center-only accepted output also reached 223/225
+because the Rat/Ram geometry resolver repaired its extra raw error; therefore,
+the claimed benefit of fusion is a less heuristic-dependent raw prediction and
+a stabilized live crop, not an inflated post-processing accuracy claim.
+
+On an Apple M1 Max, 75 timed Python frames through the combined hand and pose
+pipeline averaged 41.89 ms (51.51 ms p95); one additional ONNX crop inference
+averaged 2.39 ms. The current Python prototype therefore does not yet satisfy
+the browser blueprint's 25 ms target. Camera-mode profiling and scheduling are
+still required before making a production real-time performance claim.
+
+### Locked camera-tested baseline (2026-08-02)
+
+The user completed a live camera check and approved this recognition behavior
+as the baseline to preserve. The locked configuration includes:
+
+- raw, unmirrored frames for all inference and a mirrored display only;
+- center-square plus stabilized color hand-ROI probability fusion (`0.60/0.40`);
+- EMA hand-box smoothing (`alpha=0.45`);
+- a three-frame delayed no-hand guard with Boar and Hare fallbacks;
+- per-label confidence and margin thresholds plus the Rat/Ram resolver;
+- the five-frame hand evidence filter and one-event-per-held-sign behavior;
+- adjacent duplicate suppression, a maximum three-seal queue, timeout clearing,
+  exact-order combo matching, and attack cooldowns;
+- body movement recognition running independently from hand-seal attacks.
+
+Treat these settings and behaviors as a regression baseline. Future work may
+integrate downstream consumers or add explicitly requested features, but must
+not retune or replace this recognition path unless the user explicitly reopens
+recognition changes. Run `./run_combined_tracker.command` for the approved live
+camera test and `./test_combined_pipeline.command` for regression validation.
+
+### Versioned backend output contract (V1)
+
+`cv_model/inference/output_schema.py` converts an internal `FrameResult` into
+the stable, JSON-safe `PipelineOutputV1` contract. The adapter does not modify
+recognition state or decisions. It only reads the completed frame result.
+
+```json
+{
+  "schema_version": "1.0.0",
+  "session_id": "camera-test-001",
+  "frame_id": 42,
+  "captured_at_ms": 123456,
+  "processing_ms": 41.25,
+  "hand": {
+    "accepted_label": "rat",
+    "stable_label": "rat",
+    "emitted_seal": "rat",
+    "fusion_status": "center_roi_fused"
+  },
+  "body": {
+    "stable_label": "jumping",
+    "emitted_movement": "jumping"
+  },
+  "queue": {"seals": [], "accepted_seal": "rat"},
+  "attack": {
+    "name": "shippu",
+    "display_name": "WIND ATTACK",
+    "recognized_at_ms": 123456
+  }
+}
+```
+
+The abbreviated example omits the required prediction, metric, queue-state,
+and optional geometry fields for readability. The authoritative machine
+contract is `cv_model/schemas/pipeline_output_v1.schema.json`.
+
+- `PipelineOutputSerializer.to_dict()` returns plain JSON-compatible values.
+- `PipelineOutputSerializer.to_json()` produces compact, deterministic JSON.
+- `include_geometry=False` is the compact default. When enabled, normalized
+  hand/pose landmarks and pixel bounding boxes are included.
+- Missing ROI predictions, emitted events, geometry, and attacks are explicit
+  `null` values rather than omitted fields.
+- Non-finite numeric values and unexpected object fields are rejected.
+- A major version change is required for breaking field changes. Minor versions
+  may add backward-compatible fields; patch versions may correct validation or
+  documentation without changing the contract.
+
+The V1 frame serializer defines serialization only. It does not print, save,
+or transmit outputs. Sparse in-process event dispatch is handled by the next
+layer; external transport remains a future pipeline stage.
+
+### Unified event dispatcher
+
+`cv_model/inference/events.py` converts each validated `PipelineOutputV1` frame
+into sparse external events. Event production is edge-triggered by the locked
+pipeline result; it does not perform a second recognition decision.
+
+| Event | Emission condition |
+|:---|:---|
+| `HAND_SEAL` | The attack queue accepts a newly emitted stable hand seal |
+| `BODY_MOVEMENT` | The body evidence filter emits a movement transition |
+| `ATTACK_TRIGGERED` | The hand-seal sequence matcher recognizes an attack |
+| `QUEUE_CLEARED` | Timeout, maximum length, cooldown, or attack completion clears the queue |
+| `PIPELINE_RESET` | Manual reset, calibration transition, or camera recovery resets state |
+
+Frame events have deterministic order: hand seal, body movement, attack, then
+queue clearing. Every event carries schema version `1.0.0`, a session-scoped
+event ID and sequence, frame ID, capture timestamp, event type, and typed
+payload. The machine contract is
+`cv_model/schemas/pipeline_event_v1.schema.json`.
+
+Subscribers may listen to all events or selected event types. Delivery is
+synchronous to preserve order, but subscriber failures are isolated: one
+consumer cannot stop recognition or prevent other consumers from receiving the
+event. Failures are returned in a `DispatchReport` for explicit handling.
+
+### Runtime pipeline controller
+
+`cv_model/inference/runtime.py` owns the operational lifecycle around the
+locked `CombinedNarutoPipeline`:
+
+- lazy model creation and explicit `CREATED → RUNNING → CLOSED` lifecycle;
+- session IDs plus monotonic frame IDs and capture timestamps;
+- V1 serialization and sparse event dispatch for every processed frame;
+- manual reset events and clean, idempotent shutdown;
+- timed or explicit neutral calibration with event suppression while samples
+  are collected, followed by a `calibration_complete` reset event;
+- consecutive camera-failure counting and recognition-state recovery after the
+  configured threshold (three failures by default);
+- callback subscription and unsubscription through the event dispatcher.
+
+The camera tester now runs frames and reset/calibration commands through this
+controller. It still supplies the original raw frame to the same locked
+recognizer and mirrors only the display. The runtime adds orchestration and
+external outputs; it does not change thresholds, fusion, evidence, body rules,
+attack sequences, or queue behavior.
+
+No network, file, WebSocket, or frontend transport is implemented at this
+stage. Those consumers can now attach to the stable event callback contract.
+
+### Runtime hardening boundary (step 7)
+
+The backend runtime boundary is complete through step 7. Model initialization
+failures now raise a clear `failed to initialize the recognition pipeline`
+error while leaving the controller in `CREATED`, allowing an explicit retry.
+Shutdown is terminal and clears native pipeline references even if a model's
+close operation raises; a second close remains safe. Existing hardening also
+covers serialized reset/calibration operations, recovery after repeated camera
+read failures, worker exception reporting without killing later scheduling,
+subscriber failure isolation, and immediate metadata-report flushing.
+
+Transport, frontend integration, and simulation remain explicitly out of scope
+after this boundary.
+
+The controller/event integration was verified with the full automated suite
+and a real model-backed smoke test. Three consecutive held-out Dog frames
+produced the locked evidence transition followed by `HAND_SEAL`,
+`ATTACK_TRIGGERED`, and `QUEUE_CLEARED` in the documented order.
+
+### Latest-frame scheduler
+
+`cv_model/inference/scheduler.py` separates camera capture from recognition
+using one processing worker and a one-slot pending-frame mailbox. While a frame
+is being processed, each newly captured frame replaces the older pending frame.
+The worker therefore receives the freshest available input instead of working
+through a stale FIFO backlog.
+
+- MediaPipe and ONNX still run sequentially on one worker, preserving their
+  state and the locked recognition order.
+- Reset and calibration commands are serialized against frame processing.
+- Reset/calibration commands quiesce the worker, then discard pending and
+  completed pre-command data so an old image cannot cross the state boundary.
+- Worker exceptions are returned as failed scheduled results without silently
+  terminating the scheduler.
+- Shutdown may discard or drain the final pending frame and waits for the
+  active recognition call to finish safely.
+- Scheduler statistics expose submitted, processed, dropped, failed, and
+  superseded-result counts plus pending/processing state.
+
+The camera tester now displays scheduled results using the exact raw frame that
+produced each recognition output. Display mirroring remains presentation-only.
+It prints final scheduler counts when the camera window closes.
+
+### Detailed performance instrumentation
+
+Timing is observational only and uses `time.perf_counter()`. It does not alter
+confidence, thresholds, evidence, queueing, or attack recognition.
+
+| Layer | Available measurements |
+|:---|:---|
+| Hand classifier | Center/ROI preprocessing, ONNX execution, and postprocessing |
+| Hand detector | MediaPipe input preparation and Hand Landmarker execution |
+| Body pipeline | Pose preparation, Pose Landmarker, geometry postprocessing, total |
+| Recognition | Hand total, body total, attack queue, pipeline overhead, total |
+| Runtime | Recognition wrapper, V1 serialization, event derivation, callbacks, overhead, total |
+| Scheduler | Queue wait, worker elapsed time, capture-to-result end-to-end time |
+
+Core phase values are stored in `FrameResult.timings_ms`; serialization and
+callback values are added to `RuntimeFrame.timings_ms`; scheduler latency is
+carried by `ScheduledResult`. The live panel shows hand, pose, runtime,
+end-to-end latency, and cumulative dropped frames.
+
+A real-model scheduler smoke check rapidly submitted ten held-out Dog frames.
+The one-slot mailbox processed the newest frame and counted nine replacements
+as dropped instead of building a backlog. That single processed frame measured
+3.72 ms center ONNX, 2.50 ms ROI ONNX, 31.56 ms Hand Landmarker, 10.28 ms Pose
+Landmarker, 0.06 ms serialization, and 49.25 ms total runtime. These are a
+single-run wiring check, not an aggregate performance benchmark.
+
+### Reproducible live-camera benchmark
+
+`cv_model/benchmark_live_camera.py` runs the same locked runtime and
+latest-frame scheduler without the display/rendering cost. It performs a
+configurable unmeasured warmup followed by a bounded measurement window and
+reports:
+
+- submitted, processed, dropped, failed, superseded, and collected frames;
+- capture FPS, effective processed FPS, and dropped-frame rate;
+- count, mean, median, p95, and maximum for every available runtime and
+  scheduler timing field.
+
+The standard 30-second benchmark command is:
+
+```bash
+.venv/bin/python cv_model/benchmark_live_camera.py \
+  --warmup 3 --duration 30 \
+  --summary-json reports/benchmark.json
+```
+
+The final step-6 benchmark on 2026-08-04 ran for 30.05 seconds after a
+three-second warmup. It submitted 903 frames, processed 901, dropped 2
+(`0.2%`), and had zero failures. Effective throughput was `29.98 FPS`.
+Recognition latency was 31.20 ms mean and 31.52 ms p95; scheduler end-to-end
+latency was 31.81 ms mean and 34.84 ms p95. The complete aggregate is stored
+in `reports/final-step6-benchmark.json`. This meets the 30 FPS prototype goal,
+but not the original aspirational browser target of at most 25 ms per frame.
+
+The measured elapsed time includes final worker drainage so effective FPS is
+not inflated by leaving the final captured frame unfinished. Warmup scheduler
+counts and timings are excluded from the aggregate result.
+
+### Metadata-only live session reports
+
+Both the interactive camera tester and benchmark command accept
+`--report-jsonl` and `--report-csv`. For example:
+
+```bash
+.venv/bin/python cv_model/run_combined_camera.py \
+  --report-jsonl reports/camera-session.jsonl \
+  --report-csv reports/camera-session.csv
+```
+
+Each processed-frame record contains timestamps and identifiers, raw/accepted/
+stable hand labels, confidence and margin, body labels, emitted hand/body
+events, queue contents and transition flags, attacks, all phase timings, and
+cumulative scheduler counts. Writers flush each record immediately and append
+a final session-summary row. JSONL preserves nested values; CSV provides flat
+analysis columns plus compact JSON for complete timings and events.
+
+Reports never include frames, crops, landmark images, screenshots, or a test
+dataset. Recognition settings and decision logic remain unchanged. The guided
+evaluation mode below uses these records to compute label-specific errors
+before any locked threshold is changed.
+
+### Guided live-camera accuracy evaluation
+
+`cv_model/evaluate_live_camera.py` adds a keyboard-guided, trial-level camera
+protocol. It does not create a dataset and never writes frames. Each attempt
+starts from reset recognition state, shows a neutral preparation interval, and
+then opens a timed action interval. The user presses Space to start each trial;
+Q or Escape stops and preserves completed partial results.
+
+The evaluator uses emitted hand/body events for non-neutral trial success
+rather than treating every frame of a held gesture as an independent correct
+sample. It separately retains raw, accepted, and stable counts, rejection
+reasons, target confidence/margin distributions, and detection latency. The
+aggregate report provides trial-level precision, recall, false positives,
+misses, and confusion counts for each selected label.
+
+Evaluation protocol V1.1 isolates preparation from action:
+
+- the target and its instruction stay hidden until the action interval;
+- pending preparation frames finish before the action boundary;
+- hand temporal evidence and the attack queue reset at that boundary without
+  clearing body history, preserving the jump baseline;
+- preparation false events remain a separate negative-control measurement;
+- confidence, margin, and rejection distributions use action frames only;
+- every optional JSONL/CSV frame carries mode, target, attempt index, and phase;
+- first-event correctness, eventual target detection, unexpected events, and
+  consecutive duplicate emissions are reported separately.
+
+The original 39-attempt V1.0 hand report exposed preparation latching and
+mixed-phase aggregates, so it remains useful as a diagnostic baseline but is
+not valid for selecting exact threshold values. The completed phase-isolated
+V1.1 rerun is stored in `reports/hand-v1.1-rerun-*` and is the evidence source
+for the final targeted calibration below.
+
+### Final Dog, Dragon, and Ram calibration (2026-08-04)
+
+The user explicitly reopened recognition tuning for one final targeted pass.
+Only Dog, Dragon, and the Ram/Rat resolver changed; all other label thresholds,
+fusion settings, temporal evidence, queue behavior, and body recognition remain
+at the approved baseline.
+
+- **Dog:** the base confidence floor is `0.68` with margin `0.40`, but Dog
+  predictions below `0.80` are accepted only when the runner-up is Hare,
+  Monkey, or Ox. In the V1.1 frames, genuine low-confidence Dog used these
+  runner-ups, while the persistent Tiger-to-Dog confusion used Snake. This
+  recovers all three Dog attempts without accepting the recorded Tiger cluster.
+- **Dragon:** confidence is `0.50` and margin is `0.20`. Dragon was already the
+  dominant raw result in attempts 2 and 3 but could never reach its former
+  `0.85/0.50` gate. No non-Dragon action attempt passed the new joint gate in
+  the recorded V1.1 session. Attempt 1 remains unrecoverable because its raw
+  output was genuinely unstable rather than merely threshold-rejected.
+- **Ram:** detected-hand count no longer rewrites Ram to Rat. Genuine Ram was
+  observed with both one and two detected hands, so that geometry rule caused
+  the first event to be Rat in two attempts. Ram-to-Rat recovery now requires
+  Rat itself to be the runner-up with probability at least `0.12`.
+
+An offline sequential replay through the real five-frame evidence filter raised
+first-event correctness from **30/39 to 34/39 (87.2%)** with no wrong first
+events. Targeted replay results were Dog `3/3`, Dragon `2/3`, and Ram `3/3`.
+This is recorded-session evidence, not a replacement for the final live camera
+check. Unit regressions cover the Dog pair guard, Dragon live-confidence range,
+clear two-hand Ram, and ambiguous Ram/Rat recovery.
+
+### Revised attack catalog (2026-08-04)
+
+The authoritative hand-seal attacks are now Fire (`tiger > horse`), Lightning
+Dodge (`hare`), Water (`snake > dragon`), Sand (`monkey > ox`), and Wind
+(`dog > rat`). Internal event IDs remain `homura`, `ikazuchi`, `ryusui`,
+`daichi`, and `shippu` respectively so the versioned event/output contracts do
+not require a breaking migration. Display names and evaluator instructions use
+the new English attack names. The catalog is protected by an exact regression
+test in addition to the generic every-sequence matcher test.
+
+Attack ordering is strict: the complete current queue must exactly equal an
+attack sequence. Leading, inserted, reversed, or skipped seals cannot be
+discarded as noise to produce a match. Guided attack evaluation also ends on
+the first observed attack instead of continuing to collect repeated seals for
+the remainder of the ten-second action window. This prevents a later correct
+subsequence from turning a wrong-order attempt into a reported pass.
+
+The corrected strict-order live validation completed on 2026-08-04 with
+**15/15 successful attempts (100%)**: three attempts each for Fire Attack,
+Lightning Dodge, Water Attack, Sand Attack, and Wind Attack. There were no
+reported failure reasons. The local metadata-only evidence is stored under
+`reports/final-attack-v2-*`; report artifacts remain outside version control.
+
+Hand-sign evaluation:
+
+```bash
+.venv/bin/python cv_model/evaluate_live_camera.py \
+  --mode hand --labels all --attempts 3 \
+  --summary-json reports/hand-accuracy.json \
+  --attempts-csv reports/hand-attempts.csv
+```
+
+Body-movement evaluation supports only the implemented body catalog: `idle`,
+`jumping`, `naruto_run`, `bending_left`, and `bending_right`. `naruto_run`
+means a forward torso lean with both arms held behind the torso. It is not a
+hand sign or an attack. `dodge`, `stone`, `daichi`, and the other jutsu names
+are not body labels.
+
+```bash
+.venv/bin/python cv_model/evaluate_live_camera.py \
+  --mode body --labels all --attempts 3 \
+  --summary-json reports/body-accuracy.json \
+  --attempts-csv reports/body-attempts.csv
+```
+
+### Guided attack-sequence diagnostics
+
+Attack mode evaluates the authoritative hand-seal catalog: `homura`
+(`tiger > horse`), `ikazuchi` (`hare`), `ryusui` (`snake > dragon`), `daichi`
+(`monkey > ox`), and `shippu` (`dog > rat`). The overlay
+explicitly instructs the user to return to neutral between seals so the locked
+edge-triggered hand filter can produce fresh events.
+
+```bash
+.venv/bin/python cv_model/evaluate_live_camera.py \
+  --mode attack --labels all --attempts 3 \
+  --summary-json reports/attack-accuracy.json \
+  --attempts-csv reports/attack-attempts.csv
+```
+
+Each failed attack attempt is assigned an evidence-backed reason when
+available: `wrong_attack`, `cooldown_suppressed`, `max_length_cleared`,
+`seal_timeout`, `no_seals_recognized`, or `incomplete_sequence`. The report
+also preserves expected/missing seals, emitted seals, queue-accepted seals,
+dominant raw predictions, rejection counts, and every queue transition count.
+
+All modes may additionally enable `--report-jsonl` and `--report-csv` for the
+existing per-frame metadata diagnostics. Aggregate tuning is deliberately not
+automatic: thresholds remain locked until the user completes these trials and
+the resulting per-label evidence demonstrates a specific change is beneficial.
 
 ### ONNX Model Metadata
 - **File Name:** `best_model_A.onnx`
@@ -255,30 +684,31 @@ The web application runs `best_model_A.onnx` directly inside the browser using *
 
 ### 7.1 Master Jutsu Catalog
 
-| Jutsu Name | Element | Required Hand Seal / Movement Sequence | Special Timing & Behavior | Visual FX Animation |
+| Jutsu Name | Element | Required Hand Seal Sequence | Special Timing & Behavior | Visual FX Animation |
 |:---|:---:|:---|:---|:---|
-| **Homura (火炎)** | Fire 🔥 | `tiger` $\rightarrow$ `dragon` $\rightarrow$ `horse` | Standard 3-seal combo (Max 2.5s window between seals) | Fireball Eruption & Radial Flame Burst |
-| **Shippū (疾風)** | Wind 🌪️ | `bird` $\rightarrow$ `ram` $\rightarrow$ `rat` | Standard 3-seal combo | Swirling Tornado & Wind Blade Cutting Particles |
-| **Ikazuchi (雷光)** | Lightning ⚡ | `dog` *(Single Seal)* | **Instant Action:** Single-seal trigger for quick evasive dodge | Chidori Lightning Discharge & Electric Sparks |
-| **Daichi (大地)** | Stone 🗿 | `monkey` $\rightarrow$ `boar` $\rightarrow$ `snake` | Defensive 3-seal combo; can combine with Crossed-Arm Stance | Earth Wall Shatter & Ground Crag Barriers |
-| **Ryūsui (流水)** | Water 🌊 | `ox` $\rightarrow$ `hare` | Fast 2-seal tactical combo | Water Vortex Ring & Expanding Wave Particles |
+| **Fire Attack** | Fire 🔥 | `tiger` $\rightarrow$ `horse` | Two-seal combo (Max 3.0s window between seals) | Deferred until simulation work |
+| **Lightning Dodge** | Lightning ⚡ | `hare` *(Single Seal)* | Instant single-seal trigger | Deferred until simulation work |
+| **Water Attack** | Water 🌊 | `snake` $\rightarrow$ `dragon` | Two-seal combo | Deferred until simulation work |
+| **Sand Attack** | Sand 🏜️ | `monkey` $\rightarrow$ `ox` | Two-seal combo | Deferred until simulation work |
+| **Wind Attack** | Wind 🌪️ | `dog` $\rightarrow$ `rat` | Two-seal combo | Deferred until simulation work |
 
 ---
 
-### 7.2 5-Frame Debounce Consensus Filter
-To eliminate transient noise when a user transitions between hand positions, a **5-Frame Sliding Window Consensus Filter** buffers predictions:
+### 7.2 5-Frame Evidence Filter
+To eliminate transient noise when a user transitions between hand positions, a **5-frame evidence window** buffers accepted predictions:
 
 ```
 Frame t-4: [ TIGER ]
 Frame t-3: [ TIGER ]
-Frame t-2: [ TIGER ]  ──►  Sliding Window Buffer: [TIGER, TIGER, TIGER, TIGER, DRAGON]
-Frame t-1: [ TIGER ]        Consensus: TIGER (4/5 = 80%) ≥ 80% Threshold
-Frame t:   [ DRAGON ]       Output Event ──► EMIT "TIGER" SEAL
+Frame t-2: [ TIGER ]  ──►  Evidence reaches 3 accepted observations
+Frame t-1: [ TIGER ]        Stable label: TIGER
+Frame t:   [ DRAGON ]       Held TIGER does not emit a duplicate event
 ```
 
 - **Buffer Length:** 5 frames ($\approx 83\text{ ms}$ at 60 FPS)
-- **Consensus Threshold:** $\ge 80\%$ (at least 4 out of 5 frames must match)
-- **Confidence Cutoff:** Predictions with probability $< 0.70$ are treated as `zero` (no sign).
+- **Evidence Threshold:** 3 accepted observations by default; neutral calibration can raise a noisy class to 4.
+- **Neutral Reset:** Two consecutive `zero` observations clear old positive evidence, so the next sign must earn fresh votes.
+- **Confidence Cutoff:** Per-class confidence and margin thresholds are used instead of one global cutoff.
 
 ---
 
@@ -288,48 +718,45 @@ Frame t:   [ DRAGON ]       Output Event ──► EMIT "TIGER" SEAL
 stateDiagram-v2
     [*] --> IDLE
 
-    state "🔥 Homura (Fire Jutsu)" as Fire {
-        TIGER --> DRAGON: Valid Seal & T < 2.5s
-        DRAGON --> HORSE: Valid Seal & T < 2.5s
+    state "🔥 Fire Attack" as Fire {
+        TIGER --> HORSE: Valid Seal & T < 3.0s
         HORSE --> CAST_FIRE: Trigger FX & Reset
     }
 
-    state "🌪️ Shippū (Wind Jutsu)" as Wind {
-        BIRD --> RAM: Valid Seal & T < 2.5s
-        RAM --> RAT: Valid Seal & T < 2.5s
+    state "🌪️ Wind Attack" as Wind {
+        DOG --> RAT: Valid Seal & T < 3.0s
         RAT --> CAST_WIND: Trigger FX & Reset
     }
 
-    state "⚡ Ikazuchi (Lightning Dodge)" as Lightning {
-        DOG --> CAST_LIGHTNING: Instant Trigger & Reset
+    state "⚡ Lightning Dodge" as Lightning {
+        HARE --> CAST_LIGHTNING: Instant Trigger & Reset
     }
 
-    state "🗿 Daichi (Stone Defense)" as Stone {
-        MONKEY --> BOAR: Valid Seal & T < 2.5s
-        BOAR --> SNAKE: Valid Seal & T < 2.5s
-        SNAKE --> CAST_STONE: Trigger FX & Reset
+    state "🏜️ Sand Attack" as Sand {
+        MONKEY --> OX: Valid Seal & T < 3.0s
+        OX --> CAST_SAND: Trigger FX & Reset
     }
 
-    state "🌊 Ryūsui (Water Jutsu)" as Water {
-        OX --> HARE: Valid Seal & T < 2.5s
-        HARE --> CAST_WATER: Trigger FX & Reset
+    state "🌊 Water Attack" as Water {
+        SNAKE --> DRAGON: Valid Seal & T < 3.0s
+        DRAGON --> CAST_WATER: Trigger FX & Reset
     }
 
     IDLE --> TIGER: Detect Tiger
-    IDLE --> BIRD: Detect Bird
     IDLE --> DOG: Detect Dog
     IDLE --> MONKEY: Detect Monkey
-    IDLE --> OX: Detect Ox
+    IDLE --> HARE: Detect Hare
+    IDLE --> SNAKE: Detect Snake
 
-    Fire --> IDLE: Timeout (T > 2.5s) / Wrong Seal
-    Wind --> IDLE: Timeout (T > 2.5s) / Wrong Seal
-    Stone --> IDLE: Timeout (T > 2.5s) / Wrong Seal
-    Water --> IDLE: Timeout (T > 2.5s) / Wrong Seal
+    Fire --> IDLE: Timeout (T > 3.0s) / Three unmatched seals
+    Wind --> IDLE: Timeout (T > 3.0s) / Three unmatched seals
+    Sand --> IDLE: Timeout (T > 3.0s) / Three unmatched seals
+    Water --> IDLE: Timeout (T > 3.0s) / Three unmatched seals
 
     CAST_FIRE --> IDLE
     CAST_WIND --> IDLE
     CAST_LIGHTNING --> IDLE
-    CAST_STONE --> IDLE
+    CAST_SAND --> IDLE
     CAST_WATER --> IDLE
 ```
 
@@ -340,12 +767,34 @@ stateDiagram-v2
 All trained weights, notebooks, scripts, and datasets are organized under `cv_model/`:
 
 ```
-Naruto_Run_datacollection/
+Naruto_Run/
 ├── context.md                             # 👈 THIS DOCUMENT (Master Architecture & Context)
 ├── implementation_plan.md                 # Original architecture breakdown & execution strategy
 ├── Pure Naruto Hand Sign Data/            # Original raw dataset (2,245 images)
 │
 └── cv_model/
+    ├── inference/
+    │   ├── combined_pipeline.py            # Locked hand, body, queue, and attack pipeline
+    │   ├── pipeline_config.py              # Validated recognition configuration
+    │   ├── output_schema.py                # Versioned JSON-safe PipelineOutputV1 adapter
+    │   ├── events.py                       # Sparse typed events and isolated callbacks
+    │   ├── runtime.py                      # Lifecycle, calibration, recovery, and dispatch
+    │   ├── scheduler.py                    # Latest-frame mailbox and processing worker
+    │   ├── diagnostics.py                  # Benchmarks and metadata-only report writers
+    │   └── evaluation.py                   # Trial accuracy and attack failure analysis
+    ├── benchmark_live_camera.py            # Bounded aggregate camera benchmark command
+    ├── evaluate_live_camera.py             # Guided hand/body/attack camera evaluator
+    ├── schemas/
+    │   ├── pipeline_output_v1.schema.json  # Authoritative V1 frame contract
+    │   └── pipeline_event_v1.schema.json   # Authoritative V1 event contract
+    ├── tests/
+    │   ├── test_combined_pipeline.py       # Recognition and state-machine regressions
+    │   ├── test_display_mirroring.py       # Display-only reflection contract
+    │   ├── test_output_schema.py           # V1 golden and validation tests
+    │   ├── test_events_runtime.py          # Dispatcher and controller regressions
+    │   ├── test_scheduler_instrumentation.py # Frame dropping and timing regressions
+    │   ├── test_diagnostics.py             # Aggregate statistics and report regressions
+    │   └── test_live_evaluation.py          # Trial metrics and attack diagnosis regressions
     ├── data/
     │   ├── prepare_dataset.py             # Local dataset prep & augmentation script
     │   ├── prepared_dataset/              # 80/10/10 split dataset folder (train/val/test)

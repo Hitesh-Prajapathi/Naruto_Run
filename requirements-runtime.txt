@@ -1,0 +1,4 @@
+mediapipe>=0.10.20
+numpy>=1.26
+onnxruntime>=1.18
+opencv-python>=4.10

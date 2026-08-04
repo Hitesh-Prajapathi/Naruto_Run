@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://narutocv.local/schemas/pipeline_event_v1.schema.json",
+  "title": "NarutoCV Pipeline Event V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "event_id",
+    "event_sequence",
+    "event_type",
+    "session_id",
+    "frame_id",
+    "captured_at_ms",
+    "payload"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "event_id": {"type": "string", "minLength": 1},
+    "event_sequence": {"type": "integer", "minimum": 0},
+    "event_type": {
+      "enum": [
+        "HAND_SEAL",
+        "BODY_MOVEMENT",
+        "ATTACK_TRIGGERED",
+        "QUEUE_CLEARED",
+        "PIPELINE_RESET"
+      ]
+    },
+    "session_id": {"type": "string", "minLength": 1},
+    "frame_id": {"type": "integer", "minimum": 0},
+    "captured_at_ms": {"type": "integer", "minimum": 0},
+    "payload": {"type": "object"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"event_type": {"const": "HAND_SEAL"}}},
+      "then": {"properties": {"payload": {"$ref": "#/$defs/handSeal"}}}
+    },
+    {
+      "if": {"properties": {"event_type": {"const": "BODY_MOVEMENT"}}},
+      "then": {"properties": {"payload": {"$ref": "#/$defs/bodyMovement"}}}
+    },
+    {
+      "if": {"properties": {"event_type": {"const": "ATTACK_TRIGGERED"}}},
+      "then": {"properties": {"payload": {"$ref": "#/$defs/attack"}}}
+    },
+    {
+      "if": {"properties": {"event_type": {"const": "QUEUE_CLEARED"}}},
+      "then": {"properties": {"payload": {"$ref": "#/$defs/queueCleared"}}}
+    },
+    {
+      "if": {"properties": {"event_type": {"const": "PIPELINE_RESET"}}},
+      "then": {"properties": {"payload": {"$ref": "#/$defs/pipelineReset"}}}
+    }
+  ],
+  "$defs": {
+    "handSeal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["seal", "stable_label", "confidence"],
+      "properties": {
+        "seal": {"type": "string"},
+        "stable_label": {"type": "string"},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1}
+      }
+    },
+    "bodyMovement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["movement", "stable_label", "metrics"],
+      "properties": {
+        "movement": {"type": "string"},
+        "stable_label": {"type": "string"},
+        "metrics": {
+          "type": "object",
+          "additionalProperties": {"type": "number"}
+        }
+      }
+    },
+    "attack": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "display_name", "recognized_at_ms"],
+      "properties": {
+        "name": {"type": "string"},
+        "display_name": {"type": "string"},
+        "recognized_at_ms": {"type": "integer", "minimum": 0}
+      }
+    },
+    "queueCleared": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reasons"],
+      "properties": {
+        "reasons": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "timeout",
+              "max_length",
+              "cooldown_suppressed",
+              "attack_triggered"
+            ]
+          }
+        }
+      }
+    },
+    "pipelineReset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reason"],
+      "properties": {
+        "reason": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}
