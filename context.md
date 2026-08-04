@@ -16,7 +16,7 @@
 6. [ONNX Web Runtime & Browser Engine Architecture](#6-onnx-web-runtime--browser-engine-architecture)
 7. [Jutsu Catalog, State Machine & Debounce Filter Specifications](#7-jutsu-catalog-state-machine--debounce-filter-specifications)
 8. [Repository Asset & File Directory Map](#8-repository-asset--file-directory-map)
-9. [Detailed Technical Blueprint for Remaining Components (3 & 4)](#9-detailed-technical-blueprint-for-remaining-components-3--4)
+9. [Further Implementation Plan — Steps 6, 7, and 8](#9-further-implementation-plan--steps-6-7-and-8)
 
 ---
 
@@ -817,73 +817,304 @@ Naruto_Run/
 
 ---
 
-## 9. Detailed Technical Blueprint for Remaining Components (3 & 4)
+## 9. Further Implementation Plan — Steps 6, 7, and 8
 
-### 9.1 Component 3: Frontend Architecture (`frontend/src/`)
+This roadmap begins after the completed CV-recognition pull request is merged.
+Formal hand/body validation reports and optional repository cleanup are
+deliberately postponed; they are not prerequisites for the work below. The
+approved Python recognizer remains the only authority for classification,
+temporal evidence, exact-order attack matching, cooldowns, and body movement.
+The frontend must not duplicate those decisions.
 
+### 9.1 Step 6 — Local Backend Transport
+
+#### Objective and architecture
+
+Expose `PipelineRuntimeController` to a browser while preserving the V1 output
+and event contracts. The browser owns the camera so only one process controls
+the device and the preview stays responsive. It sends unmirrored compressed
+frames to the local Python service; the service returns authoritative state and
+sparse recognition events.
+
+```mermaid
+flowchart LR
+    Camera["Browser getUserMedia"] --> Preview["Mirrored preview only"]
+    Camera --> Encoder["Unmirrored JPEG encoder"]
+    Encoder -->|"Binary WebSocket frames"| Server["Local Python transport"]
+    Server --> Scheduler["Latest-frame scheduler"]
+    Scheduler --> CV["Approved CV runtime"]
+    CV -->|"State snapshots"| HUD["Frontend state store"]
+    CV -->|"Ordered sparse events"| Game["Future game engine"]
 ```
+
+Planned backend structure:
+
+```text
+cv_model/transport/
+├── __init__.py
+├── protocol.py              # Versions, envelopes, and validation
+├── frame_decoder.py         # Binary header checks and JPEG decoding
+├── connection.py            # Per-client lifecycle and bounded queues
+├── server.py                # Loopback HTTP/WebSocket service
+└── health.py                # Model/runtime readiness state
+cv_model/serve_transport.py  # Launcher and configuration
+cv_model/schemas/
+├── transport_message_v1.schema.json
+└── transport_control_v1.schema.json
+cv_model/tests/
+├── test_transport_protocol.py
+├── test_transport_backpressure.py
+└── test_transport_integration.py
+requirements-transport.txt
+```
+
+#### Protocol and lifecycle
+
+1. Bind to `127.0.0.1` by default. External-network binding requires an
+   explicit option and is not part of the initial release.
+2. Add `GET /health` for process, model, runtime, and protocol readiness and
+   `GET /ws` for the versioned WebSocket session.
+3. Start with `client_hello`; answer with `server_ready`, selected protocol and
+   schema versions, supported controls, and a new runtime session ID.
+4. Carry frames in a binary envelope containing magic bytes, protocol version,
+   frame sequence, browser capture timestamp, dimensions, and JPEG payload.
+5. Reject malformed, oversized, stale, wrongly versioned, or unsupported
+   frames before they enter recognition.
+6. Decode to unmirrored OpenCV BGR and submit to the existing one-slot latest-
+   frame scheduler. Never create an unbounded input queue.
+7. Send capped `state_snapshot` messages, initially at 10–15 Hz, containing the
+   latest V1 hand/body/queue state, timings, frame ID, and scheduler counters.
+8. Send `pipeline_event` messages immediately in dispatcher order, preserving
+   `event_id`, sequence, session, frame, and capture timestamp.
+9. Support only bounded controls initially: `reset`, `begin_calibration`,
+   `finish_calibration`, `cancel_calibration`, and `ping`. Every command gets a
+   correlated acknowledgement or structured error.
+10. Keep one recognition producer. Reject additional controlling clients until
+    multi-client ownership semantics are designed explicitly.
+
+#### Backpressure, security, and privacy
+
+- Keep only the newest unsent state snapshot per client.
+- Keep a small ordered event buffer. Never replace or reorder events; disconnect
+  a client that cannot consume the bounded buffer and report the reason.
+- Discard stale input sequences before JPEG decoding where possible.
+- On disconnect, stop submissions and clear temporal and attack state. A
+  reconnect starts a new runtime session so old evidence cannot cross over.
+- Use a browser-origin allowlist and limits for payload size, dimensions, and
+  submission rate.
+- Never open a client-supplied file path or log binary camera payloads.
+- Do not save frames, crops, or landmarks. Geometry remains opt-in.
+- Do not stream video back from Python; the browser already owns the preview.
+
+#### Step-6 verification gates
+
+- Unit tests cover every message, invalid version, malformed header, oversized
+  payload, stale sequence, illegal control, and lifecycle transition.
+- Integration tests submit synthetic JPEG frames and receive schema-valid state
+  and event messages through the actual WebSocket boundary.
+- Flood tests prove both input and output queues remain bounded and maintain
+  newest-frame behavior.
+- Slow-client tests prove events remain ordered or the connection is explicitly
+  closed—never silently corrupted.
+- Disconnect/reconnect tests prove evidence, queue contents, and event identity
+  cannot cross session boundaries.
+- A 30-second browser-to-backend run must sustain at least 25 processed FPS,
+  stay below 5% dropped frames in normal local conditions, and add at most
+  15 ms p95 encode/transport/decode overhead beyond the current CV runtime.
+  Failure blocks Step 7 until resolution, quality, or send rate is reduced.
+
+#### Step-6 completion artifact
+
+One command starts the loopback service; a protocol document provides exact
+messages; tests pass; and a minimal diagnostic client can connect, send frames,
+receive ordered events, issue a reset, disconnect, and reconnect cleanly.
+
+### 9.2 Step 7 — Frontend Integration
+
+#### Objective and proposed stack
+
+Build the browser client around the transport without recreating recognition.
+The first frontend milestone is camera, connectivity, state, and diagnostics—
+not simulation or visual effects. Use Vite, TypeScript, DOM/CSS, and Canvas only
+where overlays require it. Use Vitest for units and Playwright for browser tests.
+
+```text
 frontend/
-├── index.html                           # Main entry point & HUD layout
-├── css/
-│   └── styles.css                       # Anime dark mode UI design system
-└── src/
-    ├── config/
-    │   ├── gestures.js                  # 13 class label definitions & mappings
-    │   ├── jutsuCombos.js               # 5 Jutsu sequence definitions & timing limits
-    │   └── constants.js                 # FPS targets, canvas dimensions, debounce rules
-    │
-    ├── utils/
-    │   ├── imageProcessor.js            # Image crop, resize, and Float32 tensor conversion
-    │   └── mathHelpers.js               # 3D vector angle & distance calculations
-    │
-    ├── pipelines/
-    │   ├── handSignPipeline.js          # Pipeline 1: MediaPipe Hands + ONNX Runner
-    │   ├── bodyGesturePipeline.js       # Pipeline 2: MediaPipe Pose Vector Math
-    │   └── pipelineManager.js           # Multi-pipeline orchestrator
-    │
-    ├── engine/
-    │   ├── debounceFilter.js            # 5-frame sliding window consensus filter
-    │   ├── comboMatcher.js              # Jutsu sequence state machine
-    │   └── soundEngine.js               # Web Audio API sound FX player
-    │
-    └── gfx/
-        ├── particleSystem.js            # Particle emitter base class
-        ├── fireFX.js                    # Flame & Fireball particle renderer
-        ├── windFX.js                    # Tornado & Wind Blade particle renderer
-        ├── lightningFX.js               # Chidori lightning spark renderer
-        ├── earthFX.js                   # Earth wall & Crag fracture renderer
-        └── waterFX.js                   # Water vortex & Splash wave renderer
+├── index.html
+├── package.json
+├── tsconfig.json
+├── vite.config.ts
+├── src/
+│   ├── main.ts
+│   ├── config.ts
+│   ├── camera/
+│   │   ├── cameraController.ts    # Permission, device, lifecycle
+│   │   └── framePublisher.ts      # Unmirrored bounded JPEG sending
+│   ├── transport/
+│   │   ├── protocol.ts            # Schema-checked transport types
+│   │   ├── websocketClient.ts     # Handshake, heartbeat, reconnect
+│   │   └── eventDeduplicator.ts   # event_id at-most-once consumption
+│   ├── state/pipelineStore.ts      # Latest authoritative backend state
+│   ├── ui/
+│   │   ├── cameraPreview.ts       # Display-only mirroring
+│   │   ├── recognitionHud.ts      # Hand/body/queue/attack/timings
+│   │   ├── connectionPanel.ts     # Health, reset, calibration
+│   │   └── accessibility.ts
+│   └── styles/app.css
+└── tests/
+    ├── unit/
+    └── e2e/
 ```
 
----
+#### Implementation sequence
 
-### 9.2 Particle Rendering Specifications for Jutsu Visual FX
+1. Scaffold build, lint, formatting, unit-test, and production-build commands.
+2. Implement camera states: `idle`, `requesting`, `ready`, `denied`, `ended`,
+   and `error`, including device selection after permission.
+3. Render the local video with CSS horizontal mirroring. Capture/send from the
+   original unmirrored source; never flip inference pixels.
+4. Begin at 640×360, JPEG quality 0.75, and a 30 FPS cap. Encode only when the
+   socket is ready, replacing a stale pending frame with the newest one.
+5. Implement version handshake, heartbeat, incompatible-version handling, and
+   bounded exponential-backoff reconnection.
+6. Generate or verify TypeScript message types against backend schemas and
+   reject invalid messages at the transport boundary.
+7. Store only the newest state snapshot. Process events separately and
+   deduplicate every event by `event_id`.
+8. Build a diagnostic HUD for raw/accepted/stable hand sign, body movement,
+   exact queue order, last attack, FPS, drops, latency, connection, and errors.
+9. Add Reset and Neutral Calibration controls with pending/success/failure UI
+   driven only by correlated backend acknowledgements.
+10. Handle tab hiding, camera-track ending, socket loss, backend restart, and
+    page unload without stale camera or runtime state.
 
-1. **Fire Jutsu (Homura):**
-   - 300 active radial particles initialized at hand position.
-   - Per-particle parameters: lifetime $0.8\text{ s}$, expansion velocity $v \sim \mathcal{N}(5, 2)\text{ px/frame}$, color gradient $\text{Yellow} \rightarrow \text{Orange} \rightarrow \text{Deep Red} \rightarrow \text{Smoke Grey}$.
+#### Frontend invariants
 
-2. **Wind Jutsu (Shippū):**
-   - Swirling logarithmic spiral particle paths:
-     $$r(\theta) = a e^{b \theta}, \quad \theta(t) = \theta_0 + \omega t$$
-   - Particle shape: Tapered semi-transparent cyan/white wind blades.
+- TypeScript never changes thresholds or decides which attack matched.
+- The HUD renders queue order exactly as received.
+- Future effects consume only `ATTACK_TRIGGERED`, never infer attacks from
+  displayed hand labels.
+- Mirroring remains display-only; submitted pixels keep raw orientation.
+- Repeated network messages with the same `event_id` have no second effect.
+- Connection loss visibly disables input and clears/freeze states safely rather
+  than continuing with stale recognition.
 
-3. **Lightning Dodge (Ikazuchi):**
-   - Jagged polyline electrical discharge generator using Midpoint Displacement algorithm ($N=4$ recursions).
-   - Random blue/violet glowing stroke with additive blending (`globalCompositeOperation = 'lighter'`).
+#### Step-7 verification gates
 
-4. **Stone Defense (Daichi):**
-   - Polygonal rock shard particles rising from screen bottom with gravity acceleration $g = 0.5\text{ px/frame}^2$.
-   - Screen shake effect (random camera offset $\Delta x, \Delta y \in [-10, 10]\text{ px}$ decaying over 0.5s).
+- Unit tests cover parsing, schema rejection, deduplication, state transitions,
+  reconnect timing, and mirrored-display/unmirrored-send behavior.
+- Mock-server tests cover handshake failure, malformed state, duplicate event,
+  delayed acknowledgement, slow connection, and server restart.
+- Playwright uses a fake media stream to verify permission guidance, preview,
+  frame submission, and camera-track teardown.
+- A live local test confirms all five attacks and five body states appear in the
+  HUD without frontend reinterpretation.
+- Chrome and Safari are required on macOS; Edge is checked before declaring
+  cross-browser completion.
+- Production output must contain no copied model weights or JavaScript
+  recognition implementation.
+- Step 7 fails if mirrored pixels reach inference, reconnect duplicates an
+  attack, queue order differs from the backend, or latency materially exceeds
+  the Step-6 budget.
 
-5. **Water Jutsu (Ryūsui):**
-   - Concentric expanding ring ripples with sine-wave alpha decay:
-     $$\alpha(t) = \sin\left(\frac{\pi t}{T}\right) \cdot (1 - \frac{r}{R_{\max}})$$
-   - Blue/teal fluid particles with metaball blending.
+#### Step-7 completion artifact
 
----
+Starting the backend and frontend opens a page that owns the camera, shows a
+mirrored preview, streams unmirrored frames, displays authoritative CV state,
+supports reset/calibration, and survives a backend restart. It contains no game
+mechanics or attack effects yet.
 
-### 9.3 Verification & Quality Assurance Plan
-- [ ] **Unit Testing:** Validate `comboMatcher.js` state machine transitions against synthetic hand seal sequence arrays.
-- [ ] **Latency Benchmark:** Profile `ort.InferenceSession.run()` execution time across WebGL and WASM backends.
-- [ ] **Cross-Browser Testing:** Verify webcam stream capture & WebGL particle rendering in Chrome, Edge, and Safari.
+### 9.3 Step 8 — Simulation, Effects, and Gameplay Reactions
+
+#### Objective and module boundary
+
+Build a deterministic presentation/game layer that consumes backend events and
+cannot influence recognition.
+
+```text
+frontend/src/game/
+├── gameController.ts          # Fixed-timestep lifecycle
+├── actionRouter.ts            # Typed event-to-action mapping
+├── movementController.ts      # Body-event reactions
+├── cooldownView.ts            # Explanatory display only
+├── sceneState.ts
+└── attacks/
+    ├── fireAttack.ts
+    ├── lightningDodge.ts
+    ├── waterAttack.ts
+    ├── sandAttack.ts
+    └── windAttack.ts
+frontend/src/rendering/
+├── renderer.ts
+├── particlePool.ts
+├── spriteLoader.ts
+├── audioManager.ts
+└── reducedMotion.ts
+```
+
+#### Simulation rules
+
+1. Route `ATTACK_TRIGGERED` using stable internal IDs: `homura`, `ikazuchi`,
+   `ryusui`, `daichi`, and `shippu`.
+2. Route body events independently: `jumping`, `naruto_run`, `bending_left`,
+   and `bending_right`; `idle` returns the movement state to rest.
+3. Deduplicate before an event enters the simulation.
+4. Use a fixed simulation timestep with render interpolation so behavior does
+   not depend on camera or monitor FPS.
+5. Backend cooldown suppression remains authoritative. Frontend cooldown bars
+   explain state but never grant permission to attack.
+6. On reset or transport loss, cancel queued local actions, fade transient
+   effects, and display the disconnected/calibrating state.
+
+#### Approved attack effects
+
+- **Fire — Tiger → Horse:** forward projectile, bounded radial flame burst,
+  smoke fade, and optional short screen shake.
+- **Lightning Dodge — Hare:** fast lateral displacement with a blue-violet
+  electrical trail and brief readability flash. It is not a body label.
+- **Water — Snake → Dragon:** directed water arc or expanding wave with teal
+  droplets and a dissipating impact ripple.
+- **Sand — Monkey → Ox:** low ochre sand surge, pooled particles, and restrained
+  dust cloud. Do not reuse the obsolete Stone Defense concept.
+- **Wind — Dog → Rat:** directional gust, curved translucent wind blades, and
+  lightweight debris displacement.
+
+#### Performance, accessibility, and tests
+
+- Pool particles, cap active counts, and avoid per-frame allocation in hot
+  rendering paths. Reduce effect density before simulation correctness.
+- Target 60 FPS rendering, pause on hidden tabs, and release animation/audio
+  resources on teardown.
+- Require a user gesture before audio; provide effects, music, and mute controls.
+- Respect `prefers-reduced-motion`, allow screen shake to be disabled, and do
+  not communicate attacks using color alone.
+- Unit-test every event-to-action mapping, duplicate events, reset during an
+  effect, cooldown suppression, rapid body transitions, reconnect, and reduced
+  motion.
+- Use seeded effect tests for lifecycle and particle-pool accounting rather
+  than depending only on fragile pixel snapshots.
+- Run a ten-minute scripted soak test and verify stable memory, bounded
+  particles, no growing listeners, and no duplicate audio nodes.
+- Measure median and p95 render frame time for every effect and maximum allowed
+  overlap without starving camera publication.
+- Complete a live end-to-end pass confirming one reaction per backend event and
+  no effect from wrong-order seals.
+
+#### Step-8 completion artifact
+
+The application reacts once to every validated attack/body event, renders all
+five approved effects with bounded performance, recovers from resets and
+disconnects, and passes automated and live tests. Packaging or cloud deployment
+is a separate decision after this gate.
+
+### 9.4 Explicitly Postponed Work
+
+Do not spend current implementation time on:
+
+- additional formal hand/body validation reports;
+- committing local camera diagnostic reports;
+- cleaning or archiving historical reports;
+- deciding whether `presentation_guide.md` belongs in the repository; or
+- cloud deployment and public hosting.
+
+These may be revisited after Steps 6–8 or when specifically requested.
