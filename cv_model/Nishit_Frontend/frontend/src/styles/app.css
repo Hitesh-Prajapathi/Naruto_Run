@@ -1,0 +1,134 @@
+:root {
+  color-scheme: dark;
+  --bg: #12141c;
+  --panel: #1b1f2c;
+  --accent: #ff8a3d;
+  --ok: #4ade80;
+  --warn: #fbbf24;
+  --err: #f87171;
+  --text: #e6e8ef;
+  --text-dim: #9aa0b4;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+}
+
+#app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid #2a2f42;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--accent);
+}
+
+.app-subtitle {
+  margin: 0.15rem 0 0;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+}
+
+.app-main {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.preview-panel {
+  position: relative;
+  background: var(--panel);
+  border-radius: 8px;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: min(640px, 100%);
+}
+
+/* Display-only mirroring: the canvas we actually show is CSS-flipped so the
+   preview feels natural, but the underlying <video> source (and everything
+   framePublisher reads from it) is never touched -- captured pixels stay in
+   raw camera orientation. See camera/cameraController.ts. */
+#camera-preview {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  border-radius: 6px;
+  transform: scaleX(-1);
+}
+
+.camera-status {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+#camera-start {
+  align-self: flex-start;
+  background: var(--accent);
+  color: #1a1206;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+#camera-start:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.hud-panel {
+  flex: 1;
+  min-width: 280px;
+  background: var(--panel);
+  border-radius: 8px;
+  padding: 0.75rem;
+  font-size: 0.85rem;
+}
+
+#diagnostics-hud dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.25rem 0.75rem;
+  margin: 0;
+}
+
+#diagnostics-hud dt {
+  color: var(--text-dim);
+}
+
+#diagnostics-hud dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.status-ok {
+  color: var(--ok);
+}
+
+.status-warn {
+  color: var(--warn);
+}
+
+.status-err {
+  color: var(--err);
+}

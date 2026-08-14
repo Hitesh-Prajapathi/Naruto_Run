@@ -1,0 +1,12 @@
+# Phase A (transport bridge) dependencies for cv_model/Nishit_Frontend.
+# Install into the dedicated venv described in README.md -- never globally.
+aiohttp>=3.9
+
+# Same recognition-runtime stack as ../../requirements-runtime.txt, duplicated
+# here so this venv is self-contained. opencv-python-headless (no GUI/Qt
+# bindings) is used instead of opencv-python because this venv only ever
+# decodes JPEG bytes on a server; it never opens an OpenCV display window.
+numpy>=1.26
+opencv-python-headless>=4.10
+mediapipe>=0.10.20
+onnxruntime>=1.18

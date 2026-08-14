@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://narutocv.local/schemas/transport_message_v1.schema.json",
+  "title": "NarutoCV Transport JSON Message V1",
+  "description": "Every JSON (text-frame) WebSocket message exchanged on GET /ws, in either direction, over the lifetime of one connection. The binary camera-frame envelope is a separate fixed binary layout, not JSON -- see FRAME_HEADER in cv_model/Nishit_Frontend/transport/protocol.py.",
+  "oneOf": [
+    {"$ref": "#/$defs/clientHello"},
+    {"$ref": "#/$defs/serverReady"},
+    {"$ref": "#/$defs/control"},
+    {"$ref": "#/$defs/ack"},
+    {"$ref": "#/$defs/error"},
+    {"$ref": "#/$defs/stateSnapshot"},
+    {"$ref": "#/$defs/pipelineEvent"}
+  ],
+  "$defs": {
+    "clientHello": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "protocol_version"],
+      "properties": {
+        "type": {"const": "client_hello"},
+        "protocol_version": {"type": "string", "minLength": 1}
+      }
+    },
+    "serverReady": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "protocol_version",
+        "schema_version",
+        "session_id",
+        "supported_controls"
+      ],
+      "properties": {
+        "type": {"const": "server_ready"},
+        "protocol_version": {"const": "1.0.0"},
+        "schema_version": {"const": "1.0.0"},
+        "session_id": {"type": "string", "minLength": 1},
+        "supported_controls": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "reset",
+              "begin_calibration",
+              "finish_calibration",
+              "cancel_calibration",
+              "ping"
+            ]
+          }
+        }
+      }
+    },
+    "control": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "command"],
+      "properties": {
+        "type": {"const": "control"},
+        "command": {
+          "enum": [
+            "reset",
+            "begin_calibration",
+            "finish_calibration",
+            "cancel_calibration",
+            "ping"
+          ]
+        },
+        "request_id": {"type": "string", "minLength": 1}
+      },
+      "description": "Duplicated inline from transport_control_v1.schema.json so this file validates standalone without a multi-file $ref resolver."
+    },
+    "ack": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "command", "ok"],
+      "properties": {
+        "type": {"const": "ack"},
+        "command": {
+          "enum": [
+            "reset",
+            "begin_calibration",
+            "finish_calibration",
+            "cancel_calibration",
+            "ping"
+          ]
+        },
+        "ok": {"type": "boolean"},
+        "request_id": {"type": "string", "minLength": 1},
+        "error": {"type": "string"}
+      }
+    },
+    "error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "code", "message"],
+      "properties": {
+        "type": {"const": "error"},
+        "code": {"type": "string", "minLength": 1},
+        "message": {"type": "string"},
+        "request_id": {"type": "string", "minLength": 1}
+      }
+    },
+    "stateSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "session_id", "frame_id", "captured_at_ms", "output"],
+      "properties": {
+        "type": {"const": "state_snapshot"},
+        "session_id": {"type": "string", "minLength": 1},
+        "frame_id": {"type": "integer", "minimum": 0},
+        "captured_at_ms": {"type": "integer", "minimum": 0},
+        "output": {
+          "type": "object",
+          "description": "Conforms to cv_model/schemas/pipeline_output_v1.schema.json. Not re-validated field-by-field here so this contract does not fork from that one; PipelineOutputSerializer remains the single producer."
+        }
+      }
+    },
+    "pipelineEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "event"],
+      "properties": {
+        "type": {"const": "pipeline_event"},
+        "event": {
+          "type": "object",
+          "description": "Conforms to cv_model/schemas/pipeline_event_v1.schema.json, delivered immediately and in dispatcher order (HAND_SEAL, BODY_MOVEMENT, ATTACK_TRIGGERED, QUEUE_CLEARED per frame)."
+        }
+      }
+    }
+  }
+}

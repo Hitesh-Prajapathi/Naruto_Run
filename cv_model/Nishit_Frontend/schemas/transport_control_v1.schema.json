@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://narutocv.local/schemas/transport_control_v1.schema.json",
+  "title": "NarutoCV Transport Control Message V1",
+  "description": "Client -> server bounded command sent as a text WebSocket message. See cv_model/Nishit_Frontend/transport/protocol.py ControlCommand and parse_control_message.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["type", "command"],
+  "properties": {
+    "type": {"const": "control"},
+    "command": {
+      "enum": [
+        "reset",
+        "begin_calibration",
+        "finish_calibration",
+        "cancel_calibration",
+        "ping"
+      ]
+    },
+    "request_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Optional client-chosen correlation ID, echoed back verbatim on the matching ack so the frontend can resolve pending/success/failure UI state."
+    }
+  }
+}
