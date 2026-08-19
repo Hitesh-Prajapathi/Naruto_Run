@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NarutoCV</title>
+    <link rel="stylesheet" href="/src/styles/app.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="app-header">
+        <h1>NarutoCV</h1>
+        <p class="app-subtitle">Phase B: transport + camera scaffold</p>
+      </header>
+
+      <main class="app-main">
+        <section class="preview-panel">
+          <video id="camera-source" autoplay playsinline muted hidden></video>
+          <canvas id="camera-preview" width="640" height="360"></canvas>
+          <div id="camera-status" class="camera-status">camera: idle</div>
+          <button id="camera-start" type="button">Start Camera</button>
+        </section>
+
+        <aside class="hud-panel">
+          <div id="diagnostics-hud"></div>
+        </aside>
+      </main>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
