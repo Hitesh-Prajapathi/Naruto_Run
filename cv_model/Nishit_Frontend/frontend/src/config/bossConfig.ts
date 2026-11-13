@@ -109,14 +109,124 @@ export const NARUTO_PROJECTILE_TRAVEL_S = 0.28;
  * wiring real CV later is a mapping change rather than a redesign.
  */
 export const SEAL_POOL = ["tiger", "ram", "snake"] as const;
-export type SealName = (typeof SEAL_POOL)[number];
+export type SealName =
+  | (typeof SEAL_POOL)[number]
+  | "horse"
+  | "hare"
+  | "dragon"
+  | "monkey"
+  | "ox"
+  | "dog"
+  | "rat"
+  | "bird"
+  | "boar";
+
+export const ALL_SEALS = [
+  "tiger",
+  "horse",
+  "hare",
+  "snake",
+  "dragon",
+  "monkey",
+  "ox",
+  "dog",
+  "rat",
+  "ram",
+  "bird",
+  "boar",
+] as const;
 
 /** Display glyph per seal, for the combat HUD prompts. */
 export const SEAL_GLYPHS: Record<SealName, string> = {
   tiger: "寅",
-  ram: "未",
+  horse: "午",
+  hare: "卯",
   snake: "巳",
+  dragon: "辰",
+  monkey: "申",
+  ox: "丑",
+  dog: "戌",
+  rat: "子",
+  ram: "未",
+  bird: "酉",
+  boar: "亥",
 };
+
+export interface AttackDefinition {
+  id: "homura" | "ikazuchi" | "ryusui" | "daichi" | "shippu";
+  name: string;
+  japaneseName: string;
+  element: string;
+  icon: string;
+  color: string;
+  key: string;
+  keyLabel: string;
+  type: "attack" | "dodge";
+  seals: readonly SealName[];
+}
+
+export const ATTACK_CATALOG: readonly AttackDefinition[] = [
+  {
+    id: "homura",
+    name: "Fire Attack",
+    japaneseName: "Homura (炎)",
+    element: "Fire",
+    icon: "🔥",
+    color: "#ff6b35",
+    key: "Digit1",
+    keyLabel: "1",
+    type: "attack",
+    seals: ["tiger", "horse"],
+  },
+  {
+    id: "ikazuchi",
+    name: "Lightning Dodge",
+    japaneseName: "Ikazuchi (雷)",
+    element: "Lightning",
+    icon: "⚡",
+    color: "#f7d02c",
+    key: "Digit2",
+    keyLabel: "2",
+    type: "dodge",
+    seals: ["hare"],
+  },
+  {
+    id: "ryusui",
+    name: "Water Attack",
+    japaneseName: "Ryusui (流水)",
+    element: "Water",
+    icon: "🌊",
+    color: "#3a86ff",
+    key: "Digit3",
+    keyLabel: "3",
+    type: "attack",
+    seals: ["snake", "dragon"],
+  },
+  {
+    id: "daichi",
+    name: "Sand Attack",
+    japaneseName: "Daichi (大地)",
+    element: "Sand",
+    icon: "🏔️",
+    color: "#e09f3e",
+    key: "Digit4",
+    keyLabel: "4",
+    type: "attack",
+    seals: ["monkey", "ox"],
+  },
+  {
+    id: "shippu",
+    name: "Wind Attack",
+    japaneseName: "Shippu (疾風)",
+    element: "Wind",
+    icon: "💨",
+    color: "#52b788",
+    key: "Digit5",
+    keyLabel: "5",
+    type: "attack",
+    seals: ["dog", "rat"],
+  },
+] as const;
 
 // --- Feel / polish -----------------------------------------------------
 

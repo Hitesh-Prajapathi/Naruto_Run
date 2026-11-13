@@ -300,6 +300,10 @@ class TransportServer:
                 await self._run_controller(controller.finish_neutral_calibration)
             elif command is ControlCommand.CANCEL_CALIBRATION:
                 await self._run_controller(controller.cancel_neutral_calibration)
+            elif command is ControlCommand.SET_MODE:
+                mode = payload.get("mode", "body_only")
+                if hasattr(controller.pipeline, "set_mode"):
+                    await self._run_controller(lambda: controller.pipeline.set_mode(mode))
         except Exception as error:
             await ws.send_json(
                 build_ack(

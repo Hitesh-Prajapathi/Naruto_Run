@@ -54,6 +54,7 @@ export const CONTROL_COMMANDS = [
   "begin_calibration",
   "finish_calibration",
   "cancel_calibration",
+  "set_mode",
   "ping",
 ] as const;
 export type ControlCommand = (typeof CONTROL_COMMANDS)[number];
@@ -261,6 +262,7 @@ export interface ControlMessage {
   type: "control";
   command: ControlCommand;
   request_id?: string;
+  mode?: string;
 }
 
 export interface AckMessage {
@@ -304,10 +306,15 @@ export function buildClientHello(): ClientHelloMessage {
   return { type: "client_hello", protocol_version: PROTOCOL_VERSION };
 }
 
-export function buildControl(command: ControlCommand, requestId?: string): ControlMessage {
-  return requestId === undefined
-    ? { type: "control", command }
-    : { type: "control", command, request_id: requestId };
+export function buildControl(
+  command: ControlCommand,
+  requestId?: string,
+  mode?: string,
+): ControlMessage {
+  const msg: ControlMessage = { type: "control", command };
+  if (requestId !== undefined) msg.request_id = requestId;
+  if (mode !== undefined) msg.mode = mode;
+  return msg;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

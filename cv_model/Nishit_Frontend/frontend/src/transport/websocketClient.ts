@@ -100,9 +100,9 @@ export class WebSocketClient implements PipelineEventSource {
     }
   }
 
-  sendControl(command: ControlCommand, requestId?: string): void {
+  sendControl(command: ControlCommand, requestId?: string, mode?: string): void {
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-      this.socket.send(JSON.stringify(buildControl(command, requestId)));
+      this.socket.send(JSON.stringify(buildControl(command, requestId, mode)));
     }
   }
 

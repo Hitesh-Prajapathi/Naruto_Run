@@ -144,12 +144,29 @@ class BodyOnlyModeTests(unittest.TestCase):
 
     def test_full_mode_delegates_to_the_base_pipeline(self) -> None:
         instance = self.make()
-        instance._body_only = False
+        instance._mode = "full"
         with mock.patch.object(
             pipeline_module.CombinedNarutoPipeline, "process", return_value=mock.sentinel.full
         ) as base:
             self.assertIs(instance.process(mock.sentinel.frame, 2.0), mock.sentinel.full)
         base.assert_called_once()
+
+    def test_hand_only_mode_runs_hand_and_updates_attacks(self) -> None:
+        instance = self.make()
+        instance.set_mode("hand_only")
+        instance._idle_body = mock.sentinel.idle_body
+        hand_mock = mock.Mock(emitted_seal="tiger", timings_ms={"hand_total_ms": 12.0})
+        instance.hand.process.return_value = hand_mock
+        instance.attacks.update_detailed.return_value = mock.Mock(
+            attack=mock.sentinel.attack, queue=("tiger",)
+        )
+
+        result = instance.process(mock.Mock(), 3.0)
+        instance.hand.process.assert_called_once()
+        instance.body.process.assert_not_called()
+        instance.attacks.update_detailed.assert_called_once_with("tiger", 3.0)
+        self.assertIs(result.body, mock.sentinel.idle_body)
+        self.assertEqual(result.timings_ms["body_total_ms"], 0.0)
 
 
 if __name__ == "__main__":

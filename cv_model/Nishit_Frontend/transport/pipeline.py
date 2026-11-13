@@ -43,6 +43,7 @@ from cv_model.inference.combined_pipeline import (
     DEFAULT_HAND_MODEL,
     DEFAULT_POSE_MODEL,
     BodyMovementRecognizer,
+    BodyResult,
     CombinedNarutoPipeline,
     FrameResult,
     HandResult,
@@ -73,10 +74,33 @@ class SessionScopedPipeline(CombinedNarutoPipeline):
         )
         # The base class does not keep this, and the rebuild needs it.
         self._pose_model_path = Path(pose_model)
-        self._body_only = body_only
-        self._idle_hand: Optional[HandResult] = None
-        if body_only:
-            self._idle_hand = self._capture_idle_hand_result()
+        self._mode = "body_only" if body_only else "full"
+        self._idle_hand: Optional[HandResult] = self._capture_idle_hand_result()
+        self._idle_body: Optional[BodyResult] = self._capture_idle_body_result()
+
+    @property
+    def _body_only(self) -> bool:
+        return self._mode == "body_only"
+
+    @_body_only.setter
+    def _body_only(self, value: bool) -> None:
+        self._mode = "body_only" if value else "full"
+
+    @property
+    def mode(self) -> str:
+        return self._mode
+
+    def set_mode(self, mode: str) -> None:
+        if mode not in ("body_only", "hand_only", "full"):
+            raise ValueError(f"invalid recognition mode: {mode}")
+        if self._mode != mode:
+            logger.info("Switching recognition mode: %s -> %s", self._mode, mode)
+            self._mode = mode
+            if mode == "hand_only":
+                self.hand.reset()
+                self.attacks.reset()
+            elif mode == "body_only":
+                self.body.reset()
 
     def _capture_idle_hand_result(self) -> HandResult:
         """One real 'no hands here' result, to stand in for every frame.
@@ -89,51 +113,75 @@ class SessionScopedPipeline(CombinedNarutoPipeline):
         blank = np.zeros((360, 640, 3), dtype=np.uint8)
         return self.hand.process(blank, 0.0)
 
+    def _capture_idle_body_result(self) -> BodyResult:
+        """One real 'no body movement' result, to stand in for hand-only frames."""
+        blank = np.zeros((360, 640, 3), dtype=np.uint8)
+        return self.body.process(blank, 0.0)
+
     def process(self, frame_bgr: np.ndarray, timestamp: Optional[float] = None) -> FrameResult:
-        """Body-only fast path, otherwise the base behaviour unchanged.
+        """Dynamic fast path based on current recognition mode.
 
-        Hand recognition costs about 54% of the per-frame budget -- MediaPipe
-        Hands plus an ONNX classifier, measured at 26fps combined against
-        64fps for the body alone. The browser game reads only body movement;
-        hand signs are out of scope for that integration and `scene.html`
-        never touches `output.hand`. Spending more than half the frame budget
-        on output nothing consumes is latency the player feels directly, since
-        every millisecond here is a millisecond the newest sample is older.
-
-        Skipping it more than doubles the frame rate, which is the cheapest
-        available defence against samples ever going stale.
+        - 'body_only' (running): skips hand recognition, doubles frame rate.
+        - 'hand_only' (combat): skips body tracking, dedicated 100% budget to hand signs.
+        - 'full': runs both.
         """
-        if not self._body_only or self._idle_hand is None:
+        if self._mode == "full" or (self._mode == "body_only" and self._idle_hand is None) or (self._mode == "hand_only" and self._idle_body is None):
             return super().process(frame_bgr, timestamp)
 
         started = time.perf_counter()
         now = time.monotonic() if timestamp is None else timestamp
-        body_result = self.body.process(frame_bgr, now)
 
+        if self._mode == "body_only":
+            body_result = self.body.process(frame_bgr, now)
+            attack_started = time.perf_counter()
+            queue_update = self.attacks.update_detailed(None, now)
+            attack_finished = time.perf_counter()
+            processing_ms = (time.perf_counter() - started) * 1000.0
+            attack_queue_ms = (attack_finished - attack_started) * 1000.0
+            timings_ms = {
+                **body_result.timings_ms,
+                "hand_total_ms": 0.0,
+                "attack_queue_ms": attack_queue_ms,
+                "pipeline_overhead_ms": max(
+                    0.0,
+                    processing_ms
+                    - body_result.timings_ms.get("body_total_ms", 0.0)
+                    - attack_queue_ms,
+                ),
+                "recognition_total_ms": processing_ms,
+            }
+            return FrameResult(
+                hand=self._idle_hand,  # type: ignore[arg-type]
+                body=body_result,
+                attack=queue_update.attack,
+                seal_history=queue_update.queue,
+                queue_update=queue_update,
+                processing_ms=processing_ms,
+                timings_ms=timings_ms,
+            )
+
+        # mode == "hand_only" (Combat mode)
+        hand_result = self.hand.process(frame_bgr, now)
         attack_started = time.perf_counter()
-        # Fed None rather than skipped: the attack queue has timeouts of its
-        # own, and starving it of updates would leave stale state behind if
-        # hand input is ever turned back on mid-session.
-        queue_update = self.attacks.update_detailed(None, now)
+        queue_update = self.attacks.update_detailed(hand_result.emitted_seal, now)
         attack_finished = time.perf_counter()
-
         processing_ms = (time.perf_counter() - started) * 1000.0
         attack_queue_ms = (attack_finished - attack_started) * 1000.0
         timings_ms = {
-            **body_result.timings_ms,
-            "hand_total_ms": 0.0,
+            **hand_result.timings_ms,
+            "body_total_ms": 0.0,
             "attack_queue_ms": attack_queue_ms,
             "pipeline_overhead_ms": max(
                 0.0,
                 processing_ms
-                - body_result.timings_ms.get("body_total_ms", 0.0)
+                - hand_result.timings_ms.get("hand_total_ms", 0.0)
                 - attack_queue_ms,
             ),
             "recognition_total_ms": processing_ms,
         }
         return FrameResult(
-            hand=self._idle_hand,
-            body=body_result,
+            hand=hand_result,
+            body=self._idle_body,  # type: ignore[arg-type]
             attack=queue_update.attack,
             seal_history=queue_update.queue,
             queue_update=queue_update,

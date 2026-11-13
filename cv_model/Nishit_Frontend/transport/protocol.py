@@ -46,6 +46,7 @@ class ControlCommand(str, Enum):
     BEGIN_CALIBRATION = "begin_calibration"
     FINISH_CALIBRATION = "finish_calibration"
     CANCEL_CALIBRATION = "cancel_calibration"
+    SET_MODE = "set_mode"
     PING = "ping"
 
 

@@ -223,6 +223,12 @@ export class EncounterDirector {
     this.handleSealEvents(this.seals.submit(seal));
   }
 
+  /** Directly trigger an attack from hotkey or high-level recognition. */
+  triggerAttack(attackId: string): void {
+    if (this.phase !== "combat") return;
+    this.handleSealEvents(this.seals.triggerAttack(attackId));
+  }
+
   /**
    * @param dt raw, unscaled frame delta -- the special attack's countdown
    *   must run in real seconds (Brief 04 §4.1).
@@ -413,6 +419,10 @@ export class EncounterDirector {
 
   private handleSealEvents(events: SealEvent[]): void {
     for (const event of events) {
+      if (event.type === "attack_matched" && event.attack) {
+        const attack = event.attack;
+        this.hooks.onBanner(`${attack.icon} ${attack.name.toUpperCase()}!`);
+      }
       if (event.type === "sequence_completed") {
         for (const combatEvent of this.combat.launchNarutoAttack()) {
           this.handleCombatEvent(combatEvent, this.combat.obitoCurrentLane);

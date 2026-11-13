@@ -92,6 +92,8 @@ export interface BossSystemDeps {
   specialOverlayRoot: HTMLElement;
   /** Called when the player asks for a fresh run; the host resets itself. */
   onRestart: () => void;
+  /** Notify transport layer when recognition mode should switch. */
+  onModeChange?: (mode: "body_only" | "hand_only" | "full") => void;
 }
 
 const RUNNING_RESULT: BossFrameResult = {
@@ -231,8 +233,29 @@ export class BossSystem {
       return false;
     }
 
-    // Keyboard fallback for hand seals (brief 02 §6) -- combat must stay
-    // testable without a camera, permanently, not just during development.
+    // Direct Jutsu triggers (Digit1=Fire, Digit2=Lightning Dodge, Digit3=Water, Digit4=Sand, Digit5=Wind)
+    const jutsuKeyMap: Record<string, string> = {
+      Digit1: "homura",
+      Digit2: "ikazuchi",
+      Digit3: "ryusui",
+      Digit4: "daichi",
+      Digit5: "shippu",
+    };
+    const attackId = jutsuKeyMap[code];
+    if (attackId && this.state.capabilities.gestureInput) {
+      if (attackId === "ikazuchi") {
+        if (this.director.submitCounter()) {
+          return true;
+        }
+        if (this.state.state === "BOSS_COMBAT") {
+          this.notifyHarePerformed();
+        }
+      }
+      this.director.triggerAttack(attackId);
+      return true;
+    }
+
+    // Keyboard fallback for individual hand seals (1/2/3)
     const index = { Digit1: 0, Digit2: 1, Digit3: 2 }[code];
     if (index !== undefined && this.state.capabilities.gestureInput) {
       const seal = SEAL_POOL[index];
@@ -240,6 +263,34 @@ export class BossSystem {
       return true;
     }
     return false;
+  }
+
+  /** Route a recognized seal from CV camera input into combat. */
+  submitSeal(seal: SealName): void {
+    if (!this.director) return;
+    if (seal === "hare") {
+      if (this.director.submitCounter()) {
+        return;
+      }
+      if (this.state.state === "BOSS_COMBAT") {
+        this.notifyHarePerformed();
+      }
+    }
+    this.director.submitSeal(seal);
+  }
+
+  /** Route a recognized attack intent from CV into combat. */
+  triggerAttack(attackId: string): void {
+    if (!this.director) return;
+    if (attackId === "ikazuchi") {
+      if (this.director.submitCounter()) {
+        return;
+      }
+      if (this.state.state === "BOSS_COMBAT") {
+        this.notifyHarePerformed();
+      }
+    }
+    this.director.triggerAttack(attackId);
   }
 
   /** Called by the host when an obstacle hit lands, for the stats line. */
@@ -490,6 +541,7 @@ export class BossSystem {
     const index = this.scheduler.encountersTriggered - 1;
     this.director = new EncounterDirector(index, this.buildHooks());
     this.state.transitionTo("BOSS_INTRO");
+    this.deps.onModeChange?.("hand_only");
 
     // HP resets to full for both fighters each encounter (brief §2.3).
     this.obito.resetForEncounter(1, context.distanceM > 0 ? -70 : -70);
@@ -529,6 +581,9 @@ export class BossSystem {
       windowProgress: director.seals.windowProgress,
       phase: director.seals.currentPhase,
       failureReason: director.failureReason,
+      attackProgress: director.seals.attackProgress,
+      lastRecognizedSeal: director.seals.lastRecognizedSeal,
+      lastTriggeredAttack: director.seals.lastTriggeredAttack,
     });
 
     if (!director.isComplete) return;
@@ -556,6 +611,7 @@ export class BossSystem {
     // it runs the same single teardown. Done *before* the director is
     // dropped, so a window still open when the encounter ends (e.g. the
     // player dies to the special attack) cannot leave its UI on screen.
+    this.deps.onModeChange?.("body_only");
     this.tearDownSpecial();
     this.director = null;
     this.obito?.setVisible(false);

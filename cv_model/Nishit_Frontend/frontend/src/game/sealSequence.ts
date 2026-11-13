@@ -13,11 +13,13 @@
  */
 
 import {
+  ATTACK_CATALOG,
   SEAL_FAIL_COOLDOWN_S,
   SEAL_POOL,
   SEAL_SEQUENCE_LENGTH,
   SEAL_SEQUENCE_WINDOW_S,
   SEAL_SUCCESS_COOLDOWN_S,
+  type AttackDefinition,
   type SealName,
 } from "../config/bossConfig";
 
@@ -25,15 +27,19 @@ export type SealPhase = "idle" | "active" | "cooldown";
 
 export type SealEvent =
   | { type: "sequence_started"; sequence: readonly SealName[] }
-  | { type: "seal_accepted"; index: number }
+  | { type: "seal_accepted"; index: number; seal?: SealName }
+  | { type: "attack_matched"; attack: AttackDefinition }
   | { type: "sequence_failed"; reason: "wrong_seal" | "timeout" }
-  | { type: "sequence_completed" };
+  | { type: "sequence_completed"; attack?: AttackDefinition };
 
 export class SealSequence {
   private phase: SealPhase = "idle";
   private target: SealName[] = [];
   private progress = 0;
   private timer = 0;
+  private lastSeal: SealName | null = null;
+  private lastAttack: AttackDefinition | null = null;
+  private recentSeals: Array<{ seal: SealName; time: number }> = [];
 
   constructor(private readonly random: () => number = Math.random) {}
 
@@ -56,6 +62,49 @@ export class SealSequence {
     return this.phase === "active" ? (this.target[this.progress] ?? null) : null;
   }
 
+  /** The full attack catalog for UI display. */
+  get catalog(): readonly AttackDefinition[] {
+    return ATTACK_CATALOG;
+  }
+
+  /** Last recognized seal name. */
+  get lastRecognizedSeal(): SealName | null {
+    return this.lastSeal;
+  }
+
+  /** Last triggered attack definition. */
+  get lastTriggeredAttack(): AttackDefinition | null {
+    return this.lastAttack;
+  }
+
+  /**
+   * Progress towards each attack in the catalog: attack.id -> count of matched seals.
+   */
+  get attackProgress(): Record<string, number> {
+    const result: Record<string, number> = {};
+    const recent = this.recentSeals.map((r) => r.seal);
+    for (const attack of ATTACK_CATALOG) {
+      let matchCount = 0;
+      for (let len = attack.seals.length; len > 0; len -= 1) {
+        const prefix = attack.seals.slice(0, len);
+        if (recent.length >= len && this.arrayEndsWith(recent, prefix)) {
+          matchCount = len;
+          break;
+        }
+      }
+      result[attack.id] = matchCount;
+    }
+    return result;
+  }
+
+  private arrayEndsWith(arr: readonly SealName[], suffix: readonly SealName[]): boolean {
+    if (arr.length < suffix.length) return false;
+    for (let i = 0; i < suffix.length; i += 1) {
+      if (arr[arr.length - suffix.length + i] !== suffix[i]) return false;
+    }
+    return true;
+  }
+
   /** Seconds left in the sequence window (or in the cooldown). */
   get remainingS(): number {
     return Math.max(0, this.timer);
@@ -72,10 +121,6 @@ export class SealSequence {
     if (this.phase !== "idle") {
       return [];
     }
-    // No two consecutive seals the same. With a 3-seal pool, plain uniform
-    // draws produce an all-identical sequence about 11% of the time
-    // (measured: 20/200), which is trivially easy and reads as a bug rather
-    // than a roll of the dice.
     this.target = [];
     for (let i = 0; i < SEAL_SEQUENCE_LENGTH; i += 1) {
       const previous = this.target[i - 1];
@@ -85,46 +130,101 @@ export class SealSequence {
     }
     this.progress = 0;
     this.timer = SEAL_SEQUENCE_WINDOW_S;
+    this.recentSeals = [];
     this.phase = "active";
     return [{ type: "sequence_started", sequence: [...this.target] }];
   }
 
   /**
-   * Offer a seal. Correct advances the sequence (and completes it on the
-   * last one); wrong fails immediately into a cooldown. Ignored outside the
-   * active phase, so stray input during cooldown can't queue up.
+   * Offer a seal. Checks for matches in the Jutsu Catalog and against the target.
    */
-  submit(seal: SealName): SealEvent[] {
+  submit(seal: SealName, now = performance.now() / 1000): SealEvent[] {
     if (this.phase !== "active") {
       return [];
     }
-    if (seal !== this.target[this.progress]) {
+    this.lastSeal = seal;
+    this.recentSeals.push({ seal, time: now });
+    // Keep at most last 4 seals
+    if (this.recentSeals.length > 4) {
+      this.recentSeals.shift();
+    }
+
+    const recent = this.recentSeals.map((r) => r.seal);
+    const events: SealEvent[] = [];
+
+    // Check if any jutsu in the catalog is completed!
+    for (const attack of ATTACK_CATALOG) {
+      if (this.arrayEndsWith(recent, attack.seals)) {
+        this.lastAttack = attack;
+        this.phase = "cooldown";
+        this.timer = SEAL_SUCCESS_COOLDOWN_S;
+        this.recentSeals = [];
+        this.progress = this.target.length;
+        events.push({ type: "seal_accepted", index: this.progress - 1 });
+        events.push({ type: "attack_matched", attack });
+        events.push({ type: "sequence_completed", attack });
+        return events;
+      }
+    }
+
+    // Also support matching the target sequence directly
+    if (this.target.length > 0 && seal === this.target[this.progress]) {
+      this.progress += 1;
+      events.push({ type: "seal_accepted", index: this.progress - 1 });
+      if (this.progress >= this.target.length) {
+        this.phase = "cooldown";
+        this.timer = SEAL_SUCCESS_COOLDOWN_S;
+        this.recentSeals = [];
+        events.push({ type: "sequence_completed" });
+      }
+      return events;
+    }
+
+    // If seal doesn't match any partial attack prefix and doesn't match target:
+    const matchesAnyPrefix = ATTACK_CATALOG.some((attack) =>
+      this.arrayEndsWith(recent, attack.seals.slice(0, recent.length)),
+    );
+    if (!matchesAnyPrefix && (this.target.length === 0 || seal !== this.target[this.progress])) {
       return this.fail("wrong_seal");
     }
 
-    this.progress += 1;
-    const events: SealEvent[] = [{ type: "seal_accepted", index: this.progress - 1 }];
-    if (this.progress >= this.target.length) {
-      this.phase = "cooldown";
-      this.timer = SEAL_SUCCESS_COOLDOWN_S;
-      events.push({ type: "sequence_completed" });
-    }
+    events.push({ type: "seal_accepted", index: Math.max(0, this.progress - 1) });
     return events;
+  }
+
+  /**
+   * Direct trigger for a specific attack (e.g. from keyboard keys 1-5).
+   */
+  triggerAttack(attackId: string): SealEvent[] {
+    const attack = ATTACK_CATALOG.find((a) => a.id === attackId);
+    if (!attack) return [];
+    this.lastAttack = attack;
+    this.phase = "cooldown";
+    this.timer = SEAL_SUCCESS_COOLDOWN_S;
+    this.recentSeals = [];
+    this.progress = this.target.length;
+    return [
+      { type: "attack_matched", attack },
+      { type: "sequence_completed", attack },
+    ];
   }
 
   private fail(reason: "wrong_seal" | "timeout"): SealEvent[] {
     this.phase = "cooldown";
     this.timer = SEAL_FAIL_COOLDOWN_S;
     this.progress = 0;
+    this.recentSeals = [];
     return [{ type: "sequence_failed", reason }];
   }
 
-  /** Advance timers. Auto-restarts a fresh attempt after a cooldown so the
-   * player always has a sequence to work on without pressing anything. */
-  update(dt: number): SealEvent[] {
+  /** Advance timers. Auto-restarts a fresh attempt after a cooldown. */
+  update(dt: number, now = performance.now() / 1000): SealEvent[] {
     if (this.phase === "idle") {
       return this.start();
     }
+
+    // Prune stale seals older than 3.0s
+    this.recentSeals = this.recentSeals.filter((s) => now - s.time <= 3.0);
 
     this.timer -= dt;
     if (this.timer > 0) {
@@ -139,6 +239,7 @@ export class SealSequence {
     this.phase = "idle";
     this.target = [];
     this.progress = 0;
+    this.recentSeals = [];
     return this.start();
   }
 
@@ -148,5 +249,8 @@ export class SealSequence {
     this.target = [];
     this.progress = 0;
     this.timer = 0;
+    this.lastSeal = null;
+    this.lastAttack = null;
+    this.recentSeals = [];
   }
 }

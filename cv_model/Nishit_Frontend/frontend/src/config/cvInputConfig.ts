@@ -60,7 +60,7 @@ export const CV_TRANSPORT_URL = "ws://127.0.0.1:8765/ws";
 export const CV_CAPTURE_WIDTH = 640;
 export const CV_CAPTURE_HEIGHT = 360;
 export const CV_TARGET_FPS = 20;
-export const CV_JPEG_QUALITY = 0.7;
+export const CV_JPEG_QUALITY = 0.9;
 
 /** The command to start the service, shown verbatim when it is not running
  * (§4.2: "detection service not running" must be actionable). */

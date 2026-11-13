@@ -29,6 +29,7 @@ import { WebSocketClient } from "../transport/websocketClient";
 import type { ConnectionState } from "../transport/eventSource";
 import type { StateSnapshotMessage } from "../transport/protocol";
 import { toPoseSample, type PoseSample } from "./poseAdapter";
+import type { SealName } from "../config/bossConfig";
 import {
   CV_CAPTURE_HEIGHT,
   CV_CAPTURE_WIDTH,
@@ -68,6 +69,8 @@ export interface CameraPoseSourceOptions {
   transportUrl?: string;
   onSample?: (sample: PoseSample) => void;
   onStatusChange?: (status: CameraSourceStatus) => void;
+  onHandSeal?: (seal: SealName) => void;
+  onAttackTriggered?: (attackName: string) => void;
 }
 
 export class CameraPoseSource {
@@ -192,6 +195,18 @@ export class CameraPoseSource {
 
     this.unsubscribes.push(
       this.client.onStateSnapshot((snapshot) => this.handleSnapshot(snapshot)),
+    );
+    this.unsubscribes.push(
+      this.client.onEvent((event) => {
+        if (event.event_type === "HAND_SEAL" && typeof event.payload?.seal === "string") {
+          this.options.onHandSeal?.(event.payload.seal as SealName);
+        } else if (
+          event.event_type === "ATTACK_TRIGGERED" &&
+          typeof event.payload?.attack_name === "string"
+        ) {
+          this.options.onAttackTriggered?.(event.payload.attack_name);
+        }
+      }),
     );
     this.unsubscribes.push(
       this.client.onConnectionStateChange((state: ConnectionState) => this.handleConnection(state)),
@@ -321,6 +336,18 @@ export class CameraPoseSource {
     if (this.status === status) return;
     this.status = status;
     this.options.onStatusChange?.(status);
+  }
+
+  /**
+   * Dynamically switch recognition pipeline mode:
+   * - 'body_only' during running
+   * - 'hand_only' during combat with Obito
+   * - 'full' for both
+   */
+  setRecognitionMode(mode: "body_only" | "hand_only" | "full"): void {
+    if (this.client.connectionState === "open") {
+      this.client.sendControl("set_mode", undefined, mode);
+    }
   }
 
   /**

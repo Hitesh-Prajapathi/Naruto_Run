@@ -240,6 +240,9 @@ async function main(): Promise<void> {
       chaseCamera.clearFramingOverride();
       chaseCamera.snapTo(0);
     },
+    onModeChange: (mode) => {
+      cameraSource?.setRecognitionMode(mode);
+    },
   });
   // Encounter assets load in the background; running is never blocked on
   // them, and an encounter simply cannot start until they are ready.
@@ -279,6 +282,12 @@ async function main(): Promise<void> {
       video: cameraHud.video,
       onSample: (sample) => {
         latestPose = sample;
+      },
+      onHandSeal: (seal) => {
+        boss.submitSeal(seal);
+      },
+      onAttackTriggered: (attackName) => {
+        boss.triggerAttack(attackName);
       },
     });
 
