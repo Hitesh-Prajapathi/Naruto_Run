@@ -18,8 +18,7 @@ real movement. Run this before changing a threshold.
 
 Usage (from the repo root):
 
-    cv_model\\Nishit_Frontend\\venv\\Scripts\\python.exe ^
-        cv_model\\Nishit_Frontend\\diagnose_body.py
+    uv run python scripts/diagnose_body.py
 
 Then, when it says so:
   1. stand still for a few seconds  (captures your baseline)
@@ -36,19 +35,13 @@ from __future__ import annotations
 
 import argparse
 import statistics
-import sys
 import time
 from collections import deque
-from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
+import cv2
+import numpy as np
 
-import cv2  # noqa: E402
-import numpy as np  # noqa: E402
-
-from cv_model.inference.combined_pipeline import BodyMovementRecognizer  # noqa: E402
+from narutocv.inference.combined_pipeline import BodyMovementRecognizer
 
 # Must match CV_CAPTURE_WIDTH / CV_CAPTURE_HEIGHT in `cvInputConfig.ts`, since
 # the aspect correction below depends on the frame's shape.

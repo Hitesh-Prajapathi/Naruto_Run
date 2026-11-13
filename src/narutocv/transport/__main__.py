@@ -1,30 +1,22 @@
-#!/usr/bin/env python3
 """Launcher for the local browser<->Python transport bridge (Phase A).
 
 Binds to 127.0.0.1 by default -- external-network binding is not part of the
-step-6 release (context.md §9.1). Run from anywhere; this script puts the
-repository root on sys.path itself so `cv_model.inference` and
-`cv_model.Nishit_Frontend.transport` both resolve regardless of cwd.
+step-6 release (docs/archive/context.md section 9.1). Requires the package to
+be installed (`uv sync --extra transport`), after which it runs from any cwd.
 
 Usage:
-    Nishit_Frontend/venv/Scripts/python serve_transport.py
-    Nishit_Frontend/venv/Scripts/python serve_transport.py --port 8765 --allow-origin http://localhost:5173
+    python -m narutocv.transport
+    narutocv-serve --port 8765 --allow-origin http://localhost:5173
 """
 
 from __future__ import annotations
 
 import argparse
 import logging
-import sys
-from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
+from aiohttp import web
 
-from aiohttp import web  # noqa: E402  (import after sys.path bootstrap)
-
-from cv_model.Nishit_Frontend.transport.server import create_app  # noqa: E402
+from narutocv.transport.server import create_app
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:

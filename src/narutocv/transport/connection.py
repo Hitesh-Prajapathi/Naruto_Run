@@ -42,7 +42,7 @@ class FrameSequenceGuard:
 class EventQueueOverflow(RuntimeError):
     """Raised when a client cannot keep up with ordered pipeline events.
 
-    Per context.md step-6 backpressure rules, events are never dropped or
+    Per docs/archive/context.md step-6 backpressure rules, events are never dropped or
     reordered to keep delivery honest. A client that cannot consume the
     bounded buffer is disconnected instead (server.py), and this exception is
     the signal that triggers that disconnect.
@@ -81,7 +81,7 @@ class LatestSnapshotSlot:
     """Keeps only the newest state snapshot pending delivery to one client.
 
     This is what keeps state_snapshot traffic capped at a send-side rate
-    (context.md: "Keep only the newest unsent state snapshot per client")
+    (docs/archive/context.md: "Keep only the newest unsent state snapshot per client")
     regardless of how fast recognition produces frames.
     """
 

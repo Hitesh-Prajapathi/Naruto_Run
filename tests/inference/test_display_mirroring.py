@@ -5,10 +5,12 @@ import unittest
 from pathlib import Path
 
 
-CV_MODEL_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(CV_MODEL_ROOT))
+# `run_combined_camera` is a standalone script (not part of the package), so
+# its directory is put on sys.path to import the display-mirroring helper.
+SCRIPTS_DIR = Path(__file__).resolve().parents[2] / "scripts"
+sys.path.insert(0, str(SCRIPTS_DIR))
 
-from inference.combined_pipeline import (  # noqa: E402
+from narutocv.inference.combined_pipeline import (  # noqa: E402
     AttackEvent,
     BodyResult,
     Classification,

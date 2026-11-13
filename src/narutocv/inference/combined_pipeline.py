@@ -37,10 +37,10 @@ from .pipeline_config import (
 )
 
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_HAND_MODEL = REPO_ROOT / "cv_model/models/best_model_A.onnx"
-DEFAULT_HAND_LANDMARKER = REPO_ROOT / "cv_model/models/hand_landmarker.task"
-DEFAULT_POSE_MODEL = REPO_ROOT / "pose_landmarker.task"
+REPO_ROOT = Path(__file__).resolve().parents[3]
+DEFAULT_HAND_MODEL = REPO_ROOT / "models/best_model_A.onnx"
+DEFAULT_HAND_LANDMARKER = REPO_ROOT / "models/hand_landmarker.task"
+DEFAULT_POSE_MODEL = REPO_ROOT / "models/pose_landmarker.task"
 POSE_MODEL_URL = (
     "https://storage.googleapis.com/mediapipe-models/pose_landmarker/"
     "pose_landmarker_lite/float16/1/pose_landmarker_lite.task"

@@ -1,7 +1,7 @@
 """Loopback HTTP + WebSocket transport around PipelineRuntimeController.
 
 Implements the step-6 contract from game_implementation_plan.md and
-context.md §9.1: the browser owns the camera and streams unmirrored JPEG
+docs/archive/context.md §9.1: the browser owns the camera and streams unmirrored JPEG
 frames in over one binary WebSocket; this server returns capped state
 snapshots and immediately-delivered ordered sparse events out. Every frame is
 handed to the existing, locked PipelineRuntimeController/LatestFrameScheduler
@@ -19,13 +19,13 @@ from typing import Any, Callable, FrozenSet, Optional
 
 from aiohttp import WSMsgType, web
 
-from cv_model.inference.runtime import (
+from narutocv.inference.runtime import (
     PipelineFactory,
     PipelineRuntimeController,
     RuntimeConfig,
     RuntimeState,
 )
-from cv_model.inference.scheduler import LatestFrameScheduler
+from narutocv.inference.scheduler import LatestFrameScheduler
 
 from .connection import ClientSession, EventQueueOverflow, StaleFrameError
 from .frame_decoder import decode_image
@@ -52,7 +52,7 @@ logger = logging.getLogger("narutocv.transport")
 TRANSPORT_SERVER_KEY: "web.AppKey[Any]" = web.AppKey("transport_server")
 
 HANDSHAKE_TIMEOUT_SECONDS = 5.0
-SNAPSHOT_INTERVAL_SECONDS = 1.0 / 15.0  # 15 Hz cap, per context.md step-6
+SNAPSHOT_INTERVAL_SECONDS = 1.0 / 15.0  # 15 Hz cap, per docs/archive/context.md step-6
 SENDER_POLL_INTERVAL_SECONDS = 0.01
 RESULT_WAIT_TIMEOUT_SECONDS = 0.5
 MAX_WS_MESSAGE_BYTES = 4 * 1024 * 1024  # headroom above MAX_FRAME_PAYLOAD_BYTES
@@ -67,7 +67,7 @@ class TransportServer:
 
     Multi-client ownership is explicitly out of scope for step 6: a second
     connection while one is controlling is rejected rather than silently
-    mixed in (context.md: "Keep one recognition producer.").
+    mixed in (docs/archive/context.md: "Keep one recognition producer.").
     """
 
     def __init__(

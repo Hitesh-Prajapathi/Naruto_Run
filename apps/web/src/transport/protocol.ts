@@ -2,7 +2,7 @@
  * Wire format for the browser<->Python transport bridge.
  *
  * This is the TypeScript mirror of
- * cv_model/Nishit_Frontend/transport/protocol.py -- the binary frame header
+ * src/narutocv/transport/protocol.py -- the binary frame header
  * layout, JSON message shapes, and constants here must stay byte-for-byte
  * and field-for-field identical to that module. See
  * tests/unit/protocol.test.ts for a golden fixture cross-checked against the
@@ -14,7 +14,7 @@
  */
 
 export const PROTOCOL_VERSION = "1.0.0";
-// Mirrors cv_model.inference.output_schema.SCHEMA_VERSION, duplicated as a
+// Mirrors narutocv.inference.output_schema.SCHEMA_VERSION, duplicated as a
 // literal for the same reason protocol.py duplicates it: zero cross-language
 // import dependency.
 export const SCHEMA_VERSION = "1.0.0";
@@ -147,7 +147,7 @@ export function decodeFrame(data: ArrayBuffer | Uint8Array): FrameEnvelope {
   return envelope;
 }
 
-// --- V1 recognition contract (mirrors cv_model/schemas/pipeline_output_v1
+// --- V1 recognition contract (mirrors schemas/pipeline_output_v1
 // and pipeline_event_v1). Kept intentionally structural/permissive on
 // strings (label names, event types) rather than re-encoding the recognition
 // catalog here -- the backend is the single source of truth for what labels

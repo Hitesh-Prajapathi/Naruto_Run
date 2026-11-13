@@ -38,7 +38,7 @@ from typing import Optional
 
 import numpy as np
 
-from cv_model.inference.combined_pipeline import (
+from narutocv.inference.combined_pipeline import (
     DEFAULT_HAND_LANDMARKER,
     DEFAULT_HAND_MODEL,
     DEFAULT_POSE_MODEL,
@@ -47,7 +47,7 @@ from cv_model.inference.combined_pipeline import (
     FrameResult,
     HandResult,
 )
-from cv_model.inference.pipeline_config import DEFAULT_PIPELINE_CONFIG, PipelineConfig
+from narutocv.inference.pipeline_config import DEFAULT_PIPELINE_CONFIG, PipelineConfig
 
 logger = logging.getLogger(__name__)
 

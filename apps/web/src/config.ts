@@ -10,7 +10,7 @@ const DEFAULT_TRANSPORT_URL = "ws://127.0.0.1:8765/ws";
 export interface AppConfig {
   transportUrl: string;
   /** Force MockEventSource even if a real backend is reachable. Useful for
-   * demoing the UI/HUD without cv_model/Nishit_Frontend/serve_transport.py
+   * demoing the UI/HUD without `python -m narutocv.transport`
    * running. Toggle with ?mock=1 in the page URL. */
   useMock: boolean;
   captureWidth: number;

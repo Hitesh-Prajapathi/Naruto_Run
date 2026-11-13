@@ -1,14 +1,12 @@
-# Nishit_Frontend
+# NarutoCV web game (`apps/web`)
 
-Nishit's workspace for the game frontend build (`game_implementation_plan.md`
-at the repo root). Everything for the browser game — the Python transport
-bridge and, from Phase B onward, the Vite/TS/Three.js client — lives inside
-this folder so it never collides with the rest of the team's work directly
-under `cv_model/`.
+The browser game: a Vite/TypeScript/Three.js client (this folder) that talks to
+the Python transport bridge in `src/narutocv/transport/` (`game_implementation_plan.md`).
+The JSON message contracts live in the repo-level `schemas/` directory.
 
-**Hard rule this folder follows:** the locked recognition pipeline in
-`cv_model/inference/` is never modified from here. This folder only carries
-its output to a browser and, eventually, renders a game around it.
+**Hard rule this app follows:** the recognition pipeline in
+`src/narutocv/inference/` is never modified from here. The app only consumes
+its output in a browser and renders a game around it.
 
 ## Status
 
@@ -26,8 +24,8 @@ its output to a browser and, eventually, renders a game around it.
 
 ## Phase A — Transport bridge
 
-`transport/` is a loopback HTTP + WebSocket server that wraps the existing
-`PipelineRuntimeController` / `LatestFrameScheduler` from `cv_model.inference`
+`src/narutocv/transport/` is a loopback HTTP + WebSocket server that wraps the existing
+`PipelineRuntimeController` / `LatestFrameScheduler` from `narutocv.inference`
 without changing anything about how they work:
 
 - `GET /health` — process/model/runtime readiness.
@@ -76,23 +74,20 @@ output — it forwards `PipelineOutputV1`/`PipelineEventV1` unchanged.
 
 ## Setup
 
-A dedicated virtual environment lives at `venv/` inside this folder (already
-created and populated; `venv/` is covered by the repo's root `.gitignore`, so
-it is never committed). To recreate it from scratch:
+The repo uses a single [uv](https://docs.astral.sh/uv/) environment at the repo
+root (`.venv/`, gitignored). From the repository root:
 
-```powershell
-# from cv_model/Nishit_Frontend
-"C:\Program Files\Python313\python.exe" -m venv venv
-.\venv\Scripts\python.exe -m pip install --upgrade pip
-.\venv\Scripts\python.exe -m pip install -r requirements-transport.txt
+```bash
+uv sync --extra transport --extra dev   # or `make setup` for everything
+make fetch-models                       # MediaPipe .task files -> models/
 ```
 
 ## Running the tests
 
 From the repository root:
 
-```powershell
-.\cv_model\Nishit_Frontend\venv\Scripts\python.exe -m unittest discover -s cv_model\Nishit_Frontend\tests -v
+```bash
+uv run pytest tests/transport -v
 ```
 
 52/52 passing as of this Phase-A delivery:
@@ -108,8 +103,8 @@ From the repository root:
 
 ## Running the server
 
-```powershell
-.\cv_model\Nishit_Frontend\venv\Scripts\python.exe serve_transport.py
+```bash
+make serve                         # or: uv run python -m narutocv.transport
 ```
 
 Binds to `127.0.0.1:8765` by default (loopback only, per the step-6 contract).
@@ -134,13 +129,13 @@ events is a natural first Phase-B smoke test.
 
 ## Phase B — Frontend scaffold + mock event source
 
-`frontend/` is a Vite + TypeScript app (no framework, per
+`apps/web/` is a Vite + TypeScript app (no framework, per
 `game_implementation_plan.md`'s Phase 7 stack decision — DOM/CSS/Canvas only;
 Three.js arrives with Phase C). It proves the full plumbing works end to end
 *before* Phase C starts building the actual game on top of it.
 
 ```
-frontend/src/
+apps/web/src/
 ├── main.ts                  # wires everything below together
 ├── config.ts                # transport URL, mock toggle, capture settings
 ├── transport/
@@ -209,7 +204,7 @@ with one `?mock=1` query-flag check; nothing else changes.
 ### Running it
 
 ```powershell
-cd cv_model\Nishit_Frontend\frontend
+cd apps/web
 npm install
 npm run typecheck   # tsc --noEmit
 npm run test        # vitest run (62 tests)
@@ -221,7 +216,7 @@ With `?mock=1`, the page runs entirely off `demoTape.ts` (one hand seal, one
 Fire Attack, one jump) with 150 ms±40 ms injected latency — no camera, no
 Python process, no network required. Without it, `main.ts` connects a real
 `WebSocketClient` to `ws://127.0.0.1:8765/ws`, i.e. Phase A's
-`serve_transport.py` needs to be running.
+`python -m narutocv.transport` (`make serve`) needs to be running.
 
 ### What's deliberately not here yet (Phase B)
 
@@ -246,14 +241,14 @@ Python process, no network required. Without it, `main.ts` connects a real
 
 ## Phase C — Environment & map (Three.js)
 
-`frontend/scene.html` is a second, independent dev-harness page (separate
+`apps/web/scene.html` is a second, independent dev-harness page (separate
 from Phase B's `index.html`) that proves the environment/map systems work
 together: a scrolling jungle track, pooled obstacle spawning driven by
 `levelDefinition.ts`, AABB collision detection, and a keyboard-driven
 placeholder cube standing in for the not-yet-built real player character.
 
 ```
-frontend/
+apps/web/
 ├── scene.html                        # Phase C dev harness page
 └── src/
     ├── sceneMain.ts                  # wires it all together
@@ -371,7 +366,7 @@ the camera, which only a real render surfaces.
 ### Running it
 
 ```powershell
-cd cv_model\Nishit_Frontend\frontend
+cd apps/web
 npm run test                          # 132 unit tests
 npm run typecheck && npm run build    # both index.html and scene.html
 npm run dev                           # http://127.0.0.1:5173/scene.html
@@ -476,13 +471,13 @@ explaining why, not by changing any gameplay timing.
 ## Phase D — Character & movement
 
 Replaces the Phase-C placeholder cube with the real Naruto model you
-provided (`cv_model/Character_3D_Models/naruto-sage/`, copied into
-`frontend/public/models/naruto/`) and the real lane/jump controller.
+provided (`Character_3D_Models/naruto-sage/`, copied into
+`apps/web/public/models/naruto/`) and the real lane/jump controller.
 `dev/debugPlayerRig.ts` is deleted, exactly as Phase C's own doc comment said
 it would be.
 
 ```
-frontend/
+apps/web/
 ├── public/models/naruto/         # copied from Character_3D_Models/naruto-sage
 │   ├── Naruto.dae                # rigged mesh + skeleton (no baked animations)
 │   ├── Naruto.mtl, Naruto.png, nr2_tex01/02.png, eyes/*.png
@@ -598,7 +593,7 @@ from assumptions:
 ### Running it
 
 ```powershell
-cd cv_model\Nishit_Frontend\frontend
+cd apps/web
 npm run test                          # 146 unit tests
 npm run typecheck && npm run build    # both index.html and scene.html
 npm run dev                           # http://127.0.0.1:5173/scene.html
@@ -939,7 +934,7 @@ called out under "Known gaps" below.
 ### One finding worth the owner's attention
 
 `hare` is the **weakest-separated class in the recognizer**. From
-`cv_model/inference/hand_config.py`, it has the lowest confidence threshold of
+`src/narutocv/inference/hand_config.py`, it has the lowest confidence threshold of
 all thirteen classes (0.32; the next lowest is `rat` at 0.45) and a margin
 threshold of **0.02** — an order of magnitude below every other sign except
 `rat`. Those numbers say the classifier can barely distinguish `hare` from its
@@ -1132,14 +1127,14 @@ There is **no trained body model**. `body_tracking_prototype.py` is a
 standalone heuristic demo — MediaPipe's pretrained `pose_landmarker_lite`
 plus hard-coded thresholds, drawing to an OpenCV window, returning nothing.
 The real implementation is `BodyMovementRecognizer` in
-`cv_model/inference/combined_pipeline.py`, already wired into the Phase-A
+`src/narutocv/inference/combined_pipeline.py`, already wired into the Phase-A
 transport (52/52 tests green). The prototype is untouched, per the owner.
 
 ### ⚠️ The mirroring inversion, and where it is fixed
 
 The pipeline runs inference on the **raw, unmirrored** frame:
 `framePublisher.ts` "never mirrors"; `run_combined_camera.py` flips only
-*after* recognition; and `cv_model/tests/test_display_mirroring.py` asserts
+*after* recognition; and `tests/inference/test_display_mirroring.py` asserts
 that display mirroring leaves labels alone. In an unmirrored frame the
 player's physical left sits at *higher* x, so leaning left yields
 `lean_x > 0` → the pipeline calls it **`bending_right`**. Unfixed, leaning
@@ -1237,7 +1232,7 @@ those tests were right to break: it changes how the approved build starts.
 Flip the default in `src/config/cvInputConfig.ts` once §9.7's manual protocol
 has been run on the demo machine.
 
-**One command to play** (§3.2): `.\cv_model\Nishit_Frontend\start_game.ps1`
+**One command to play** (§3.2): `.\scripts\windows\start_game.ps1`
 starts the recognition service, waits for it to actually answer, starts the
 dev server and opens the game. `-KeyboardOnly` skips the service. The manual
 two-terminal path is documented at the top of the script.

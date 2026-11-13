@@ -6,7 +6,7 @@ from pathlib import Path
 
 import numpy as np
 
-from cv_model.inference.combined_pipeline import (
+from narutocv.inference.combined_pipeline import (
     AttackEvent,
     BodyResult,
     Classification,
@@ -14,9 +14,9 @@ from cv_model.inference.combined_pipeline import (
     HandResult,
     QueueUpdate,
 )
-from cv_model.inference.events import PipelineEventDispatcher, PipelineEventType
-from cv_model.inference.output_schema import PipelineOutputSerializer
-from cv_model.inference.runtime import (
+from narutocv.inference.events import PipelineEventDispatcher, PipelineEventType
+from narutocv.inference.output_schema import PipelineOutputSerializer
+from narutocv.inference.runtime import (
     PipelineRuntimeController,
     RuntimeConfig,
     RuntimeState,
@@ -25,7 +25,7 @@ from cv_model.inference.runtime import (
 
 
 EVENT_SCHEMA_PATH = (
-    Path(__file__).resolve().parents[1]
+    Path(__file__).resolve().parents[2]
     / "schemas"
     / "pipeline_event_v1.schema.json"
 )

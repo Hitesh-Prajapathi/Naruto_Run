@@ -10,7 +10,7 @@ import urllib.request
 from collections import deque
 
 # Download the model if it doesn't exist
-model_path = 'pose_landmarker.task'
+model_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'models', 'pose_landmarker.task')
 if not os.path.exists(model_path):
     print("Downloading Pose Landmarker model...")
     urllib.request.urlretrieve('https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task', model_path)

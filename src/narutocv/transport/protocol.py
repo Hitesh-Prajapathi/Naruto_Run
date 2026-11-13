@@ -15,7 +15,7 @@ from enum import Enum
 from typing import Any, Mapping, Optional
 
 PROTOCOL_VERSION = "1.0.0"
-# Mirrors cv_model.inference.output_schema.SCHEMA_VERSION. Duplicated as a
+# Mirrors narutocv.inference.output_schema.SCHEMA_VERSION. Duplicated as a
 # literal (rather than imported) so this module has zero dependency on the
 # inference package and can be unit tested in isolation.
 SCHEMA_VERSION = "1.0.0"
@@ -88,7 +88,7 @@ def encode_frame(envelope: FrameEnvelope) -> bytes:
 
     Production frames are produced by the browser's framePublisher, not this
     backend. This exists for tests and the future minimal diagnostic client
-    (context.md step-6 completion artifact).
+    (docs/archive/context.md step-6 completion artifact).
     """
     envelope.validate()
     header = FRAME_HEADER.pack(

@@ -6,28 +6,22 @@ pipeline, so no camera, model weights, MediaPipe, or ONNX Runtime inference
 is required -- only the message contract and scheduling glue are under test.
 The real CombinedNarutoPipeline dataclasses are still imported (see
 combined_pipeline module docstring), which is why mediapipe/onnxruntime are
-listed in requirements-transport.txt even though this file never runs them.
+listed in the `transport` extra of pyproject.toml even though this file never runs them.
 """
 
 from __future__ import annotations
 
 import asyncio
 import struct
-import sys
 import unittest
-from pathlib import Path
 from typing import Optional
-
-_REPO_ROOT = Path(__file__).resolve().parents[3]
-if str(_REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(_REPO_ROOT))
 
 import cv2
 import numpy as np
 from aiohttp import WSMsgType
 from aiohttp.test_utils import AioHTTPTestCase
 
-from cv_model.inference.combined_pipeline import (
+from narutocv.inference.combined_pipeline import (
     AttackEvent,
     BodyResult,
     Classification,
@@ -35,16 +29,16 @@ from cv_model.inference.combined_pipeline import (
     HandResult,
     QueueUpdate,
 )
-from cv_model.inference.runtime import RuntimeConfig
+from narutocv.inference.runtime import RuntimeConfig
 
-from cv_model.Nishit_Frontend.transport.protocol import (
+from narutocv.transport.protocol import (
     FRAME_HEADER,
     FRAME_MAGIC,
     MAX_FRAME_PAYLOAD_BYTES,
     FrameEnvelope,
     encode_frame,
 )
-from cv_model.Nishit_Frontend.transport.server import create_app
+from narutocv.transport.server import create_app
 
 RECEIVE_TIMEOUT_SECONDS = 3.0
 

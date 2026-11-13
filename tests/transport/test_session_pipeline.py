@@ -20,8 +20,8 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from cv_model.Nishit_Frontend.transport import pipeline as pipeline_module
-from cv_model.Nishit_Frontend.transport.pipeline import SessionScopedPipeline
+from narutocv.transport import pipeline as pipeline_module
+from narutocv.transport.pipeline import SessionScopedPipeline
 
 
 class FakeRecognizer:

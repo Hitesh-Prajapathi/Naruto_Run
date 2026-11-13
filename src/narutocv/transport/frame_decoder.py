@@ -32,7 +32,7 @@ def decode_image(envelope: FrameEnvelope) -> DecodedFrame:
 
     Split out from decode_binary_frame so the server can check the frame
     sequence guard against the cheap header first and skip the JPEG decode
-    entirely for a stale/duplicate frame (context.md step-6: "discard stale
+    entirely for a stale/duplicate frame (docs/archive/context.md step-6: "discard stale
     input sequences before JPEG decoding where possible").
     """
     buffer = np.frombuffer(envelope.payload, dtype=np.uint8)

@@ -10,14 +10,14 @@ from typing import Any, Optional
 
 import cv2
 
-from inference.combined_pipeline import (
+from narutocv.inference.combined_pipeline import (
     DEFAULT_HAND_LANDMARKER,
     DEFAULT_HAND_MODEL,
     DEFAULT_POSE_MODEL,
     CombinedNarutoPipeline,
 )
-from inference.diagnostics import SessionDiagnosticsRecorder
-from inference.evaluation import (
+from narutocv.inference.diagnostics import SessionDiagnosticsRecorder
+from narutocv.inference.evaluation import (
     ATTACK_LABELS,
     ATTACK_SEALS,
     BODY_LABELS,
@@ -28,8 +28,8 @@ from inference.evaluation import (
     LabelEvaluationSession,
     write_evaluation_reports,
 )
-from inference.runtime import PipelineRuntimeController
-from inference.scheduler import LatestFrameScheduler, ScheduledResult
+from narutocv.inference.runtime import PipelineRuntimeController
+from narutocv.inference.scheduler import LatestFrameScheduler, ScheduledResult
 
 
 BODY_PROMPTS = {

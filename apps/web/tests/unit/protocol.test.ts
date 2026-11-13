@@ -45,7 +45,7 @@ describe("cross-language wire format", () => {
   //   env = FrameEnvelope(version=1, sequence=42, captured_at_ms=1731000000123,
   //                        width=640, height=360, payload=b"hello-jpeg-bytes")
   //   encode_frame(env).hex()
-  // If this ever needs regenerating, run that from cv_model/Nishit_Frontend
+  // If this ever needs regenerating, run that from the repo root
   // with the transport venv active. A mismatch here means the TS and Python
   // encoders have drifted apart at the byte level.
   const GOLDEN_HEX =

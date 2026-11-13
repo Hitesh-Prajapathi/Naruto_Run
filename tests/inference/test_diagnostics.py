@@ -7,13 +7,13 @@ import unittest
 from pathlib import Path
 from types import SimpleNamespace
 
-from cv_model.inference.diagnostics import (
+from narutocv.inference.diagnostics import (
     BenchmarkCollector,
     SessionDiagnosticsRecorder,
     build_frame_diagnostic,
     format_benchmark_summary,
 )
-from cv_model.inference.scheduler import ScheduledResult, SchedulerStats
+from narutocv.inference.scheduler import ScheduledResult, SchedulerStats
 
 
 def _stats(

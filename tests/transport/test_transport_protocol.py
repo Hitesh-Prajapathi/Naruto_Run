@@ -1,18 +1,8 @@
 from __future__ import annotations
 
-import sys
 import unittest
-from pathlib import Path
 
-# Bootstrap the repo root onto sys.path so `cv_model....` absolute imports
-# resolve no matter how this module is invoked (plain `python -m unittest`,
-# pytest, or an IDE runner) -- unlike a relative import, this doesn't depend
-# on unittest discovery importing this file as part of the `tests` package.
-_REPO_ROOT = Path(__file__).resolve().parents[3]
-if str(_REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(_REPO_ROOT))
-
-from cv_model.Nishit_Frontend.transport.protocol import (
+from narutocv.transport.protocol import (
     FRAME_HEADER_SIZE,
     FRAME_MAGIC,
     MAX_FRAME_PAYLOAD_BYTES,

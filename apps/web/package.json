@@ -2,7 +2,7 @@
   "name": "narutocv-frontend",
   "private": true,
   "version": "0.1.0",
-  "description": "NarutoCV game frontend (game_implementation_plan.md Phases B-H). Consumes the Nishit_Frontend/transport WebSocket bridge; never re-implements recognition.",
+  "description": "NarutoCV game frontend (game_implementation_plan.md Phases B-H). Consumes the src/narutocv/transport WebSocket bridge; never re-implements recognition.",
   "type": "module",
   "scripts": {
     "dev": "vite",

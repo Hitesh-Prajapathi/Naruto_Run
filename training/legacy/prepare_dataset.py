@@ -4,15 +4,19 @@ import random
 import shutil
 import zipfile
 from datetime import datetime
+from pathlib import Path
 import numpy as np
 from PIL import Image, ImageEnhance, ImageFilter
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
 # ── Configuration ──────────────────────────────────────────
-RAW_DIR = "/Users/hiteshprajapathi/Desktop/Naruto_Run_datacollection/Pure Naruto Hand Sign Data"
-OUTPUT_DIR = "/Users/hiteshprajapathi/Desktop/Naruto_Run_datacollection/cv_model/data/prepared_dataset"
-ZIP_PATH = "/Users/hiteshprajapathi/Desktop/Naruto_Run_datacollection/cv_model/data/prepared_dataset.zip"
+# LEGACY: produces the leaky per-frame random split (see docs/archive/ and the
+# honest-evaluation work). Kept only to reproduce the v0 baseline.
+REPO_ROOT = Path(__file__).resolve().parents[2]
+RAW_DIR = str(REPO_ROOT / "Pure Naruto Hand Sign Data")
+OUTPUT_DIR = str(REPO_ROOT / "data" / "prepared_dataset")
+ZIP_PATH = str(REPO_ROOT / "data" / "prepared_dataset.zip")
 
 IMAGE_SIZE = 224
 RANDOM_SEED = 42
@@ -167,7 +171,7 @@ def main():
         aug_stats[c] = aug_count
         
     # 6. Save Splits
-    print("\n[6/8] Saving splits to cv_model/data/prepared_dataset/...")
+    print("\n[6/8] Saving splits to data/prepared_dataset/...")
     if os.path.exists(OUTPUT_DIR):
         shutil.rmtree(OUTPUT_DIR)
         

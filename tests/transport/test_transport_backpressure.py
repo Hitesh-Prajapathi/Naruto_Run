@@ -1,14 +1,8 @@
 from __future__ import annotations
 
-import sys
 import unittest
-from pathlib import Path
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
-if str(_REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(_REPO_ROOT))
-
-from cv_model.Nishit_Frontend.transport.connection import (
+from narutocv.transport.connection import (
     BoundedEventQueue,
     ClientSession,
     EventQueueOverflow,

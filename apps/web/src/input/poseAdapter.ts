@@ -16,7 +16,7 @@
  *     as-is;
  *   - `run_combined_camera.py` flips only *after* recognition, and
  *     `_mirror_result_for_display` reflects geometry while explicitly leaving
- *     labels alone (asserted in `cv_model/tests/test_display_mirroring.py`).
+ *     labels alone (asserted in `tests/inference/test_display_mirroring.py`).
  *
  * In an unmirrored frame the player's physical left appears at *higher* x.
  * So a player leaning to their own left drops their anatomical left shoulder,

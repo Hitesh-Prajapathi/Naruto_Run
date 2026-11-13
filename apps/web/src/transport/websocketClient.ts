@@ -1,6 +1,6 @@
 /**
  * Real transport implementation of PipelineEventSource: connects to
- * cv_model/Nishit_Frontend/serve_transport.py's GET /ws, performs the
+ * `python -m narutocv.transport`'s GET /ws, performs the
  * client_hello/server_ready handshake, heartbeats with `ping`, and
  * reconnects with bounded exponential backoff on an unexpected close.
  *

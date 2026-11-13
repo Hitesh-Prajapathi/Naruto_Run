@@ -11,7 +11,7 @@ import cv2
 import numpy as np
 import onnxruntime as ort
 
-from inference.hand_config import HAND_CONFIDENCE_THRESHOLDS, HAND_MARGIN_THRESHOLDS
+from narutocv.inference.hand_config import HAND_CONFIDENCE_THRESHOLDS, HAND_MARGIN_THRESHOLDS
 
 
 def parse_args() -> argparse.Namespace:
@@ -19,12 +19,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--data",
         type=Path,
-        default=Path(__file__).resolve().parent / "data/prepared_dataset/test",
+        default=Path(__file__).resolve().parents[1] / "data/prepared_dataset/test",
     )
     parser.add_argument(
         "--model",
         type=Path,
-        default=Path(__file__).resolve().parent / "models/best_model_A.onnx",
+        default=Path(__file__).resolve().parents[1] / "models/best_model_A.onnx",
     )
     return parser.parse_args()
 

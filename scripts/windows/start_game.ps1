@@ -8,11 +8,14 @@
 # Starts the recognition service, waits until it is actually answering, then
 # starts the Vite dev server and opens the game.
 #
-#   .\cv_model\Nishit_Frontend\start_game.ps1
+#   .\scripts\windows\start_game.ps1
+#
+# One-time setup (repo root):  uv sync --extra transport ; python scripts\fetch_models.py
+#                              cd apps\web ; npm ci
 #
 # Manual path (two terminals), if you want the logs separated:
-#   1) .\cv_model\Nishit_Frontend\venv\Scripts\python.exe cv_model\Nishit_Frontend\serve_transport.py
-#   2) cd cv_model\Nishit_Frontend\frontend ; npm run dev
+#   1) .\.venv\Scripts\python.exe -m narutocv.transport
+#   2) cd apps\web ; npm run dev
 #      then open http://localhost:5173/scene.html
 #
 # Keyboard-only, no camera and no service needed:
@@ -28,9 +31,9 @@ param(
 
 $ErrorActionPreference = "Stop"
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
-$python = Join-Path $here "venv\Scripts\python.exe"
-$server = Join-Path $here "serve_transport.py"
-$frontend = Join-Path $here "frontend"
+$repo = Resolve-Path (Join-Path $here "..\..")
+$python = Join-Path $repo ".venv\Scripts\python.exe"
+$frontend = Join-Path $repo "apps\web"
 
 function Test-PortOpen([int]$Port) {
     try {
@@ -47,7 +50,7 @@ $jobs = @()
 
 if (-not $KeyboardOnly) {
     if (-not (Test-Path $python)) {
-        Write-Error "Virtual environment missing at $python. See the Setup section of README.md."
+        Write-Error "Virtual environment missing at $python. Run 'uv sync --extra transport' from the repo root (see apps\web\README.md)."
     }
     if (Test-PortOpen $ServicePort) {
         Write-Host "Recognition service already running on port $ServicePort." -ForegroundColor Yellow
@@ -56,7 +59,7 @@ if (-not $KeyboardOnly) {
         # --body-only: the game reads body movement only, and hand inference is
         # more than half the per-frame cost. Skipping it roughly doubles the
         # frame rate, which is what keeps samples from arriving stale.
-        $jobs += Start-Process -FilePath $python -ArgumentList @($server, "--body-only") -PassThru -WorkingDirectory $here
+        $jobs += Start-Process -FilePath $python -ArgumentList @("-m", "narutocv.transport", "--body-only") -PassThru -WorkingDirectory $repo
 
         # The models take a while to load; do not open the game before the
         # socket answers, or the player meets "service not running" on a

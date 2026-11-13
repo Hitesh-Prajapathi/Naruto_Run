@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from cv_model.inference.evaluation import (
+from narutocv.inference.evaluation import (
     AttackAttemptEvaluator,
     AttackEvaluationSession,
     LabelAttemptEvaluator,

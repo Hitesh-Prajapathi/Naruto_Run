@@ -8,7 +8,7 @@ import { defineConfig } from "vite";
 export default defineConfig({
   // No explicit `root`: Vite defaults it to this config file's directory.
   server: {
-    // Explicit IPv4 loopback: matches serve_transport.py's 127.0.0.1 default
+    // Explicit IPv4 loopback: matches `python -m narutocv.transport`'s 127.0.0.1 default
     // so "the backend" and "the frontend" mean the same host consistently.
     host: "127.0.0.1",
     port: 5173,

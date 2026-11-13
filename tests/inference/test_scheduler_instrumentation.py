@@ -6,8 +6,8 @@ from types import SimpleNamespace
 
 import numpy as np
 
-from cv_model.inference.combined_pipeline import HandSignRecognizer
-from cv_model.inference.scheduler import (
+from narutocv.inference.combined_pipeline import HandSignRecognizer
+from narutocv.inference.scheduler import (
     LatestFrameScheduler,
     SchedulerState,
     SchedulerStateError,

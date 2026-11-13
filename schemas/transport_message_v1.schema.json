@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://narutocv.local/schemas/transport_message_v1.schema.json",
   "title": "NarutoCV Transport JSON Message V1",
-  "description": "Every JSON (text-frame) WebSocket message exchanged on GET /ws, in either direction, over the lifetime of one connection. The binary camera-frame envelope is a separate fixed binary layout, not JSON -- see FRAME_HEADER in cv_model/Nishit_Frontend/transport/protocol.py.",
+  "description": "Every JSON (text-frame) WebSocket message exchanged on GET /ws, in either direction, over the lifetime of one connection. The binary camera-frame envelope is a separate fixed binary layout, not JSON -- see FRAME_HEADER in src/narutocv/transport/protocol.py.",
   "oneOf": [
     {"$ref": "#/$defs/clientHello"},
     {"$ref": "#/$defs/serverReady"},
@@ -112,7 +112,7 @@
         "captured_at_ms": {"type": "integer", "minimum": 0},
         "output": {
           "type": "object",
-          "description": "Conforms to cv_model/schemas/pipeline_output_v1.schema.json. Not re-validated field-by-field here so this contract does not fork from that one; PipelineOutputSerializer remains the single producer."
+          "description": "Conforms to schemas/pipeline_output_v1.schema.json. Not re-validated field-by-field here so this contract does not fork from that one; PipelineOutputSerializer remains the single producer."
         }
       }
     },
@@ -124,7 +124,7 @@
         "type": {"const": "pipeline_event"},
         "event": {
           "type": "object",
-          "description": "Conforms to cv_model/schemas/pipeline_event_v1.schema.json, delivered immediately and in dispatcher order (HAND_SEAL, BODY_MOVEMENT, ATTACK_TRIGGERED, QUEUE_CLEARED per frame)."
+          "description": "Conforms to schemas/pipeline_event_v1.schema.json, delivered immediately and in dispatcher order (HAND_SEAL, BODY_MOVEMENT, ATTACK_TRIGGERED, QUEUE_CLEARED per frame)."
         }
       }
     }

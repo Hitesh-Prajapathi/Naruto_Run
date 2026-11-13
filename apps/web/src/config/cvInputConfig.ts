@@ -45,7 +45,7 @@ export function isCvInputEnabled(): boolean {
 /** Kept as a constant too, for code that cannot call a function (tests). */
 export const ENABLE_CV_INPUT = DEFAULT_ENABLE_CV_INPUT;
 
-/** Where the Python recognition service listens. Matches serve_transport.py. */
+/** Where the Python recognition service listens. Matches `python -m narutocv.transport`. */
 export const CV_TRANSPORT_URL = "ws://127.0.0.1:8765/ws";
 
 /**
@@ -65,4 +65,4 @@ export const CV_JPEG_QUALITY = 0.7;
 /** The command to start the service, shown verbatim when it is not running
  * (§4.2: "detection service not running" must be actionable). */
 export const CV_SERVICE_COMMAND =
-  ".\\cv_model\\Nishit_Frontend\\venv\\Scripts\\python.exe cv_model\\Nishit_Frontend\\serve_transport.py";
+  "uv run python -m narutocv.transport";

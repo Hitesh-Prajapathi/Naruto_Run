@@ -4,7 +4,7 @@ import unittest
 
 import numpy as np
 
-from cv_model.inference.combined_pipeline import (
+from narutocv.inference.combined_pipeline import (
     ATTACKS,
     AttackRecognizer,
     BodyMovementRecognizer,
@@ -15,7 +15,7 @@ from cv_model.inference.combined_pipeline import (
     HandResult,
     HandSignRecognizer,
 )
-from cv_model.inference.pipeline_config import (
+from narutocv.inference.pipeline_config import (
     AttackQueueConfig,
     BodyMovementConfig,
     HandFusionConfig,

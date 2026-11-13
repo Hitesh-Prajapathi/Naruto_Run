@@ -21,7 +21,7 @@ export const ENABLE_SPECIAL_ATTACK = true;
  * The one sign that saves Naruto. Deliberately its own type rather than a
  * member of `SEAL_POOL`: adding it to the pool would change the approved
  * jutsu sequences, which §0 forbids. The name matches the recognition
- * pipeline's vocabulary (`cv_model/inference/hand_config.py`) so wiring CV
+ * pipeline's vocabulary (`src/narutocv/inference/hand_config.py`) so wiring CV
  * later is a mapping, not a redesign.
  */
 export const COUNTER_SIGN = "hare" as const;

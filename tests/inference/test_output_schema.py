@@ -7,7 +7,7 @@ import unittest
 from dataclasses import replace
 from pathlib import Path
 
-from cv_model.inference.combined_pipeline import (
+from narutocv.inference.combined_pipeline import (
     AttackEvent,
     BodyResult,
     Classification,
@@ -15,7 +15,7 @@ from cv_model.inference.combined_pipeline import (
     HandResult,
     QueueUpdate,
 )
-from cv_model.inference.output_schema import (
+from narutocv.inference.output_schema import (
     SCHEMA_VERSION,
     PipelineOutputSerializer,
     SerializationError,
@@ -24,7 +24,7 @@ from cv_model.inference.output_schema import (
 
 
 SCHEMA_PATH = (
-    Path(__file__).resolve().parents[1]
+    Path(__file__).resolve().parents[2]
     / "schemas"
     / "pipeline_output_v1.schema.json"
 )

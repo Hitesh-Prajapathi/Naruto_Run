@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://narutocv.local/schemas/transport_control_v1.schema.json",
   "title": "NarutoCV Transport Control Message V1",
-  "description": "Client -> server bounded command sent as a text WebSocket message. See cv_model/Nishit_Frontend/transport/protocol.py ControlCommand and parse_control_message.",
+  "description": "Client -> server bounded command sent as a text WebSocket message. See src/narutocv/transport/protocol.py ControlCommand and parse_control_message.",
   "type": "object",
   "additionalProperties": false,
   "required": ["type", "command"],

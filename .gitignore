@@ -22,8 +22,6 @@ prepared_dataset.zip
 data/raw/
 data/prepared/
 data/prepared_dataset/
-cv_model/data/prepared_dataset.zip
-cv_model/data/prepared_dataset/
 
 # Models fetched by `make fetch-models` (see models/manifest.yaml)
 models/*.task
@@ -42,6 +40,8 @@ presentation_guide.md
 # Local training runs & temporary outputs
 training/runs/
 training/dry_run_output/
-cv_model/training/runs/
-cv_model/training/dry_run_output/
 *.log
+
+# Legacy pre-refactor directory: local untracked data (venvs, prepared_dataset*)
+# may still linger here in old checkouts. Never commit any of it.
+cv_model/

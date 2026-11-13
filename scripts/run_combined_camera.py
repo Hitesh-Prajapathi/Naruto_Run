@@ -10,16 +10,16 @@ from pathlib import Path
 
 import cv2
 
-from inference.combined_pipeline import (
+from narutocv.inference.combined_pipeline import (
     DEFAULT_HAND_LANDMARKER,
     DEFAULT_HAND_MODEL,
     DEFAULT_POSE_MODEL,
     CombinedNarutoPipeline,
     FrameResult,
 )
-from inference.diagnostics import SessionDiagnosticsRecorder, scheduled_timings_ms
-from inference.runtime import PipelineRuntimeController
-from inference.scheduler import LatestFrameScheduler
+from narutocv.inference.diagnostics import SessionDiagnosticsRecorder, scheduled_timings_ms
+from narutocv.inference.runtime import PipelineRuntimeController
+from narutocv.inference.scheduler import LatestFrameScheduler
 
 
 POSE_CONNECTIONS = (
