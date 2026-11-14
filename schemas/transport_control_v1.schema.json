@@ -5,15 +5,21 @@
   "description": "Client -> server bounded command sent as a text WebSocket message. See src/narutocv/transport/protocol.py ControlCommand and parse_control_message.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["type", "command"],
+  "required": [
+    "type",
+    "command"
+  ],
   "properties": {
-    "type": {"const": "control"},
+    "type": {
+      "const": "control"
+    },
     "command": {
       "enum": [
         "reset",
         "begin_calibration",
         "finish_calibration",
         "cancel_calibration",
+        "set_mode",
         "ping"
       ]
     },
@@ -21,6 +27,11 @@
       "type": "string",
       "minLength": 1,
       "description": "Optional client-chosen correlation ID, echoed back verbatim on the matching ack so the frontend can resolve pending/success/failure UI state."
+    },
+    "mode": {
+      "type": "string",
+      "maxLength": 32,
+      "description": "Only for command set_mode."
     }
   }
 }

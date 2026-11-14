@@ -14,11 +14,15 @@ import {
   type ControlCommand,
   type ErrorMessage,
   type PipelineEventV1,
+  type ServerReadyMessage,
   type StateSnapshotMessage,
   type TransportMessage,
+  FATAL_CLOSE_CODES,
+  PROTOCOL_MAJOR,
   ProtocolError,
   buildClientHello,
   buildControl,
+  parseProtocolMajor,
   parseTransportMessage,
 } from "./protocol";
 import {
@@ -37,6 +41,10 @@ export interface WebSocketClientOptions {
   maxBackoffMs?: number;
   /** How long to wait for server_ready after the socket opens. */
   handshakeTimeoutMs?: number;
+  /** Model bundle id this build expects (server_ready.model.id). When set, a
+   * server running a different bundle refuses the connection (model_mismatch)
+   * and the client does not retry. Omit to accept any bundle. */
+  expectedModelId?: string;
   /** Injectable for tests -- must return a WebSocket-shaped object. */
   webSocketFactory?: (url: string) => WebSocket;
 }
@@ -52,6 +60,9 @@ export class WebSocketClient implements PipelineEventSource {
   private manuallyDisconnected = false;
   private reconnectAttempts = 0;
   private sessionId: string | null = null;
+  private serverInfo: ServerReadyMessage | null = null;
+  /** Set when the failure cannot be fixed by retrying (version/model mismatch). */
+  private fatal = false;
 
   private heartbeatTimer: ReturnType<typeof setInterval> | null = null;
   private handshakeTimer: ReturnType<typeof setTimeout> | null = null;
@@ -73,8 +84,15 @@ export class WebSocketClient implements PipelineEventSource {
     return this.sessionId;
   }
 
+  /** The most recent server_ready (protocol version, model bundle, classes,
+   * capabilities); null until the handshake completes. */
+  get serverReady(): ServerReadyMessage | null {
+    return this.serverInfo;
+  }
+
   connect(): void {
     this.manuallyDisconnected = false;
+    this.fatal = false;
     if (this.state === "open" || this.state === "connecting") {
       return;
     }
@@ -143,7 +161,7 @@ export class WebSocketClient implements PipelineEventSource {
     }, this.options.handshakeTimeoutMs ?? DEFAULT_HANDSHAKE_TIMEOUT_MS);
 
     socket.onopen = () => {
-      socket.send(JSON.stringify(buildClientHello()));
+      socket.send(JSON.stringify(buildClientHello(this.options.expectedModelId)));
     };
     socket.onmessage = (event: MessageEvent) => {
       this.handleMessage(event);
@@ -151,8 +169,8 @@ export class WebSocketClient implements PipelineEventSource {
     socket.onerror = () => {
       this.errorSignal.emit({ type: "error", code: "socket_error", message: "WebSocket transport error" });
     };
-    socket.onclose = () => {
-      this.handleClose();
+    socket.onclose = (event?: CloseEvent) => {
+      this.handleClose(event?.code);
     };
   }
 
@@ -173,6 +191,10 @@ export class WebSocketClient implements PipelineEventSource {
 
     switch (parsed.type) {
       case "server_ready":
+        if (!this.acceptServerReady(parsed)) {
+          break;
+        }
+        this.serverInfo = parsed;
         this.sessionId = parsed.session_id;
         this.clearHandshakeTimer();
         this.reconnectAttempts = 0;
@@ -183,6 +205,9 @@ export class WebSocketClient implements PipelineEventSource {
         this.ackSignal.emit(parsed);
         break;
       case "error":
+        if (parsed.code === "protocol_version_mismatch" || parsed.code === "model_mismatch") {
+          this.fatal = true;
+        }
         this.errorSignal.emit(parsed);
         break;
       case "state_snapshot":
@@ -197,6 +222,40 @@ export class WebSocketClient implements PipelineEventSource {
         // over a message shape that simply doesn't apply to this direction.
         break;
     }
+  }
+
+  /** Defence in depth: the server already refuses a different major, but a
+   * server that does not check (or an old one) must not be driven blindly. */
+  private acceptServerReady(ready: ServerReadyMessage): boolean {
+    let major: number;
+    try {
+      major = parseProtocolMajor(ready.protocol_version);
+    } catch (error) {
+      this.failFatally("invalid_message", error instanceof Error ? error.message : String(error));
+      return false;
+    }
+    if (major !== PROTOCOL_MAJOR) {
+      this.failFatally(
+        "protocol_version_mismatch",
+        `server speaks protocol ${ready.protocol_version}; this client speaks major version ${PROTOCOL_MAJOR}`,
+      );
+      return false;
+    }
+    const expected = this.options.expectedModelId;
+    if (expected !== undefined && ready.model !== undefined && ready.model.id !== expected) {
+      this.failFatally(
+        "model_mismatch",
+        `client expects model bundle ${expected} but the server runs ${ready.model.id}`,
+      );
+      return false;
+    }
+    return true;
+  }
+
+  private failFatally(code: string, message: string): void {
+    this.fatal = true;
+    this.errorSignal.emit({ type: "error", code, message });
+    this.socket?.close();
   }
 
   private startHeartbeat(): void {
@@ -219,13 +278,19 @@ export class WebSocketClient implements PipelineEventSource {
     }
   }
 
-  private handleClose(): void {
+  private handleClose(code?: number): void {
     this.stopHeartbeat();
     this.clearHandshakeTimer();
     this.socket = null;
     this.sessionId = null;
+    this.serverInfo = null;
     if (this.manuallyDisconnected) {
       this.setState("closed");
+      return;
+    }
+    if (this.fatal || (code !== undefined && FATAL_CLOSE_CODES.includes(code))) {
+      // Retrying cannot help: wait for the user to upgrade client or server.
+      this.setState("error");
       return;
     }
     this.scheduleReconnect();

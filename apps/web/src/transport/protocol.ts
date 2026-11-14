@@ -13,7 +13,32 @@
  * a recognition decision, per game_implementation_plan.md invariant 2.
  */
 
-export const PROTOCOL_VERSION = "1.0.0";
+// 1.1.0 is additive over 1.0.0 (see schemas/transport_message_v1.schema.json):
+// the hello may carry `expected_model_id`; server_ready adds `model`,
+// `classes` and `capabilities`. Peers are compatible when MAJOR matches.
+export const PROTOCOL_VERSION = "1.1.0";
+export const PROTOCOL_MAJOR = 1;
+
+/** WebSocket close codes (mirror src/narutocv/transport/server.py). */
+export const CLOSE_CODE_IDLE_TIMEOUT = 4408;
+export const CLOSE_CODE_CONTROLLER_TAKEN = 4409;
+export const CLOSE_CODE_MODEL_MISMATCH = 4412;
+export const CLOSE_CODE_VERSION_MISMATCH = 4426;
+export const CLOSE_CODE_BACKPRESSURE = 4429;
+/** Closes after which reconnecting cannot succeed until something is upgraded. */
+export const FATAL_CLOSE_CODES: readonly number[] = [
+  CLOSE_CODE_MODEL_MISMATCH,
+  CLOSE_CODE_VERSION_MISMATCH,
+];
+
+/** Parse the MAJOR of "MAJOR.MINOR.PATCH"; throws ProtocolError otherwise. */
+export function parseProtocolMajor(version: string): number {
+  const match = /^(\d+)\.(\d+)\.(\d+)$/.exec(version);
+  if (!match) {
+    throw new ProtocolError(`protocol_version ${JSON.stringify(version)} is not MAJOR.MINOR.PATCH`);
+  }
+  return Number(match[1]);
+}
 // Mirrors narutocv.inference.output_schema.SCHEMA_VERSION, duplicated as a
 // literal for the same reason protocol.py duplicates it: zero cross-language
 // import dependency.
@@ -248,6 +273,40 @@ export interface PipelineEventV1 {
 export interface ClientHelloMessage {
   type: "client_hello";
   protocol_version: string;
+  /** 1.1.0: refuse to talk to a server running a different model bundle. */
+  expected_model_id?: string;
+}
+
+export interface ModelFileInfo {
+  name: string;
+  version: string;
+  sha256: string;
+}
+
+export interface ModelBundleInfo {
+  id: string;
+  sha256: string | null;
+  files: ModelFileInfo[];
+}
+
+export interface ServerClasses {
+  hand: string[];
+  body: string[];
+  attacks: string[];
+}
+
+export interface ServerCapabilities {
+  initial_mode?: string;
+  recognition_modes?: string[];
+  geometry?: boolean;
+  calibration?: boolean;
+  max_fps?: number;
+  max_frame_bytes?: number;
+  max_frame_width?: number;
+  max_frame_height?: number;
+  idle_timeout_s?: number;
+  heartbeat_s?: number;
+  [key: string]: unknown;
 }
 
 export interface ServerReadyMessage {
@@ -256,6 +315,10 @@ export interface ServerReadyMessage {
   schema_version: string;
   session_id: string;
   supported_controls: ControlCommand[];
+  /** 1.1.0 additions; absent when talking to a 1.0.0 server. */
+  model?: ModelBundleInfo;
+  classes?: ServerClasses;
+  capabilities?: ServerCapabilities;
 }
 
 export interface ControlMessage {
@@ -278,6 +341,7 @@ export interface ErrorMessage {
   code: string;
   message: string;
   request_id?: string;
+  details?: Record<string, unknown>;
 }
 
 export interface StateSnapshotMessage {
@@ -302,8 +366,10 @@ export type TransportMessage =
   | StateSnapshotMessage
   | PipelineEventMessage;
 
-export function buildClientHello(): ClientHelloMessage {
-  return { type: "client_hello", protocol_version: PROTOCOL_VERSION };
+export function buildClientHello(expectedModelId?: string): ClientHelloMessage {
+  const hello: ClientHelloMessage = { type: "client_hello", protocol_version: PROTOCOL_VERSION };
+  if (expectedModelId !== undefined) hello.expected_model_id = expectedModelId;
+  return hello;
 }
 
 export function buildControl(

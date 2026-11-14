@@ -5,7 +5,10 @@ import {
   MAX_FRAME_PAYLOAD_BYTES,
   ProtocolError,
   type FrameEnvelope,
+  PROTOCOL_MAJOR,
+  PROTOCOL_VERSION,
   buildClientHello,
+  parseProtocolMajor,
   buildControl,
   decodeFrame,
   encodeFrame,
@@ -154,7 +157,23 @@ describe("JSON message builders", () => {
   it("builds a client_hello with the current protocol version", () => {
     const message = buildClientHello();
     expect(message.type).toBe("client_hello");
-    expect(message.protocol_version).toBeTruthy();
+    expect(message.protocol_version).toBe(PROTOCOL_VERSION);
+    expect("expected_model_id" in message).toBe(false);
+  });
+
+  it("includes expected_model_id in the client_hello only when given", () => {
+    expect(buildClientHello("narutocv-abc").expected_model_id).toBe("narutocv-abc");
+  });
+
+  it("parses the protocol major and rejects non-semver strings", () => {
+    expect(parseProtocolMajor("1.1.0")).toBe(1);
+    expect(parseProtocolMajor("12.0.3")).toBe(12);
+    expect(() => parseProtocolMajor("1.1")).toThrow(ProtocolError);
+    expect(() => parseProtocolMajor("banana")).toThrow(ProtocolError);
+  });
+
+  it("keeps PROTOCOL_VERSION on the supported major", () => {
+    expect(parseProtocolMajor(PROTOCOL_VERSION)).toBe(PROTOCOL_MAJOR);
   });
 
   it("omits request_id from control when not given", () => {
