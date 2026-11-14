@@ -9,8 +9,6 @@ from pathlib import Path
 import numpy as np
 from hypothesis import given, settings
 from hypothesis import strategies as st
-from numpy.typing import NDArray
-
 from narutocv.features.landmarks import (
     FEATURE_DIM,
     FEATURE_NAMES,
@@ -25,6 +23,7 @@ from narutocv.features.landmarks import (
     to_pixel_space,
     two_hand_features,
 )
+from numpy.typing import NDArray
 
 SIZE = (640, 480)
 TOL = 1e-4
@@ -92,7 +91,8 @@ def transform(
     out = (px @ rot.T) * scale
     out[:, 0] += shift[0] * size[0]
     out[:, 1] += shift[1] * size[1]
-    return out / np.array([size[0], size[1], size[0]], dtype=np.float64)
+    result: NDArray[np.float64] = out / np.array([size[0], size[1], size[0]], dtype=np.float64)
+    return result
 
 
 def mirror(lm: NDArray[np.float64]) -> NDArray[np.float64]:
@@ -139,11 +139,10 @@ def test_two_hand_invariant_to_similarity(
     right = make_hand(hp2[0], hp2[1], origin=(0.7, 0.55))
     hands = [HandObservation(left, "Left", 0.8), HandObservation(right, "Right", 0.9)]
     ref = two_hand_features(hands, image_size=SIZE)
+    kw = {"theta": theta, "scale": scale, "shift": (tx, ty)}
     hands_t = [
-        HandObservation(
-            transform(h.landmarks, theta=theta, scale=scale, shift=(tx, ty)), h.handedness, h.score
-        )  # type: ignore[arg-type]
-        for h in hands
+        HandObservation(transform(left, **kw), "Left", 0.8),  # type: ignore[arg-type]
+        HandObservation(transform(right, **kw), "Right", 0.9),  # type: ignore[arg-type]
     ]
     moved = two_hand_features(hands_t, image_size=SIZE)
     assert np.allclose(ref, moved, atol=TOL)

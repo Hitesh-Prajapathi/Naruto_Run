@@ -8,9 +8,6 @@ import numpy as np
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
-from numpy.typing import NDArray
-from scipy.optimize import check_grad
-
 from narutocv.models.calibration import (
     StackedFusion,
     TemperatureScaler,
@@ -20,6 +17,8 @@ from narutocv.models.calibration import (
     log_softmax,
     softmax,
 )
+from numpy.typing import NDArray
+from scipy.optimize import check_grad
 
 K = 6
 
