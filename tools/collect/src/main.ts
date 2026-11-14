@@ -1,6 +1,6 @@
 import "./style.css";
 import { CONSENT_HASH, CONSENT_TEXT, renderMarkdown } from "./content";
-import { DEFAULT_CONFIG, generatePlan } from "./protocol";
+import { DEFAULT_CONFIG, FAST_CONFIG, generatePlan } from "./protocol";
 import { browserMime, cameraWarnings, FpsMeter, openCamera, REQUESTED } from "./recorder";
 import {
   newProtocolInfo,
@@ -17,6 +17,7 @@ import { h, mount } from "./ui/dom";
 import { runSession } from "./ui/run";
 
 const root = document.getElementById("app")!;
+const CONFIG = new URLSearchParams(location.search).has("fast") ? FAST_CONFIG : DEFAULT_CONFIG;
 const UPLOAD_URL = (import.meta.env.VITE_UPLOAD_URL as string | undefined) || "";
 const UPLOAD_TOKEN = (import.meta.env.VITE_UPLOAD_TOKEN as string | undefined) || "";
 
@@ -227,8 +228,8 @@ async function beginSession() {
       session_id: newSessionId(),
       subject: pendingSubject!,
       device: deviceInfo(),
-      protocol: newProtocolInfo(seed, DEFAULT_CONFIG),
-      plan: generatePlan(seed, DEFAULT_CONFIG),
+      protocol: newProtocolInfo(seed, CONFIG),
+      plan: generatePlan(seed, CONFIG),
       started_at: new Date().toISOString(),
       ended_at: null,
       status: "in_progress",
@@ -236,7 +237,7 @@ async function beginSession() {
   }
   await store.saveSession(rec);
   try {
-    void (navigator as Navigator & { wakeLock?: { request(t: string): Promise<unknown> } }).wakeLock?.request("screen");
+    void (navigator as Navigator & { wakeLock?: { request(t: string): Promise<unknown> } }).wakeLock?.request("screen").catch(() => {});
   } catch { /* optional */ }
   const r = rec;
   stopRun = runSession({

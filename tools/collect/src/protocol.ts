@@ -62,6 +62,23 @@ export const DEFAULT_CONFIG: ProtocolConfig = {
   tailMs: 300,
 };
 
+/** Short protocol for automated smoke tests (enabled with ?fast in the URL). Never use for real data. */
+export const FAST_CONFIG: ProtocolConfig = {
+  ...DEFAULT_CONFIG,
+  seals: ["tiger", "rat"],
+  sealTakes: 2,
+  countdownSec: 1,
+  formMs: 400,
+  holdMs: 500,
+  releaseMs: 300,
+  combos: [["tiger", "horse"]],
+  comboFormMs: 300,
+  comboHoldMs: 300,
+  comboReleaseMs: 200,
+  freeMotionMs: 2500,
+  freeSuggestionEveryMs: 1000,
+};
+
 export type Block = "seal" | "combo" | "free";
 
 export interface ClipPlan {
