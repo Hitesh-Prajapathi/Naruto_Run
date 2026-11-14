@@ -237,3 +237,91 @@ class MetricsRegistry:
         for metric in self._metrics:
             lines.extend(metric.render())
         return "\n".join(lines) + "\n"
+
+
+class TransportMetrics:
+    """The fixed set of metrics the transport exports, with their label sets."""
+
+    DROP_REASONS = ("rate_limited", "invalid", "stale_sequence", "rejected", "superseded")
+    REJECT_REASONS = ("origin", "shutting_down", "not_ready", "max_sessions", "controller_busy")
+    HANDSHAKE_FAILURES = ("timeout", "invalid", "protocol_version", "model_mismatch")
+    CLOSE_REASONS = (
+        "client",
+        "idle_timeout",
+        "backpressure",
+        "message_too_big",
+        "invalid_messages",
+        "shutdown",
+        "handshake_failed",
+        "controller_busy",
+    )
+
+    def __init__(self, registry: "MetricsRegistry | None" = None) -> None:
+        self.registry = registry or MetricsRegistry()
+        r = self.registry
+        self.frames_received = r.counter(
+            "narutocv_frames_received_total", "Binary frame messages received."
+        )
+        self.frames_processed = r.counter(
+            "narutocv_frames_processed_total", "Frames the recognition pipeline finished."
+        )
+        self.frames_failed = r.counter(
+            "narutocv_frames_failed_total", "Frames whose recognition raised an error."
+        )
+        self.frames_dropped = r.counter(
+            "narutocv_frames_dropped_total", "Frames discarded, by reason.", ("reason",)
+        )
+        self.controls_dropped = r.counter(
+            "narutocv_controls_dropped_total", "Control messages dropped by the rate cap."
+        )
+        self.errors_suppressed = r.counter(
+            "narutocv_error_replies_suppressed_total",
+            "Error replies not sent because the per-connection error cap was reached.",
+        )
+        self.connections_rejected = r.counter(
+            "narutocv_connections_rejected_total",
+            "WebSocket connections refused or turned away, by reason.",
+            ("reason",),
+        )
+        self.connections_closed = r.counter(
+            "narutocv_connections_closed_total", "WebSocket connections ended, by reason.", ("reason",)
+        )
+        self.handshake_failures = r.counter(
+            "narutocv_handshake_failures_total", "Failed handshakes, by reason.", ("reason",)
+        )
+        self.active_sessions = r.gauge(
+            "narutocv_active_sessions", "Handshaken sessions currently controlling the pipeline."
+        )
+        self.open_connections = r.gauge(
+            "narutocv_open_connections", "Upgraded WebSocket connections currently open."
+        )
+        self.ready = r.gauge("narutocv_ready", "1 when the recognition runtime is ready.")
+        self.build_info = r.gauge(
+            "narutocv_build_info",
+            "Protocol and model bundle served (value is always 1).",
+            ("protocol_version", "model_id"),
+        )
+        self.stage_latency = r.histogram(
+            "narutocv_stage_latency_ms",
+            "Per-stage pipeline latency in milliseconds (from the runtime's timings_ms).",
+            ("stage",),
+        )
+        for reason in self.DROP_REASONS:
+            self.frames_dropped.touch(reason=reason)
+        for reason in self.REJECT_REASONS:
+            self.connections_rejected.touch(reason=reason)
+        for reason in self.HANDSHAKE_FAILURES:
+            self.handshake_failures.touch(reason=reason)
+        for reason in self.CLOSE_REASONS:
+            self.connections_closed.touch(reason=reason)
+        for counter in (
+            self.frames_received,
+            self.frames_processed,
+            self.frames_failed,
+            self.controls_dropped,
+            self.errors_suppressed,
+        ):
+            counter.touch()
+        self.active_sessions.set(0)
+        self.open_connections.set(0)
+        self.ready.set(0)
