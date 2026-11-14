@@ -164,5 +164,41 @@ class BodyOnlyModeTests(unittest.TestCase):
         self.assertEqual(result.timings_ms["body_total_ms"], 0.0)
 
 
+class ResourceReleaseTests(unittest.TestCase):
+    """Native landmarkers must be released on every exit path."""
+
+    def test_close_releases_the_body_landmarker_even_if_the_hand_close_raises(self) -> None:
+        instance = object.__new__(SessionScopedPipeline)
+        instance.hand = mock.Mock()
+        instance.hand.close.side_effect = RuntimeError("hand release failed")
+        instance.body = mock.Mock()
+
+        with self.assertLogs(pipeline_module.logger, level="WARNING"):
+            with self.assertRaises(RuntimeError):
+                instance.close()
+
+        instance.body.close.assert_called_once()
+
+    def test_failed_construction_closes_what_the_base_class_already_opened(self) -> None:
+        hand, body = mock.Mock(), mock.Mock()
+
+        def fake_base_init(self, **_kwargs) -> None:
+            self.hand, self.body = hand, body
+
+        with (
+            mock.patch.object(pipeline_module.CombinedNarutoPipeline, "__init__", fake_base_init),
+            mock.patch.object(
+                SessionScopedPipeline,
+                "_capture_idle_hand_result",
+                side_effect=RuntimeError("blank frame failed"),
+            ),
+        ):
+            with self.assertRaises(RuntimeError):
+                SessionScopedPipeline()
+
+        hand.close.assert_called_once()
+        body.close.assert_called_once()
+
+
 if __name__ == "__main__":
     unittest.main()

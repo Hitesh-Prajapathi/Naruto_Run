@@ -526,7 +526,8 @@ class TransportServer:
                     else:
                         await self._handle_control(ws, session, msg.data)
                 elif msg.type == WSMsgType.ERROR:
-                    if ws.close_code == 1009:
+                    error = ws.exception()
+                    if ws.close_code == 1009 or getattr(error, "code", None) == 1009:
                         reason = "message_too_big"
                     logger.warning(
                         "websocket error",
