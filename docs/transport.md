@@ -72,7 +72,7 @@ Residual risks, deliberately not addressed here: a non-browser process on the
 same machine can still occupy the controller slot (no authentication; loopback
 is the trust boundary), and `/health`, `/live` and `/metrics` are unauthenticated.
 
-### Protocol version 1.1.0 and the handshake
+### Protocol version 1.1.0 and the handshake (still current; see 1.2.0 below)
 
 The wire change is **additive**, so 1.0.0 clients and servers keep working.
 
@@ -90,7 +90,7 @@ The wire change is **additive**, so 1.0.0 clients and servers keep working.
 - The TS client treats 4412/4426 (and a mismatching `server_ready`) as fatal: it
   reports the error, enters the `error` connection state and does **not** retry.
 
-Model bundle identity comes from `models/manifest.yaml` (override with
+Model bundle identity (the manifest also tracks `calibration_v0.json`, so recalibrating changes the id) comes from `models/manifest.yaml` (override with
 `NARUTOCV_MODEL_MANIFEST`): `sha256` is the digest of the sorted
 `<name>:<sha256>` lines of every artifact, and `id` is `narutocv-` plus its first
 12 hex characters. The digests are the manifest's pinned values; they are not
@@ -103,6 +103,43 @@ Close codes: 1001 server shutting down, 1009 message too big, 4400 protocol
 error / handshake failed / too many invalid messages, 4408 idle timeout, 4409
 controller already connected, 4412 model mismatch, 4426 protocol version
 mismatch, 4429 client too slow (event backpressure).
+
+### Protocol version 1.2.0 and the hand decoder
+
+Also **additive**: 1.0.0 and 1.1.0 clients keep working (the server accepts any 1.x hello;
+unknown fields are ignored by both sides) and 1.2.0 clients work against older servers.
+
+| Where | Change |
+|-------|--------|
+| `server_ready.capabilities.hand_decoder` | `"legacy"` or `"v1"`: the decoder behind HAND_SEAL events. Read from the live pipeline, not the CLI. Absent on servers older than 1.2.0 (which are legacy). |
+| `HAND_SEAL` payload `decoder` | `"legacy"` or `"v1"`, always present from 1.2.0. |
+| `HAND_SEAL` payload `t_start_ms`, `t_emit_ms` | v1 only. Milliseconds on the **pipeline clock**, which is the frame's `captured_at_ms` basis (the browser's `performance.now()` for frames this client sent), so `t_emit_ms` equals the `captured_at_ms` of the frame that produced the event and `t_emit_ms - t_start_ms` is the dwell. `t_start_ms` is the first update with the *smoothed* probability at or above `tau_on`; it is not corrected for the smoother's rise time, so it lags the true onset by roughly the EMA rise time (about 100 ms at the default half-life). |
+| `HAND_SEAL` payload `decoder_confidence` | v1 only. Smoothed calibrated probability at emission. `confidence` stays the raw frame confidence, as before. |
+| `state_snapshot.output.hand.decoder` | v1 only: `{"mode": "v1", "event": null | {label, t_start_ms, t_emit_ms, confidence}}`. Legacy output omits the key, so legacy snapshots are byte-identical to 1.1.0. |
+
+The timing fields are present only when the decoder's event is the seal the attack queue accepted:
+the queue still ignores an adjacent duplicate seal (`duplicate_ignored`), and then there is no
+HAND_SEAL event at all, in either decoder. Schemas: `transport_message_v1` (capability),
+`pipeline_event_v1` (payload), `pipeline_output_v1` (snapshot). The TS client exposes
+`WebSocketClient.handDecoder` and `parseHandSealPayload()`.
+
+**Selecting the decoder.** `legacy` is the default and never reads
+`models/calibration_v0.json`. `v1` is opt-in because its thresholds are an identity placeholder
+(no honest calibration set exists yet) and it has **not been tested on a real camera**.
+
+| Entry point | Flag | Environment |
+|-------------|------|-------------|
+| `python -m narutocv.transport`, `scripts/run_combined_camera.py`, `scripts/evaluate_live_camera.py`, `scripts/benchmark_live_camera.py` | `--hand-decoder legacy\|v1` | `NARUTOCV_HAND_DECODER` (flag wins; an invalid value is an error) |
+| the same | `--hand-decoder-prior` / `--no-hand-decoder-prior` | `NARUTOCV_HAND_DECODER_PRIOR` (default: the calibration file, which has the prior **off**) |
+| library | `PipelineConfig(hand_decoder="v1", hand_decoder_use_prior=None, calibration_path=None)` | |
+
+In v1 mode the per-class thresholds in `hand_config.py` are bypassed (not deleted), and
+`calibrate_neutral` is a no-op. The structural no-hands gate is kept: when the landmarker has seen
+no hand for longer than the grace period and the label is not a detector-free fallback, the
+decoder is fed an idle vector instead of the classifier output. The attack queue publishes its
+next-seal candidates (`AttackRecognizer.expected_next`) to the decoder only when the prior is on.
+`models/calibration_v0.json` is part of `models/manifest.yaml`, so it is verified by
+`scripts/fetch_models.py` and changes the model-bundle id.
 
 ### Observability
 
