@@ -114,14 +114,15 @@ export function validateDecoderConfig(cfg: DecoderConfig): DecoderConfig {
   if (!(0.0 < cfg.tau_reject && cfg.tau_reject <= cfg.tau_off && cfg.tau_off < cfg.tau_on && cfg.tau_on <= 1.0)) {
     throw new Error("require 0 < tau_reject <= tau_off < tau_on <= 1");
   }
-  if (!(cfg.half_life_ms > 0.0) || !(cfg.hmm_ref_ms > 0.0)) {
+  // Written as `x <= 0` (not `!(x > 0)`) to match Python, which lets NaN through here.
+  if (cfg.half_life_ms <= 0.0 || cfg.hmm_ref_ms <= 0.0) {
     throw new Error("half_life_ms and hmm_ref_ms must be positive");
   }
-  if (!(cfg.min_dwell_ms >= 0.0) || !(cfg.refractory_ms >= 0.0)) {
+  if (cfg.min_dwell_ms < 0.0 || cfg.refractory_ms < 0.0) {
     throw new Error("min_dwell_ms and refractory_ms must be >= 0");
   }
-  if (!(cfg.max_gap_ms > 0.0)) throw new Error("max_gap_ms must be positive");
-  if (!(cfg.prior_boost >= 1.0)) throw new Error("prior_boost must be >= 1");
+  if (cfg.max_gap_ms <= 0.0) throw new Error("max_gap_ms must be positive");
+  if (cfg.prior_boost < 1.0) throw new Error("prior_boost must be >= 1");
   if (!(1.0 / k < cfg.hmm_p_stay && cfg.hmm_p_stay < 1.0)) {
     throw new Error("hmm_p_stay must be in (1/K, 1)");
   }
