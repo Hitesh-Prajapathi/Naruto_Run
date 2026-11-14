@@ -7,8 +7,45 @@ be unit tested as plain data structures (see test_transport_backpressure.py).
 from __future__ import annotations
 
 import collections
+import time
+import uuid
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Deque, Optional
+
+
+class TokenBucket:
+    """Classic token bucket: `rate` tokens/second, holding at most `burst`.
+
+    `try_consume` never blocks and never raises; a False return means "over the
+    cap right now", which callers turn into a counted drop. The clock is
+    injectable so tests do not need to sleep.
+    """
+
+    def __init__(
+        self,
+        rate: float,
+        burst: int,
+        *,
+        clock: Callable[[], float] = time.monotonic,
+    ) -> None:
+        if rate <= 0 or burst < 1:
+            raise ValueError("rate must be positive and burst at least 1")
+        self.rate = float(rate)
+        self.burst = float(burst)
+        self._clock = clock
+        self._tokens = float(burst)
+        self._updated = clock()
+
+    def try_consume(self, tokens: float = 1.0) -> bool:
+        now = self._clock()
+        elapsed = max(0.0, now - self._updated)
+        self._updated = now
+        self._tokens = min(self.burst, self._tokens + elapsed * self.rate)
+        if self._tokens >= tokens:
+            self._tokens -= tokens
+            return True
+        return False
 
 
 class StaleFrameError(ValueError):
@@ -101,7 +138,20 @@ class LatestSnapshotSlot:
 class ClientSession:
     """Bundles the per-connection guards a single browser client owns."""
 
-    def __init__(self, *, event_queue_size: int = 256) -> None:
+    def __init__(
+        self,
+        *,
+        event_queue_size: int = 256,
+        connection_id: Optional[str] = None,
+        frame_bucket: Optional[TokenBucket] = None,
+        control_bucket: Optional[TokenBucket] = None,
+        error_bucket: Optional[TokenBucket] = None,
+    ) -> None:
+        self.connection_id = connection_id or uuid.uuid4().hex[:12]
+        self.frame_bucket = frame_bucket
+        self.control_bucket = control_bucket
+        self.error_bucket = error_bucket
+        self.invalid_messages = 0
         self.frame_guard = FrameSequenceGuard()
         self.events = BoundedEventQueue(max_size=event_queue_size)
         self.snapshot = LatestSnapshotSlot()
