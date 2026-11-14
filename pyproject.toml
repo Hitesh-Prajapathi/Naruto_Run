@@ -31,6 +31,11 @@ transport = [
     "narutocv[runtime]",
     "aiohttp>=3.9",
 ]
+# Data-collection receiver (tools/collect/server/receive.py).
+collect = [
+    "aiohttp>=3.9",
+    "jsonschema>=4.21",
+]
 # Honest evaluation: manifests, splits, metrics, plots.
 eval = [
     "scikit-learn>=1.5",
@@ -46,6 +51,7 @@ train = [
     "ultralytics>=8.3",
 ]
 dev = [
+    "narutocv[collect]",
     "pytest>=8.3",
     "hypothesis>=6.100",
     "ruff>=0.8",

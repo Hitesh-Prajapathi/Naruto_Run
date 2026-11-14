@@ -17,6 +17,7 @@ API (all but /health need header X-Collect-Token):
 Layout written:  <out>/<subject_id>/<session_id>/{session.json, clips/<clip_id>.<ext>}
 The client uploads clips first and session.json last, so session.json marks a finished upload.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -36,7 +37,9 @@ from jsonschema import Draft202012Validator
 
 ID_RE = re.compile(r"^[A-Za-z0-9_-]{4,64}$")
 CLIP_RE = re.compile(r"^([A-Za-z0-9_-]{1,64})\.(webm|mp4)$")
-DEFAULT_SCHEMA = Path(__file__).resolve().parents[3] / "schemas" / "collection_session_v1.schema.json"
+DEFAULT_SCHEMA = (
+    Path(__file__).resolve().parents[3] / "schemas" / "collection_session_v1.schema.json"
+)
 CHUNK = 1 << 20
 
 
@@ -130,24 +133,39 @@ async def put_session(request: web.Request) -> web.Response:
     if errors:
         e = errors[0]
         return err(422, f"schema violation at /{'/'.join(map(str, e.path))}: {e.message}"[:500])
-    if doc["subject"]["subject_id"] != request.match_info["subject_id"] or doc["session"]["session_id"] != request.match_info["session_id"]:
+    if (
+        doc["subject"]["subject_id"] != request.match_info["subject_id"]
+        or doc["session"]["session_id"] != request.match_info["session_id"]
+    ):
         return err(400, "ids in session.json do not match the URL")
     missing = [c["file"] for c in doc["clips"] if not (d / c["file"]).is_file()]
     _atomic_write(d / "session.json", json.dumps(doc, indent=2).encode())
     # 200 even with missing clips: client can see what to resend; session.json is kept either way.
-    return web.json_response({"ok": True, "clips_declared": len(doc["clips"]), "missing_files": missing})
+    return web.json_response(
+        {"ok": True, "clips_declared": len(doc["clips"]), "missing_files": missing}
+    )
 
 
 async def health(_: web.Request) -> web.Response:
     return web.json_response({"ok": True})
 
 
-def make_app(out: Path, token: str, schema_path: Path = DEFAULT_SCHEMA, max_clip_mb: int = 200,
-             allow_origin: str = "*") -> web.Application:
+def make_app(
+    out: Path,
+    token: str,
+    schema_path: Path = DEFAULT_SCHEMA,
+    max_clip_mb: int = 200,
+    allow_origin: str = "*",
+) -> web.Application:
     schema = json.loads(schema_path.read_text())
     Draft202012Validator.check_schema(schema)
     app = web.Application(middlewares=[cors_and_auth])
-    app["cfg"] = {"out": out, "token": token, "max_clip_bytes": max_clip_mb * 1024 * 1024, "allow_origin": allow_origin}
+    app["cfg"] = {
+        "out": out,
+        "token": token,
+        "max_clip_bytes": max_clip_mb * 1024 * 1024,
+        "allow_origin": allow_origin,
+    }
     app["validator"] = Draft202012Validator(schema)
     app.router.add_get("/api/v1/health", health)
     app.router.add_put("/api/v1/{subject_id}/{session_id}/clips/{filename}", put_clip)
@@ -170,23 +188,56 @@ def _sample_session(subject: str, session: str, clip_id: str) -> dict:
     return {
         "schema_version": "collection_session_v1",
         "subject": {
-            "subject_id": subject, "camera_type": "laptop", "lighting": "normal", "background": "plain",
-            "distance_m": 1, "dominant_hand": "R", "monk_skin_tone": None,
-            "consent": {"accepted": True, "accepted_at": "2026-11-13T10:00:00.000Z", "text_hash": "deadbeef"},
+            "subject_id": subject,
+            "camera_type": "laptop",
+            "lighting": "normal",
+            "background": "plain",
+            "distance_m": 1,
+            "dominant_hand": "R",
+            "monk_skin_tone": None,
+            "consent": {
+                "accepted": True,
+                "accepted_at": "2026-11-13T10:00:00.000Z",
+                "text_hash": "deadbeef",
+            },
         },
-        "session": {"session_id": session, "started_at": "2026-11-13T10:00:00.000Z", "ended_at": None, "status": "in_progress"},
+        "session": {
+            "session_id": session,
+            "started_at": "2026-11-13T10:00:00.000Z",
+            "ended_at": None,
+            "status": "in_progress",
+        },
         "device": {
-            "user_agent": "selftest", "platform": "x", "screen": {"width": 1, "height": 1, "device_pixel_ratio": 1},
+            "user_agent": "selftest",
+            "platform": "x",
+            "screen": {"width": 1, "height": 1, "device_pixel_ratio": 1},
             "requested": {"width": 1280, "height": 720, "fps": 30},
-            "achieved": {"width": 1280, "height": 720, "fps_measured": 30}, "mirrored_display": True,
+            "achieved": {"width": 1280, "height": 720, "fps_measured": 30},
+            "mirrored_display": True,
         },
         "protocol": {"version": "1.0.0", "seed": "S", "config": {}},
-        "clips": [{
-            "clip_id": clip_id, "block": "seal", "label": "rat", "take": 1, "attempt": 1, "mime": "video/webm",
-            "file": f"clips/{clip_id}.webm", "size_bytes": 5, "duration_ms": 9800, "width": 1280, "height": 720,
-            "fps_measured": 30.0,
-            "phase_offsets_ms": {"form_start": 3000, "hold_start": 5000, "hold_end": 8000, "release_end": 9500},
-        }],
+        "clips": [
+            {
+                "clip_id": clip_id,
+                "block": "seal",
+                "label": "rat",
+                "take": 1,
+                "attempt": 1,
+                "mime": "video/webm",
+                "file": f"clips/{clip_id}.webm",
+                "size_bytes": 5,
+                "duration_ms": 9800,
+                "width": 1280,
+                "height": 720,
+                "fps_measured": 30.0,
+                "phase_offsets_ms": {
+                    "form_start": 3000,
+                    "hold_start": 5000,
+                    "hold_end": 8000,
+                    "release_end": 9500,
+                },
+            }
+        ],
     }
 
 
@@ -206,19 +257,57 @@ async def self_test() -> None:
                 print(("PASS " if cond else "FAIL ") + name)
 
             check("health needs no token", (await c.get("/api/v1/health")).status == 200)
-            check("missing token -> 401", (await c.put(f"{base}/clips/c001.webm", data=b"x")).status == 401)
-            check("wrong token -> 401", (await c.put(f"{base}/clips/c001.webm", data=b"x", headers={"X-Collect-Token": "nope"})).status == 401)
+            check(
+                "missing token -> 401",
+                (await c.put(f"{base}/clips/c001.webm", data=b"x")).status == 401,
+            )
+            check(
+                "wrong token -> 401",
+                (
+                    await c.put(
+                        f"{base}/clips/c001.webm", data=b"x", headers={"X-Collect-Token": "nope"}
+                    )
+                ).status
+                == 401,
+            )
             r = await c.options(f"{base}/session.json")
-            check("CORS preflight 204 without token", r.status == 204 and "X-Collect-Token" in r.headers["Access-Control-Allow-Headers"])
+            check(
+                "CORS preflight 204 without token",
+                r.status == 204 and "X-Collect-Token" in r.headers["Access-Control-Allow-Headers"],
+            )
             r = await c.put(f"{base}/clips/c001.webm", data=b"hello", headers=H)
-            check("clip stored", r.status == 200 and (out / "S-TEST01/sess-0001/clips/c001.webm").read_bytes() == b"hello")
+            check(
+                "clip stored",
+                r.status == 200
+                and (out / "S-TEST01/sess-0001/clips/c001.webm").read_bytes() == b"hello",
+            )
             check("no .part files left", not list(out.rglob("*.part")))
             r = await c.put(f"{base}/clips/c002.webm", data=b"x" * (1024 * 1024 + 1), headers=H)
-            check("oversize clip -> 413", r.status == 413 and not (out / "S-TEST01/sess-0001/clips/c002.webm").exists())
-            check("bad extension -> 400", (await c.put(f"{base}/clips/c003.exe", data=b"x", headers=H)).status == 400)
-            check("bad clip name -> 400", (await c.put(f"{base}/clips/..%2Fevil.webm", data=b"x", headers=H)).status in (400, 404))
-            check("bad subject id -> 400", (await c.put("/api/v1/a/sess-0001/clips/c1.webm", data=b"x", headers=H)).status == 400)
-            check("path traversal -> rejected", (await c.put("/api/v1/..%2F..%2Fx/sess-0001/clips/c1.webm", data=b"x", headers=H)).status in (400, 404))
+            check(
+                "oversize clip -> 413",
+                r.status == 413 and not (out / "S-TEST01/sess-0001/clips/c002.webm").exists(),
+            )
+            check(
+                "bad extension -> 400",
+                (await c.put(f"{base}/clips/c003.exe", data=b"x", headers=H)).status == 400,
+            )
+            check(
+                "bad clip name -> 400",
+                (await c.put(f"{base}/clips/..%2Fevil.webm", data=b"x", headers=H)).status
+                in (400, 404),
+            )
+            check(
+                "bad subject id -> 400",
+                (await c.put("/api/v1/a/sess-0001/clips/c1.webm", data=b"x", headers=H)).status
+                == 400,
+            )
+            check(
+                "path traversal -> rejected",
+                (
+                    await c.put("/api/v1/..%2F..%2Fx/sess-0001/clips/c1.webm", data=b"x", headers=H)
+                ).status
+                in (400, 404),
+            )
 
             good = _sample_session("S-TEST01", "sess-0001", "c001")
             r = await c.put(f"{base}/session.json", data=json.dumps(good), headers=H)
@@ -226,15 +315,35 @@ async def self_test() -> None:
             check("valid session.json accepted", r.status == 200 and body["missing_files"] == [])
             check("session.json on disk", (out / "S-TEST01/sess-0001/session.json").is_file())
 
-            bad = json.loads(json.dumps(good)); bad["subject"]["monk_skin_tone"] = 99
-            check("schema violation -> 422", (await c.put(f"{base}/session.json", data=json.dumps(bad), headers=H)).status == 422)
-            bad = json.loads(json.dumps(good)); bad["subject"]["email"] = "a@b.c"
-            check("extra PII field -> 422", (await c.put(f"{base}/session.json", data=json.dumps(bad), headers=H)).status == 422)
-            check("non-JSON -> 400", (await c.put(f"{base}/session.json", data=b"{nope", headers=H)).status == 400)
+            bad = json.loads(json.dumps(good))
+            bad["subject"]["monk_skin_tone"] = 99
+            check(
+                "schema violation -> 422",
+                (await c.put(f"{base}/session.json", data=json.dumps(bad), headers=H)).status
+                == 422,
+            )
+            bad = json.loads(json.dumps(good))
+            bad["subject"]["email"] = "a@b.c"
+            check(
+                "extra PII field -> 422",
+                (await c.put(f"{base}/session.json", data=json.dumps(bad), headers=H)).status
+                == 422,
+            )
+            check(
+                "non-JSON -> 400",
+                (await c.put(f"{base}/session.json", data=b"{nope", headers=H)).status == 400,
+            )
             mismatch = _sample_session("S-OTHER1", "sess-0001", "c001")
-            check("id mismatch -> 400", (await c.put(f"{base}/session.json", data=json.dumps(mismatch), headers=H)).status == 400)
+            check(
+                "id mismatch -> 400",
+                (await c.put(f"{base}/session.json", data=json.dumps(mismatch), headers=H)).status
+                == 400,
+            )
 
-        check("delete-subject removes the folder", delete_subject(out, "S-TEST01") and not (out / "S-TEST01").exists())
+        check(
+            "delete-subject removes the folder",
+            delete_subject(out, "S-TEST01") and not (out / "S-TEST01").exists(),
+        )
         failed = [n for n, ok in checks if not ok]
         print(f"\n{len(checks) - len(failed)}/{len(checks)} checks passed")
         if failed:
@@ -242,17 +351,27 @@ async def self_test() -> None:
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     ap.add_argument("--out", type=Path, default=Path("data/raw/collection"))
     ap.add_argument("--host", default="0.0.0.0")
     ap.add_argument("--port", type=int, default=8787)
-    ap.add_argument("--token", default=os.environ.get("COLLECT_TOKEN"), help="shared secret (or env COLLECT_TOKEN)")
+    ap.add_argument(
+        "--token",
+        default=os.environ.get("COLLECT_TOKEN"),
+        help="shared secret (or env COLLECT_TOKEN)",
+    )
     ap.add_argument("--schema", type=Path, default=DEFAULT_SCHEMA)
     ap.add_argument("--max-clip-mb", type=int, default=200)
     ap.add_argument("--allow-origin", default="*", help="CORS origin, e.g. https://you.github.io")
     ap.add_argument("--cert", type=Path, help="TLS cert (PEM) to serve https directly")
     ap.add_argument("--key", type=Path, help="TLS key (PEM)")
-    ap.add_argument("--delete-subject", metavar="SUBJECT_ID", help="delete everything stored for this subject and exit")
+    ap.add_argument(
+        "--delete-subject",
+        metavar="SUBJECT_ID",
+        help="delete everything stored for this subject and exit",
+    )
     ap.add_argument("--self-test", action="store_true")
     a = ap.parse_args()
 
@@ -260,7 +379,11 @@ def main() -> None:
         asyncio.run(self_test())
         return
     if a.delete_subject:
-        print("deleted" if delete_subject(a.out, a.delete_subject) else "nothing found for that subject")
+        print(
+            "deleted"
+            if delete_subject(a.out, a.delete_subject)
+            else "nothing found for that subject"
+        )
         return
     if not a.token:
         sys.exit("refusing to start without a token: pass --token or set COLLECT_TOKEN")
@@ -270,7 +393,13 @@ def main() -> None:
         ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
         ctx.load_cert_chain(a.cert, a.key)
     app = make_app(a.out, a.token, a.schema, a.max_clip_mb, a.allow_origin)
-    web.run_app(app, host=a.host, port=a.port, ssl_context=ctx, client_max_size=a.max_clip_mb * 1024 * 1024 + 4096)
+    web.run_app(
+        app,
+        host=a.host,
+        port=a.port,
+        ssl_context=ctx,
+        client_max_size=a.max_clip_mb * 1024 * 1024 + 4096,
+    )
 
 
 if __name__ == "__main__":

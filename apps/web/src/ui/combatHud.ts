@@ -40,7 +40,7 @@ export class CombatHud {
   constructor(private readonly root: HTMLElement) {
     root.innerHTML = `
       <div class="combat-banner" data-banner hidden></div>
-      
+
       <!-- Side Jutsu Catalog list -->
       <div class="combat-jutsu-catalog" data-catalog></div>
 

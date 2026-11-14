@@ -63,13 +63,13 @@ def normalize_image(img_path, size=224):
         img = Image.open(img_path)
         if img.mode != 'RGB':
             img = img.convert('RGB')
-        
+
         w, h = img.size
         crop_size = min(w, h)
         left = (w - crop_size) // 2
         top = (h - crop_size) // 2
         img = img.crop((left, top, left + crop_size, top + crop_size))
-        
+
         img = img.resize((size, size), Image.Resampling.LANCZOS)
         return img
     except Exception as e:
@@ -80,17 +80,17 @@ def apply_augmentation(img):
     # 1. Random Rotation (-15 to 15)
     angle = random.uniform(-15, 15)
     img = img.rotate(angle, resample=Image.Resampling.BICUBIC, fillcolor=(0,0,0))
-    
+
     # 2. Color Jitter
     if random.random() < 0.8:
         img = ImageEnhance.Brightness(img).enhance(random.uniform(0.7, 1.3))
         img = ImageEnhance.Contrast(img).enhance(random.uniform(0.8, 1.2))
         img = ImageEnhance.Color(img).enhance(random.uniform(0.8, 1.2))
-        
+
     # 3. Gaussian Blur
     if random.random() < 0.3:
         img = img.filter(ImageFilter.GaussianBlur(radius=random.uniform(0.1, 1.0)))
-        
+
     # 4. Random Resized Crop (Zoom)
     scale = random.uniform(0.85, 1.0)
     w, h = img.size
@@ -100,27 +100,27 @@ def apply_augmentation(img):
     top = random.randint(0, h - new_h)
     img = img.crop((left, top, left + new_w, top + new_h))
     img = img.resize((w, h), Image.Resampling.LANCZOS)
-    
+
     # 5. Additive Gaussian Noise
     if random.random() < 0.2:
         img_arr = np.array(img).astype(np.float32) / 255.0
         noise = np.random.normal(0, random.uniform(0.01, 0.03), img_arr.shape)
         img_arr = np.clip(img_arr + noise, 0.0, 1.0) * 255.0
         img = Image.fromarray(img_arr.astype(np.uint8))
-        
+
     return img
 
 def main():
     print("═══════════════════════════════════════════════════════════")
     print("  NarutoCV Dataset Preparation — Component 1")
     print("═══════════════════════════════════════════════════════════\n")
-    
+
     # 1. Scan
     print("[1/8] Scanning raw dataset...")
     merged_pool = scan_raw_dataset(RAW_DIR)
     total_imgs = sum(len(files) for files in merged_pool.values())
     print(f"      Found {len(CLASSES)} classes, {total_imgs} images total")
-    
+
     # 2. Normalize
     print("\n[2/8] Normalizing images (RGBA→RGB, center-crop, resize 224×224)...")
     normalized_pool = {c: [] for c in CLASSES}
@@ -129,7 +129,7 @@ def main():
             img = normalize_image(f, size=IMAGE_SIZE)
             if img:
                 normalized_pool[c].append(img)
-    
+
     # 3. Split
     print("\n[3/8] Stratified split (80/10/10, seed=42)...")
     all_imgs = []
@@ -137,24 +137,24 @@ def main():
     for c in CLASSES:
         all_imgs.extend(normalized_pool[c])
         all_labels.extend([c] * len(normalized_pool[c]))
-        
+
     train_x, holdout_x, train_y, holdout_y = train_test_split(
         all_imgs, all_labels, test_size=(VAL_RATIO + TEST_RATIO), stratify=all_labels, random_state=RANDOM_SEED
     )
-    
+
     val_x, test_x, val_y, test_y = train_test_split(
         holdout_x, holdout_y, test_size=(TEST_RATIO / (VAL_RATIO + TEST_RATIO)), stratify=holdout_y, random_state=RANDOM_SEED
     )
-    
+
     train_dict = {c: [] for c in CLASSES}
     for x, y in zip(train_x, train_y): train_dict[y].append(x)
     val_dict = {c: [] for c in CLASSES}
     for x, y in zip(val_x, val_y): val_dict[y].append(x)
     test_dict = {c: [] for c in CLASSES}
     for x, y in zip(test_x, test_y): test_dict[y].append(x)
-    
+
     print(f"      Train: {len(train_x)} | Val: {len(val_x)} | Test: {len(test_x)}")
-    
+
     # 4/5. Augment and Balance
     print("\n[4 & 5/8] Augmenting & balancing training set (target: 220/class)...")
     aug_stats = {}
@@ -169,12 +169,12 @@ def main():
                 train_dict[c].append(aug)
                 aug_count += 1
         aug_stats[c] = aug_count
-        
+
     # 6. Save Splits
     print("\n[6/8] Saving splits to data/prepared_dataset/...")
     if os.path.exists(OUTPUT_DIR):
         shutil.rmtree(OUTPUT_DIR)
-        
+
     for split_name, split_data in [('train', train_dict), ('val', val_dict), ('test', test_dict)]:
         split_dir = os.path.join(OUTPUT_DIR, split_name)
         for c in CLASSES:
@@ -184,7 +184,7 @@ def main():
                 suffix = "_aug" if split_name == 'train' and i >= len(split_data[c]) - aug_stats[c] else ""
                 filename = f"{c}_{split_name}{suffix}_{i:05d}.png"
                 img.save(os.path.join(c_dir, filename), "PNG")
-                
+
     # 7. Metadata
     print("\n[7/8] Writing metadata...")
     stats = {
@@ -208,14 +208,14 @@ def main():
             }
         }
     }
-    
+
     with open(os.path.join(OUTPUT_DIR, "dataset_stats.json"), "w") as f:
         json.dump(stats, f, indent=2)
-        
+
     class_map = {c: i for i, c in enumerate(CLASSES)}
     with open(os.path.join(OUTPUT_DIR, "class_map.json"), "w") as f:
         json.dump(class_map, f, indent=2)
-        
+
     # 8. Zip
     print("\n[8/8] Creating ZIP...")
     with zipfile.ZipFile(ZIP_PATH, 'w', zipfile.ZIP_DEFLATED) as zipf:
@@ -224,7 +224,7 @@ def main():
                 file_path = os.path.join(root, file)
                 arcname = os.path.relpath(file_path, os.path.dirname(OUTPUT_DIR))
                 zipf.write(file_path, arcname)
-                
+
     print("\n═══════════════════════════════════════════════════════════")
     print("  ✅ DONE — Dataset ready for Kaggle upload")
     print("═══════════════════════════════════════════════════════════\n")
