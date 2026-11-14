@@ -1,5 +1,5 @@
 {
-  "spec_version": "1.0.0",
+  "spec_version": "1.0.1",
   "dtype": "float32",
   "feature_dim": 84,
   "constants": {

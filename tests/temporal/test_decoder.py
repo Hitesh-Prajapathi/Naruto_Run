@@ -321,6 +321,33 @@ def test_ema_alpha_is_half_life_based() -> None:
     assert out2[0] == pytest.approx(0.5)
 
 
+@pytest.mark.parametrize(
+    "field",
+    [
+        "half_life_ms",
+        "hmm_ref_ms",
+        "min_dwell_ms",
+        "refractory_ms",
+        "max_gap_ms",
+        "prior_boost",
+        "tau_on",
+        "tau_off",
+        "tau_reject",
+        "hmm_p_stay",
+    ],
+)
+@pytest.mark.parametrize("bad", [math.nan, math.inf, -math.inf])
+def test_config_rejects_non_finite_numbers(field: str, bad: float) -> None:
+    with pytest.raises(ValueError, match=f"{field} must be finite"):
+        DecoderConfig(**{field: bad})  # type: ignore[arg-type]
+
+
+def test_spec_version_is_a_patch_bump() -> None:
+    from narutocv.temporal.decoder import DECODER_SPEC_VERSION
+
+    assert DECODER_SPEC_VERSION == "1.0.1"
+
+
 def test_config_roundtrip_and_validation() -> None:
     cfg = DecoderConfig(tau_on=0.7, tau_off=0.35, half_life_ms=60.0, smoother="hmm")
     assert DecoderConfig.from_dict(cfg.to_dict()) == cfg

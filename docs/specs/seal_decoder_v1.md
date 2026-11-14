@@ -1,4 +1,7 @@
-# Seal decoder spec v1
+# Seal decoder spec v1 (`DECODER_SPEC_VERSION = "1.0.1"`)
+
+Changelog: **1.0.1** -- configuration validation rejects non-finite numbers (section 1).
+Decoding behaviour for valid configurations is unchanged. 1.0.0 -- initial.
 
 Reference implementation: `src/narutocv/temporal/decoder.py`
 (`SealDecoder`, `DecoderConfig`, `EmaSmoother`, `HMMSmoother`, `SealEvent`).
@@ -28,9 +31,16 @@ point `Math.pow` vs Python `**` differences are far below any threshold).
 | `use_prior` | true | master switch for the grammar prior (evaluation: turn off) |
 | `hmm_p_stay`, `hmm_ref_ms` | 0.95, 33.3 | HMM smoother parameters |
 
-Validation: `0 < tau_reject <= tau_off < tau_on <= 1`, `labels` unique with at
-least two entries, `idle_label in labels`, `half_life_ms > 0`, `max_gap_ms > 0`,
-`min_dwell_ms, refractory_ms >= 0`, `1/K < hmm_p_stay < 1`. JSON round-trip via
+Validation (in this order, first failure wins): `labels` unique with at least two
+entries, `idle_label in labels`, `smoother` valid; every numeric field
+(`half_life_ms`, `tau_on`, `tau_off`, `tau_reject`, `min_dwell_ms`, `refractory_ms`,
+`max_gap_ms`, `prior_boost`, `hmm_p_stay`, `hmm_ref_ms`) finite (`"<field> must be
+finite"`, so NaN and +-inf are rejected); `0 < tau_reject <= tau_off < tau_on <= 1`;
+`half_life_ms > 0` and `hmm_ref_ms > 0`; `min_dwell_ms >= 0` and `refractory_ms >= 0`;
+`max_gap_ms > 0`; `prior_boost >= 1`; `1/K < hmm_p_stay < 1`. The checks are written in
+the `not (x > 0)` form (never `x <= 0`) so that a NaN cannot pass any comparison; the
+error messages are part of the contract and are compared exactly by the golden fixture
+(`config_errors` in `tests/golden/decoder_v1.json`). JSON round-trip via
 `to_dict` / `from_dict` (unknown keys are an error; `labels` is a JSON list).
 
 ## 2. State
@@ -173,4 +183,4 @@ non-dominated set (FA/min down, recall up, TTD down; duplicates removed).
 - `argmax` returns the lowest index on ties.
 - `2 ** x` -> `Math.pow(2, x)`; keep all numbers as float64 `number`.
 - Golden test: export a few recorded probability streams with expected events from
-  the Python decoder and assert event equality (labels exact, times to 1e-6 ms).
+  the Python decoder and assert event equality (labels exact, times exact, as the golden tests do).

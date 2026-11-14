@@ -2,6 +2,7 @@
 import { afterAll, describe, expect, it } from "vitest";
 import goldenRaw from "../../../../../tests/golden/decoder_v1.json";
 import {
+  DECODER_SPEC_VERSION,
   SealDecoder,
   decoderConfigFromDict,
   defaultDecoderConfig,
@@ -9,7 +10,7 @@ import {
   type DecoderConfig,
   type SealEvent,
 } from "../../../src/recognition";
-import { maxAbsDiff, report, track } from "./goldenTypes";
+import { maxAbsDiff, report, revive, track } from "./goldenTypes";
 
 type Trace = ([number, number] | null)[];
 interface Frame {
@@ -30,7 +31,14 @@ interface Case {
     final_active: string | null;
   };
 }
+interface ConfigErrorCase {
+  name: string;
+  config: Record<string, unknown>;
+  error: string | null;
+}
 interface Golden {
+  spec_version: string;
+  config_errors: ConfigErrorCase[];
   label_order: string[];
   default_config: Record<string, unknown>;
   cases: Case[];
@@ -39,7 +47,30 @@ const golden = goldenRaw as unknown as Golden;
 
 afterAll(report);
 
+const configErrors = revive(golden.config_errors);
+
 describe("seal decoder: golden parity with Python", () => {
+  it("implements the same spec version as the fixtures", () => {
+    expect(golden.spec_version).toBe(DECODER_SPEC_VERSION);
+  });
+
+  it("covers NaN and infinite configuration values", () => {
+    const names = configErrors.map((c) => c.name);
+    expect(names).toContain("nan_half_life");
+    expect(names).toContain("inf_max_gap");
+    expect(configErrors.filter((c) => c.error === null).length).toBeGreaterThanOrEqual(2);
+  });
+
+  for (const c of configErrors) {
+    it(`config validation: ${c.name}`, () => {
+      if (c.error === null) {
+        expect(() => makeDecoderConfig(c.config as Partial<DecoderConfig>)).not.toThrow();
+      } else {
+        expect(() => makeDecoderConfig(c.config as Partial<DecoderConfig>)).toThrow(new Error(c.error));
+      }
+    });
+  }
+
   it("default config equals Python's DecoderConfig()", () => {
     expect(defaultDecoderConfig()).toEqual(golden.default_config);
     expect(makeDecoderConfig()).toEqual(golden.default_config);
