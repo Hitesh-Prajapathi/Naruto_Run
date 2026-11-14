@@ -1,6 +1,7 @@
-.PHONY: help setup fetch-models test test-py test-web lint fmt mypy camera serve web build-web
+.PHONY: ci test-collect help setup fetch-models test test-py test-web lint fmt mypy camera serve web build-web
 
 WEB := apps/web
+COLLECT := tools/collect
 
 help:
 	@grep -E "^[a-z-]+:.*##" $(MAKEFILE_LIST) | sed -E "s/:.*## /\t/"
@@ -19,6 +20,12 @@ test-py: ## python tests (pytest)
 
 test-web: ## web unit tests (vitest)
 	cd $(WEB) && npx vitest run
+
+test-collect: ## data-collection tool: vitest + build + receiver self-test
+	cd $(COLLECT) && npx vitest run && npm run build
+	uv run python $(COLLECT)/server/receive.py --self-test
+
+ci: lint test-py test-web test-collect ## everything CI runs (minus Playwright e2e/smoke and mypy)
 
 lint: ## ruff + eslint + tsc
 	uv run ruff check .
