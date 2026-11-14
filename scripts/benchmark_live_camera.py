@@ -17,6 +17,10 @@ from narutocv.inference.combined_pipeline import (
     DEFAULT_POSE_MODEL,
     CombinedNarutoPipeline,
 )
+from narutocv.inference.hand_decoder import (
+    add_hand_decoder_arguments,
+    pipeline_config_from_args,
+)
 from narutocv.inference.diagnostics import (
     BenchmarkCollector,
     SessionDiagnosticsRecorder,
@@ -72,7 +76,9 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Load models and validate arguments without opening the camera.",
     )
+    add_hand_decoder_arguments(parser)
     args = parser.parse_args()
+    args.pipeline_config = pipeline_config_from_args(args, parser)
     if args.duration <= 0:
         parser.error("--duration must be positive")
     if args.warmup < 0:
@@ -137,6 +143,7 @@ def main() -> int:
             hand_landmarker=args.hand_landmarker,
             pose_model=args.pose_model,
             hand_confidence=args.hand_confidence,
+            config=args.pipeline_config,
         )
     ).start()
     if args.self_check:

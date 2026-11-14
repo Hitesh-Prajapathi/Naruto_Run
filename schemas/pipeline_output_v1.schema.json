@@ -142,6 +142,32 @@
             {"type": "null"},
             {"$ref": "#/$defs/handGeometry"}
           ]
+        },
+        "decoder": {"$ref": "#/$defs/handDecoder"}
+      }
+    },
+    "handDecoder": {
+      "description": "Optional (protocol 1.2.0): present only when the v1 decoder is active; legacy output omits it.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "event"],
+      "properties": {
+        "mode": {"const": "v1"},
+        "event": {
+          "oneOf": [
+            {"type": "null"},
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["label", "t_start_ms", "t_emit_ms", "confidence"],
+              "properties": {
+                "label": {"type": "string"},
+                "t_start_ms": {"type": "number", "minimum": 0},
+                "t_emit_ms": {"type": "number", "minimum": 0},
+                "confidence": {"type": "number", "minimum": 0, "maximum": 1}
+              }
+            }
+          ]
         }
       }
     },

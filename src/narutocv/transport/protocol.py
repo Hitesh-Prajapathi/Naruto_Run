@@ -18,7 +18,12 @@ from typing import Any, Mapping, Optional
 # server_ready adds `model`, `classes` and `capabilities`. A 1.0.0 client that
 # sends neither still works. Compatibility rule: majors must match; minors may
 # differ in either direction (unknown fields are ignored by both sides).
-PROTOCOL_VERSION = "1.1.0"
+#
+# 1.2.0 (additive over 1.1.0): `server_ready.capabilities.hand_decoder` ("legacy" | "v1"),
+# and the HAND_SEAL event payload gains `decoder` plus, for the v1 decoder, `t_start_ms`,
+# `t_emit_ms` (pipeline clock = the frame's captured_at_ms basis, in ms) and
+# `decoder_confidence`. Nothing is removed or renamed, so 1.0/1.1 clients keep working.
+PROTOCOL_VERSION = "1.2.0"
 PROTOCOL_MAJOR = 1
 # Mirrors narutocv.inference.output_schema.SCHEMA_VERSION. Duplicated as a
 # literal (rather than imported) so this module has zero dependency on the

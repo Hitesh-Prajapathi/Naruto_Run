@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://narutocv.local/schemas/transport_message_v1.schema.json",
   "title": "NarutoCV Transport JSON Message V1",
-  "description": "Every JSON (text-frame) WebSocket message exchanged on GET /ws, in either direction, over the lifetime of one connection. The binary camera-frame envelope is a separate fixed binary layout, not JSON -- see FRAME_HEADER in src/narutocv/transport/protocol.py. Protocol 1.1.0 is additive over 1.0.0: client_hello may carry expected_model_id; server_ready adds model, classes and capabilities; error may carry details. A 1.0.0 peer that omits/ignores these still conforms.",
+  "description": "Every JSON (text-frame) WebSocket message exchanged on GET /ws, in either direction, over the lifetime of one connection. The binary camera-frame envelope is a separate fixed binary layout, not JSON -- see FRAME_HEADER in src/narutocv/transport/protocol.py. Protocol 1.1.0 is additive over 1.0.0: client_hello may carry expected_model_id; server_ready adds model, classes and capabilities; error may carry details. Protocol 1.2.0 is additive over 1.1.0: server_ready.capabilities.hand_decoder, and the HAND_SEAL event payload (pipeline_event_v1) gains decoder, t_start_ms, t_emit_ms and decoder_confidence. A 1.0.0 or 1.1.0 peer that omits/ignores these still conforms.",
   "oneOf": [
     {
       "$ref": "#/$defs/clientHello"
@@ -205,6 +205,13 @@
             },
             "heartbeat_s": {
               "type": "number"
+            },
+            "hand_decoder": {
+              "enum": [
+                "legacy",
+                "v1"
+              ],
+              "description": "Optional (1.2.0). Decoder behind HAND_SEAL events: 'legacy' (per-class thresholds + 5-frame vote) or 'v1' (temperature calibration + SealDecoder). Absent on servers older than 1.2.0, which are legacy."
             }
           }
         }

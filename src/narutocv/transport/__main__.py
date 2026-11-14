@@ -8,7 +8,9 @@ Every limit below can also be set by environment variable (flag wins):
 NARUTOCV_ALLOWED_ORIGINS, NARUTOCV_REQUIRE_ORIGIN, NARUTOCV_MAX_FPS,
 NARUTOCV_FRAME_BURST, NARUTOCV_MAX_SESSIONS, NARUTOCV_IDLE_TIMEOUT,
 NARUTOCV_HEARTBEAT, NARUTOCV_SHUTDOWN_GRACE, NARUTOCV_HOST, NARUTOCV_PORT,
-NARUTOCV_LOG_LEVEL, NARUTOCV_LOG_FORMAT, NARUTOCV_MODEL_MANIFEST.
+NARUTOCV_LOG_LEVEL, NARUTOCV_LOG_FORMAT, NARUTOCV_MODEL_MANIFEST. The hand-seal decoder
+(`--hand-decoder legacy|v1`, default legacy) follows the same rule via NARUTOCV_HAND_DECODER
+(and NARUTOCV_HAND_DECODER_PRIOR for the v1 grammar prior).
 
 Usage:
     python -m narutocv.transport
@@ -25,6 +27,10 @@ from collections.abc import Mapping
 
 from aiohttp import web
 
+from narutocv.inference.hand_decoder import (
+    add_hand_decoder_arguments,
+    pipeline_config_from_args,
+)
 from narutocv.transport.config import TransportConfig, parse_origins
 from narutocv.transport.logging_config import configure_logging
 from narutocv.transport.server import create_app
@@ -94,7 +100,10 @@ def parse_args(
         choices=("json", "text"),
         help="structured JSON lines (default) or human-readable text",
     )
-    return parser.parse_args(argv)
+    add_hand_decoder_arguments(parser)
+    args = parser.parse_args(argv)
+    args.pipeline_config = pipeline_config_from_args(args, parser, env)
+    return args
 
 
 def build_config(args: argparse.Namespace, env: Mapping[str, str] | None = None) -> TransportConfig:
@@ -127,7 +136,14 @@ def main(argv: list[str] | None = None) -> None:
             "in front and keep an explicit origin allow-list",
             extra={"host": args.host},
         )
-    app = create_app(config=config, body_only=args.body_only)
+    pipeline_config = args.pipeline_config
+    if pipeline_config.hand_decoder == "v1":
+        log.warning(
+            "hand decoder v1 is selected: untested on a real camera and its thresholds are "
+            "an identity placeholder (models/calibration_v0.json)",
+            extra={"use_prior": pipeline_config.hand_decoder_use_prior},
+        )
+    app = create_app(config=config, body_only=args.body_only, pipeline_config=pipeline_config)
     web.run_app(
         app,
         host=args.host,

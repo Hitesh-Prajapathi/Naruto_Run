@@ -184,6 +184,9 @@ class PipelineRuntimeController:
 
     def _reset_hand_calibration_state(self) -> None:
         self.pipeline.hand.filter.reset()
+        reset_decoder = getattr(self.pipeline.hand, "reset_decoder", None)
+        if callable(reset_decoder):
+            reset_decoder()  # v1 decoder state; a no-op for the legacy filter
         self.pipeline.attacks.reset()
 
     def _complete_calibration(self, captured_at_ms: int) -> CalibrationOutcome:

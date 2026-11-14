@@ -23,12 +23,16 @@ import onnxruntime as ort
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 
+from narutocv.temporal.decoder import SealEvent
+
 from .hand_config import (
     HAND_CONFIDENCE_THRESHOLDS,
     HAND_MARGIN_THRESHOLDS,
 )
+from .hand_decoder import V1HandDecoder
 from .pipeline_config import (
     DEFAULT_PIPELINE_CONFIG,
+    HAND_DECODER_MODES,
     AttackQueueConfig,
     BodyMovementConfig,
     HandFusionConfig,
@@ -90,6 +94,11 @@ class HandResult:
     roi_prediction: Optional[Classification] = None
     fusion_status: str = "center_only"
     timings_ms: dict[str, float] = field(default_factory=dict)
+    #: Which decoder produced ``emitted_seal``: ``"legacy"`` or ``"v1"``.
+    decoder: str = "legacy"
+    #: v1 only: the full decoder event (label, t_start_ms, t_emit_ms, confidence) when
+    #: ``emitted_seal`` was produced on this frame.  Times are on the pipeline clock, in ms.
+    seal_event: Optional[SealEvent] = None
 
 
 @dataclass(frozen=True)
@@ -261,7 +270,18 @@ def _center_square_bbox(width: int, height: int) -> tuple[int, int, int, int]:
 
 
 class HandSignRecognizer:
-    """Training-matched ONNX classification with stabilized hand-ROI fusion."""
+    """Training-matched ONNX classification with stabilized hand-ROI fusion.
+
+    Two decoding back ends share the classification stage (``hand_decoder``):
+
+    * ``"legacy"`` (default): per-class thresholds + ``EvidenceHandFilter``.
+    * ``"v1"``: the fused probabilities go through ``TemperatureScaler`` and ``SealDecoder``
+      (see ``hand_decoder.py``); the thresholds in ``hand_config.py`` are bypassed.
+    """
+
+    # Class-level defaults so partially constructed recognizers (tests) behave as legacy.
+    decoder_mode: str = "legacy"
+    v1: Optional[V1HandDecoder] = None
 
     def __init__(
         self,
@@ -270,7 +290,14 @@ class HandSignRecognizer:
         confidence_threshold: Optional[float] = None,
         temporal_config: HandTemporalConfig = DEFAULT_PIPELINE_CONFIG.hand,
         fusion_config: HandFusionConfig = DEFAULT_PIPELINE_CONFIG.hand_fusion,
+        hand_decoder: str = "legacy",
+        calibration_path: Optional[Path] = None,
+        decoder_use_prior: Optional[bool] = None,
     ) -> None:
+        if hand_decoder not in HAND_DECODER_MODES:
+            raise ValueError(
+                f"hand_decoder must be one of {', '.join(HAND_DECODER_MODES)}, got {hand_decoder!r}"
+            )
         if not model_path.exists():
             raise FileNotFoundError(f"Hand-sign ONNX model not found: {model_path}")
         if not landmarker_path.exists():
@@ -284,6 +311,12 @@ class HandSignRecognizer:
         self.output_name = self.session.get_outputs()[0].name
         metadata = self.session.get_modelmeta().custom_metadata_map
         self.classes = self._parse_class_names(metadata.get("names"))
+        self.decoder_mode = hand_decoder
+        if hand_decoder == "v1":
+            # Fails loudly if the model's class order differs from the decoder labels.
+            self.v1 = V1HandDecoder.from_file(
+                self.classes, calibration_path, use_prior=decoder_use_prior
+            )
 
         options = vision.HandLandmarkerOptions(
             base_options=python.BaseOptions(model_asset_path=str(landmarker_path)),
@@ -418,8 +451,14 @@ class HandSignRecognizer:
     def calibrate_neutral(
         self, samples: Sequence[Classification]
     ) -> dict[str, tuple[float, float]]:
-        """Tighten session thresholds for false labels seen in neutral poses."""
+        """Tighten session thresholds for false labels seen in neutral poses.
+
+        A no-op in v1 mode: the per-class thresholds it adjusts are bypassed there.  A
+        per-user change in v1 is an explicit edit of ``DecoderConfig.tau_on``.
+        """
         adjustments: dict[str, tuple[float, float]] = {}
+        if self.decoder_mode == "v1":
+            return adjustments
         for label in self.classes:
             if label == "zero":
                 continue
@@ -453,7 +492,38 @@ class HandSignRecognizer:
         self._last_timestamp_ms = max(candidate, self._last_timestamp_ms + 1)
         return self._last_timestamp_ms
 
-    def process(self, frame_bgr: np.ndarray, timestamp: Optional[float] = None) -> HandResult:
+    @property
+    def decoder_uses_prior(self) -> bool:
+        """True when the v1 decoder wants ``expected_next`` (the grammar prior is enabled)."""
+        return self.v1 is not None and self.v1.config.use_prior
+
+    def _decode_v1(
+        self,
+        probabilities: Sequence[float],
+        t_ms: float,
+        expected_next: Sequence[str] = (),
+        *,
+        no_hands: bool = False,
+    ) -> tuple[str, Optional[str], str, Optional[str], Optional[SealEvent]]:
+        """The v1 stage: fused probabilities in, decoder outcome out.
+
+        Returns ``(accepted_label, rejection_reason, stable_label, emitted_seal, event)``.
+        ``t_ms`` is the raw pipeline clock in milliseconds -- not the bumped MediaPipe
+        timestamp.  ``no_hands`` is the structural no-hands gate (the landmarker saw no hand
+        for longer than the grace period and the label is not a detector-free fallback): the
+        decoder is then fed an idle vector instead of the classifier output.
+        """
+        assert self.v1 is not None
+        step = self.v1.update(probabilities, t_ms, expected_next, no_hands=no_hands)
+        emitted = step.event.label if step.event is not None else None
+        return step.accepted_label, step.rejection_reason, step.stable_label, emitted, step.event
+
+    def process(
+        self,
+        frame_bgr: np.ndarray,
+        timestamp: Optional[float] = None,
+        expected_next: Sequence[str] = (),
+    ) -> HandResult:
         started = time.perf_counter()
         height, width = frame_bgr.shape[:2]
         classification_bbox = _center_square_bbox(width, height)
@@ -499,11 +569,27 @@ class HandSignRecognizer:
             else:
                 fusion_status = "center_no_hands_grace"
 
-        if self._should_gate_without_hands(prediction):
-            accepted_label, rejection_reason = "zero", "no_hand_landmarks"
+        seal_event: Optional[SealEvent] = None
+        if self.decoder_mode == "v1":
+            t_ms = (time.monotonic() if timestamp is None else timestamp) * 1000.0
+            (
+                accepted_label,
+                rejection_reason,
+                stable,
+                emitted,
+                seal_event,
+            ) = self._decode_v1(
+                prediction.probabilities,
+                t_ms,
+                expected_next,
+                no_hands=self._should_gate_without_hands(prediction),
+            )
         else:
-            accepted_label, rejection_reason = self._accept(prediction, detected_hands)
-        stable, emitted = self.filter.update(accepted_label)
+            if self._should_gate_without_hands(prediction):
+                accepted_label, rejection_reason = "zero", "no_hand_landmarks"
+            else:
+                accepted_label, rejection_reason = self._accept(prediction, detected_hands)
+            stable, emitted = self.filter.update(accepted_label)
         landmark_points = tuple(
             tuple((point.x, point.y) for point in hand) for hand in detected.hand_landmarks
         )
@@ -541,10 +627,18 @@ class HandSignRecognizer:
             roi_prediction=roi_prediction,
             fusion_status=fusion_status,
             timings_ms=timings_ms,
+            decoder=self.decoder_mode,
+            seal_event=seal_event,
         )
+
+    def reset_decoder(self) -> None:
+        """Forget the v1 decoder's smoothing, hysteresis and refractory state (no-op in legacy)."""
+        if self.v1 is not None:
+            self.v1.reset()
 
     def reset(self) -> None:
         self.filter.reset()
+        self.reset_decoder()
         self._smoothed_hand_bbox = None
         self._missing_hand_frames = 0
 
@@ -773,6 +867,31 @@ class AttackRecognizer:
             for index in range(1, len(events))
         )
 
+    def expected_next(self, now: Optional[float] = None) -> tuple[str, ...]:
+        """Seals that would advance a combo in progress (the decoder's grammar prior).
+
+        The union (sorted, de-duplicated) of the next seal of every attack whose sequence has
+        the current queue as a *strict* prefix.  An empty queue returns ``()``: "no prior",
+        not "every first seal".  With ``now`` given, a queue the next update would clear for
+        timing out (``seal_timeout`` since its last seal) counts as empty, and so does one
+        whose consecutive seals are already too far apart to ever match.
+        """
+        events = list(self.seals)
+        if not events:
+            return ()
+        timeout = self.config.seal_timeout
+        if now is not None and now - events[-1][1] > timeout:
+            return ()
+        if any(events[i][1] - events[i - 1][1] > timeout for i in range(1, len(events))):
+            return ()
+        queue = tuple(label for label, _ in events)
+        following = {
+            attack.seals[len(queue)]
+            for attack in ATTACKS
+            if len(attack.seals) > len(queue) and attack.seals[: len(queue)] == queue
+        }
+        return tuple(sorted(following))
+
     def _trigger(self, attack: AttackDefinition, now: float) -> tuple[Optional[AttackEvent], bool]:
         self.seals.clear()
         if now - self.last_triggered.get(attack.name, -math.inf) < self.config.trigger_cooldown:
@@ -855,14 +974,27 @@ class CombinedNarutoPipeline:
             confidence_threshold=hand_confidence,
             temporal_config=config.hand,
             fusion_config=config.hand_fusion,
+            hand_decoder=config.hand_decoder,
+            calibration_path=config.calibration_path,
+            decoder_use_prior=config.hand_decoder_use_prior,
         )
         self.body = BodyMovementRecognizer(Path(pose_model), config.body)
         self.attacks = AttackRecognizer(config=config.attacks)
 
+    def _process_hand(self, frame_bgr: np.ndarray, now: float) -> HandResult:
+        """Run the hand stage; hands the combo grammar to the v1 decoder when it asked for it.
+
+        The legacy call is untouched: ``expected_next`` is only passed when the recognizer
+        reports ``decoder_uses_prior`` (v1 with the prior enabled).
+        """
+        if getattr(self.hand, "decoder_uses_prior", False):
+            return self.hand.process(frame_bgr, now, expected_next=self.attacks.expected_next(now))
+        return self.hand.process(frame_bgr, now)
+
     def process(self, frame_bgr: np.ndarray, timestamp: Optional[float] = None) -> FrameResult:
         started = time.perf_counter()
         now = time.monotonic() if timestamp is None else timestamp
-        hand_result = self.hand.process(frame_bgr, now)
+        hand_result = self._process_hand(frame_bgr, now)
         body_result = self.body.process(frame_bgr, now)
         attack_started = time.perf_counter()
         queue_update = self.attacks.update_detailed(hand_result.emitted_seal, now)

@@ -27,6 +27,7 @@ from typing import Any, Callable, FrozenSet, Optional
 from aiohttp import WSMsgType, web
 
 from narutocv.inference.combined_pipeline import ATTACKS, FALLBACK_HAND_CLASSES
+from narutocv.inference.pipeline_config import DEFAULT_PIPELINE_CONFIG, PipelineConfig
 from narutocv.inference.runtime import (
     PipelineFactory,
     PipelineRuntimeController,
@@ -113,12 +114,13 @@ class TransportServer:
         config: Optional[TransportConfig] = None,
         model_bundle: Optional[ModelBundle] = None,
         clock: Callable[[], float] = time.monotonic,
+        pipeline_config: Optional[PipelineConfig] = None,
     ) -> None:
         # Defaults to the session-scoped pipeline so that a reset re-detects
         # the player instead of staying locked onto whoever was in front of
         # the camera first. See transport/pipeline.py.
         self._pipeline_factory = pipeline_factory or session_scoped_pipeline_factory(
-            body_only=body_only
+            body_only=body_only, config=pipeline_config or DEFAULT_PIPELINE_CONFIG
         )
         # `include_geometry=True` by default here, unlike RuntimeConfig's own
         # default. The browser game needs the pose landmarks for three
@@ -226,6 +228,9 @@ class TransportServer:
                 "recognition_modes": ["body_only", "hand_only", "full"] if supports_modes else [],
                 "geometry": self._runtime_config.include_geometry,
                 "calibration": True,
+                # 1.2.0: which decoder produces HAND_SEAL events ("legacy" | "v1"), read
+                # from the live pipeline rather than the CLI so it cannot drift from it.
+                "hand_decoder": getattr(getattr(pipeline, "hand", None), "decoder_mode", "legacy"),
                 "max_fps": cfg.max_fps,
                 "max_frame_bytes": MAX_FRAME_PAYLOAD_BYTES,
                 "max_frame_width": MAX_FRAME_WIDTH,
@@ -769,6 +774,7 @@ def create_app(
     body_only: bool = False,
     config: Optional[TransportConfig] = None,
     model_bundle: Optional[ModelBundle] = None,
+    pipeline_config: Optional[PipelineConfig] = None,
 ) -> web.Application:
     server = TransportServer(
         pipeline_factory=pipeline_factory,
@@ -777,6 +783,7 @@ def create_app(
         body_only=body_only,
         config=config,
         model_bundle=model_bundle,
+        pipeline_config=pipeline_config,
     )
     app = server.build_app()
     app[TRANSPORT_SERVER_KEY] = server

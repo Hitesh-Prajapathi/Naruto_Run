@@ -77,6 +77,11 @@ class SessionScopedPipeline(CombinedNarutoPipeline):
             self._pose_model_path = Path(pose_model)
             self._mode = "body_only" if body_only else "full"
             self._idle_hand: Optional[HandResult] = self._capture_idle_hand_result()
+            # The blank frame was fed to the v1 decoder at t=0; forget it so the first real
+            # frame does not register as a gap against that stamp.
+            reset_decoder = getattr(self.hand, "reset_decoder", None)
+            if callable(reset_decoder):
+                reset_decoder()
             self._idle_body: Optional[BodyResult] = self._capture_idle_body_result()
         except BaseException:
             # The base class has already opened two native landmarkers; a
@@ -171,7 +176,7 @@ class SessionScopedPipeline(CombinedNarutoPipeline):
             )
 
         # mode == "hand_only" (Combat mode)
-        hand_result = self.hand.process(frame_bgr, now)
+        hand_result = self._process_hand(frame_bgr, now)
         attack_started = time.perf_counter()
         queue_update = self.attacks.update_detailed(hand_result.emitted_seal, now)
         attack_finished = time.perf_counter()
@@ -242,16 +247,20 @@ class SessionScopedPipeline(CombinedNarutoPipeline):
             logger.warning("failed to close the previous pose landmarker", exc_info=True)
 
 
-def session_scoped_pipeline_factory(*, body_only: bool = False):
+def session_scoped_pipeline_factory(
+    *, body_only: bool = False, config: PipelineConfig = DEFAULT_PIPELINE_CONFIG
+):
     """Factory in the shape `PipelineRuntimeController` expects.
 
     `body_only` skips hand recognition, which the browser game does not use
     and which costs more than half the frame budget. Off by default so that
     anything else pointed at this transport -- the diagnostics page, for one
     -- keeps working exactly as before.
+
+    `config` carries the hand decoder choice (`hand_decoder`: "legacy" | "v1").
     """
 
     def factory() -> SessionScopedPipeline:
-        return SessionScopedPipeline(body_only=body_only)
+        return SessionScopedPipeline(body_only=body_only, config=config)
 
     return factory

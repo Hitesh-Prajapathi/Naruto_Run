@@ -63,6 +63,26 @@ def combine_dispatch_reports(*reports: DispatchReport) -> DispatchReport:
     )
 
 
+def _hand_seal_payload(output: PipelineOutputV1, accepted_seal: str) -> dict[str, Any]:
+    """HAND_SEAL payload.  Protocol 1.2.0 adds ``decoder`` always, and (v1 only) the
+    decoder's ``t_start_ms`` / ``t_emit_ms`` / ``decoder_confidence`` when its event is the
+    seal the attack queue accepted.  ``confidence`` stays the raw frame confidence."""
+    hand = output["hand"]
+    decoder = hand.get("decoder")
+    payload: dict[str, Any] = {
+        "seal": accepted_seal,
+        "stable_label": hand["stable_label"],
+        "confidence": hand["raw"]["confidence"],
+        "decoder": decoder["mode"] if decoder is not None else "legacy",
+    }
+    event = decoder["event"] if decoder is not None else None
+    if event is not None and event["label"] == accepted_seal:
+        payload["t_start_ms"] = event["t_start_ms"]
+        payload["t_emit_ms"] = event["t_emit_ms"]
+        payload["decoder_confidence"] = event["confidence"]
+    return payload
+
+
 class PipelineEventDispatcher:
     """Derive sparse events and deliver them to isolated synchronous callbacks."""
 
@@ -164,11 +184,7 @@ class PipelineEventDispatcher:
             events.append(
                 self._new_event(
                     PipelineEventType.HAND_SEAL,
-                    payload={
-                        "seal": accepted_seal,
-                        "stable_label": output["hand"]["stable_label"],
-                        "confidence": output["hand"]["raw"]["confidence"],
-                    },
+                    payload=_hand_seal_payload(output, accepted_seal),
                     **common,
                 )
             )
