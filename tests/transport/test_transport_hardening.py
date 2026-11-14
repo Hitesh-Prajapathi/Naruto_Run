@@ -615,7 +615,12 @@ class ModelBundleTests(unittest.TestCase):
         self.assertTrue(bundle.id.startswith("narutocv-"))
         self.assertEqual(
             {f.name for f in bundle.files},
-            {"best_model_A.onnx", "hand_landmarker.task", "pose_landmarker.task"},
+            {
+                "best_model_A.onnx",
+                "calibration_v0.json",
+                "hand_landmarker.task",
+                "pose_landmarker.task",
+            },
         )
 
     def test_missing_manifest_reports_unversioned(self) -> None:
