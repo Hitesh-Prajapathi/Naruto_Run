@@ -284,7 +284,9 @@ class TransportMetrics:
             ("reason",),
         )
         self.connections_closed = r.counter(
-            "narutocv_connections_closed_total", "WebSocket connections ended, by reason.", ("reason",)
+            "narutocv_connections_closed_total",
+            "WebSocket connections ended, by reason.",
+            ("reason",),
         )
         self.handshake_failures = r.counter(
             "narutocv_handshake_failures_total", "Failed handshakes, by reason.", ("reason",)
