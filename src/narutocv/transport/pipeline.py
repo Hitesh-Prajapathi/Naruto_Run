@@ -72,11 +72,17 @@ class SessionScopedPipeline(CombinedNarutoPipeline):
             hand_confidence=hand_confidence,
             config=config,
         )
-        # The base class does not keep this, and the rebuild needs it.
-        self._pose_model_path = Path(pose_model)
-        self._mode = "body_only" if body_only else "full"
-        self._idle_hand: Optional[HandResult] = self._capture_idle_hand_result()
-        self._idle_body: Optional[BodyResult] = self._capture_idle_body_result()
+        try:
+            # The base class does not keep this, and the rebuild needs it.
+            self._pose_model_path = Path(pose_model)
+            self._mode = "body_only" if body_only else "full"
+            self._idle_hand: Optional[HandResult] = self._capture_idle_hand_result()
+            self._idle_body: Optional[BodyResult] = self._capture_idle_body_result()
+        except BaseException:
+            # The base class has already opened two native landmarkers; a
+            # constructor that raises never gets close() called, so release them.
+            self.close()
+            raise
 
     @property
     def _body_only(self) -> bool:
@@ -190,6 +196,24 @@ class SessionScopedPipeline(CombinedNarutoPipeline):
             processing_ms=processing_ms,
             timings_ms=timings_ms,
         )
+
+    def close(self) -> None:
+        """Close both recognizers even if the first one's release raises.
+
+        The base implementation closes the hand landmarker then the body
+        landmarker, so an exception from the first leaks the second.
+        """
+        first_error: Optional[BaseException] = None
+        for recognizer in (getattr(self, "hand", None), getattr(self, "body", None)):
+            if recognizer is None:
+                continue
+            try:
+                recognizer.close()
+            except Exception as error:
+                logger.warning("failed to close a recognizer", exc_info=True)
+                first_error = first_error or error
+        if first_error is not None:
+            raise first_error
 
     def reset(self) -> None:
         super().reset()

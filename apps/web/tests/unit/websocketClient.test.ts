@@ -17,7 +17,7 @@ class FakeWebSocket {
   onopen: (() => void) | null = null;
   onmessage: ((event: { data: string | ArrayBuffer }) => void) | null = null;
   onerror: (() => void) | null = null;
-  onclose: (() => void) | null = null;
+  onclose: ((event?: CloseEvent) => void) | null = null;
 
   constructor(public readonly url: string) {}
 
@@ -53,15 +53,22 @@ class FakeWebSocket {
   }
 }
 
-function serverReady(sessionId = "session-1"): string {
+function serverReady(
+  sessionId = "session-1",
+  extra: Record<string, unknown> = {},
+  protocolVersion = "1.0.0",
+): string {
   return JSON.stringify({
     type: "server_ready",
-    protocol_version: "1.0.0",
+    protocol_version: protocolVersion,
     schema_version: "1.0.0",
     session_id: sessionId,
     supported_controls: ["ping", "reset"],
+    ...extra,
   });
 }
+
+const MODEL = { id: "narutocv-abc123", sha256: "0".repeat(64), files: [] };
 
 describe("WebSocketClient", () => {
   let sockets: FakeWebSocket[];
@@ -99,7 +106,117 @@ describe("WebSocketClient", () => {
 
     sockets[0]!.simulateOpen();
 
-    expect(sockets[0]!.lastSentJson()).toMatchObject({ type: "client_hello", protocol_version: "1.0.0" });
+    expect(sockets[0]!.lastSentJson()).toMatchObject({ type: "client_hello", protocol_version: "1.1.0" });
+    // No expected model configured: the optional field must be absent so a
+    // 1.0.0-era server sees exactly the hello it always did.
+    expect(sockets[0]!.lastSentJson()).not.toHaveProperty("expected_model_id");
+  });
+
+  it("sends expected_model_id in the hello when configured", () => {
+    const client = makeClient({ expectedModelId: "narutocv-abc123" });
+    client.connect();
+    sockets[0]!.simulateOpen();
+
+    expect(sockets[0]!.lastSentJson()).toMatchObject({ expected_model_id: "narutocv-abc123" });
+  });
+
+  it("exposes the 1.1.0 model, classes and capabilities from server_ready", () => {
+    const client = makeClient();
+    client.connect();
+    sockets[0]!.simulateOpen();
+    sockets[0]!.simulateMessage(
+      serverReady("s", { model: MODEL, classes: { hand: ["dog"], body: [], attacks: [] } }, "1.1.0"),
+    );
+
+    expect(client.connectionState).toBe("open");
+    expect(client.serverReady?.model?.id).toBe("narutocv-abc123");
+    expect(client.serverReady?.classes?.hand).toEqual(["dog"]);
+  });
+
+  it("still opens against a 1.0.0 server that sends no model info", () => {
+    const client = makeClient();
+    client.connect();
+    sockets[0]!.simulateOpen();
+    sockets[0]!.simulateMessage(serverReady());
+
+    expect(client.connectionState).toBe("open");
+    expect(client.serverReady?.model).toBeUndefined();
+  });
+
+  it("treats a different server major version as fatal and does not reconnect", () => {
+    const client = makeClient();
+    const errors: string[] = [];
+    client.onError((error) => errors.push(error.code));
+    client.connect();
+    sockets[0]!.simulateOpen();
+    sockets[0]!.simulateMessage(serverReady("s", {}, "2.0.0"));
+    vi.advanceTimersByTime(60_000);
+
+    expect(errors).toContain("protocol_version_mismatch");
+    expect(client.connectionState).toBe("error");
+    expect(sockets).toHaveLength(1);
+  });
+
+  it("treats a model id that differs from the expected one as fatal", () => {
+    const client = makeClient({ expectedModelId: "narutocv-other" });
+    const errors: string[] = [];
+    client.onError((error) => errors.push(error.code));
+    client.connect();
+    sockets[0]!.simulateOpen();
+    sockets[0]!.simulateMessage(serverReady("s", { model: MODEL }, "1.1.0"));
+    vi.advanceTimersByTime(60_000);
+
+    expect(errors).toContain("model_mismatch");
+    expect(client.connectionState).toBe("error");
+    expect(sockets).toHaveLength(1);
+  });
+
+  it("does not reconnect after the server rejects the version (error + close 4426)", () => {
+    const client = makeClient();
+    const errors: string[] = [];
+    client.onError((error) => errors.push(error.code));
+    client.connect();
+    sockets[0]!.simulateOpen();
+    sockets[0]!.simulateMessage(
+      JSON.stringify({
+        type: "error",
+        code: "protocol_version_mismatch",
+        message: "client speaks protocol 0.9.0",
+        details: { server_protocol_version: "1.1.0" },
+      }),
+    );
+    sockets[0]!.readyState = FakeWebSocket.CLOSED;
+    sockets[0]!.onclose?.({ code: 4426 } as unknown as CloseEvent);
+    vi.advanceTimersByTime(60_000);
+
+    expect(errors).toEqual(["protocol_version_mismatch"]);
+    expect(client.connectionState).toBe("error");
+    expect(sockets).toHaveLength(1);
+  });
+
+  it("does not reconnect on a bare fatal close code", () => {
+    const client = makeClient();
+    client.connect();
+    sockets[0]!.simulateOpen();
+    sockets[0]!.simulateMessage(serverReady());
+    sockets[0]!.readyState = FakeWebSocket.CLOSED;
+    sockets[0]!.onclose?.({ code: 4412 } as unknown as CloseEvent);
+    vi.advanceTimersByTime(60_000);
+
+    expect(client.connectionState).toBe("error");
+    expect(sockets).toHaveLength(1);
+  });
+
+  it("still reconnects after a non-fatal close such as the idle timeout (4408)", () => {
+    const client = makeClient({ initialBackoffMs: 100 });
+    client.connect();
+    sockets[0]!.simulateOpen();
+    sockets[0]!.simulateMessage(serverReady());
+    sockets[0]!.readyState = FakeWebSocket.CLOSED;
+    sockets[0]!.onclose?.({ code: 4408 } as unknown as CloseEvent);
+    vi.advanceTimersByTime(100);
+
+    expect(sockets).toHaveLength(2);
   });
 
   it("becomes open and records the session id after server_ready", () => {

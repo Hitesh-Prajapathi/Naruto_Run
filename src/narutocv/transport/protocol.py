@@ -14,7 +14,12 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Mapping, Optional
 
-PROTOCOL_VERSION = "1.0.0"
+# 1.1.0 (additive over 1.0.0): the hello may carry `expected_model_id`, and
+# server_ready adds `model`, `classes` and `capabilities`. A 1.0.0 client that
+# sends neither still works. Compatibility rule: majors must match; minors may
+# differ in either direction (unknown fields are ignored by both sides).
+PROTOCOL_VERSION = "1.1.0"
+PROTOCOL_MAJOR = 1
 # Mirrors narutocv.inference.output_schema.SCHEMA_VERSION. Duplicated as a
 # literal (rather than imported) so this module has zero dependency on the
 # inference package and can be unit tested in isolation.
@@ -39,6 +44,38 @@ class ProtocolError(ValueError):
     Callers (server.py) reject the offending frame/message before it reaches
     recognition rather than letting a malformed payload propagate.
     """
+
+
+class VersionMismatchError(ProtocolError):
+    """The client speaks a protocol major version this server does not."""
+
+    def __init__(self, client_version: str) -> None:
+        self.client_version = client_version
+        super().__init__(
+            f"client speaks protocol {client_version}; this server speaks "
+            f"{PROTOCOL_VERSION} (supported major version: {PROTOCOL_MAJOR}). "
+            "Update the client or the server so the major versions match."
+        )
+
+
+class ModelMismatchError(ProtocolError):
+    """The client expects a model bundle other than the one this server runs."""
+
+    def __init__(self, expected: str, actual: str) -> None:
+        self.expected = expected
+        self.actual = actual
+        super().__init__(
+            f"client expects model bundle {expected!r} but this server runs {actual!r}"
+        )
+
+
+def parse_protocol_version(version: str) -> tuple[int, int, int]:
+    """Parse "MAJOR.MINOR.PATCH"; raises ProtocolError for anything else."""
+    parts = version.split(".")
+    if len(parts) != 3 or not all(part.isascii() and part.isdigit() for part in parts):
+        raise ProtocolError(f"protocol_version {version!r} is not MAJOR.MINOR.PATCH")
+    major, minor, patch = (int(part) for part in parts)
+    return major, minor, patch
 
 
 class ControlCommand(str, Enum):
@@ -126,24 +163,50 @@ def decode_frame(data: bytes) -> FrameEnvelope:
 # --- JSON control-plane messages -------------------------------------------
 
 
-def build_client_hello(*, protocol_version: str = PROTOCOL_VERSION) -> dict:
-    return {"type": "client_hello", "protocol_version": protocol_version}
+def build_client_hello(
+    *, protocol_version: str = PROTOCOL_VERSION, expected_model_id: Optional[str] = None
+) -> dict:
+    payload: dict[str, Any] = {"type": "client_hello", "protocol_version": protocol_version}
+    if expected_model_id is not None:
+        payload["expected_model_id"] = expected_model_id
+    return payload
 
 
-def build_server_ready(*, session_id: str) -> dict:
-    return {
+def build_server_ready(
+    *,
+    session_id: str,
+    model: Optional[Mapping[str, Any]] = None,
+    classes: Optional[Mapping[str, Any]] = None,
+    capabilities: Optional[Mapping[str, Any]] = None,
+) -> dict:
+    payload: dict[str, Any] = {
         "type": "server_ready",
         "protocol_version": PROTOCOL_VERSION,
         "schema_version": SCHEMA_VERSION,
         "session_id": session_id,
         "supported_controls": list(SUPPORTED_CONTROLS),
     }
+    if model is not None:
+        payload["model"] = dict(model)
+    if classes is not None:
+        payload["classes"] = {key: list(value) for key, value in classes.items()}
+    if capabilities is not None:
+        payload["capabilities"] = dict(capabilities)
+    return payload
 
 
-def build_error(*, code: str, message: str, request_id: Optional[str] = None) -> dict:
+def build_error(
+    *,
+    code: str,
+    message: str,
+    request_id: Optional[str] = None,
+    details: Optional[Mapping[str, Any]] = None,
+) -> dict:
     payload: dict[str, Any] = {"type": "error", "code": code, "message": message}
     if request_id is not None:
         payload["request_id"] = request_id
+    if details is not None:
+        payload["details"] = dict(details)
     return payload
 
 
@@ -178,14 +241,41 @@ def build_pipeline_event(event: Mapping[str, Any]) -> dict:
     return {"type": "pipeline_event", "event": dict(event)}
 
 
-def parse_client_hello(raw: Mapping[str, Any]) -> str:
-    """Validate the opening handshake message; returns the client's protocol version."""
+@dataclass(frozen=True)
+class ClientHello:
+    protocol_version: str
+    expected_model_id: Optional[str] = None
+
+
+def parse_client_hello_full(raw: Mapping[str, Any]) -> ClientHello:
+    """Validate the opening handshake message, including optional fields."""
     if raw.get("type") != "client_hello":
         raise ProtocolError(f"expected 'client_hello', received {raw.get('type')!r}")
     version = raw.get("protocol_version")
     if not isinstance(version, str) or not version:
         raise ProtocolError("client_hello requires a non-empty protocol_version")
-    return version
+    expected = raw.get("expected_model_id")
+    if expected is not None and (not isinstance(expected, str) or not expected):
+        raise ProtocolError("expected_model_id must be a non-empty string when present")
+    return ClientHello(protocol_version=version, expected_model_id=expected)
+
+
+def parse_client_hello(raw: Mapping[str, Any]) -> str:
+    """Validate the opening handshake message; returns the client's protocol version."""
+    return parse_client_hello_full(raw).protocol_version
+
+
+def negotiate_hello(hello: ClientHello, *, server_model_id: str) -> None:
+    """Raise if this server cannot serve `hello`; return None when it can.
+
+    Rule: protocol majors must be equal (minors may differ either way), and a
+    client that names an expected model bundle must get exactly that bundle.
+    """
+    major, _minor, _patch = parse_protocol_version(hello.protocol_version)
+    if major != PROTOCOL_MAJOR:
+        raise VersionMismatchError(hello.protocol_version)
+    if hello.expected_model_id is not None and hello.expected_model_id != server_model_id:
+        raise ModelMismatchError(hello.expected_model_id, server_model_id)
 
 
 def parse_control_message(raw: Mapping[str, Any]) -> tuple[ControlCommand, Optional[str]]:
