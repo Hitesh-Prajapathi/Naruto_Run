@@ -1,0 +1,70 @@
+{
+  "_note": "DRAFT descriptions written without reference photos. Project owner: verify every entry against your canonical photos (docs/seals.md) and edit. Descriptions are shown to subjects next to the reference card. Left/right are from the performer's point of view.",
+  "seals": {
+    "bird": {
+      "description": "Hands in front of the chest, one palm flat facing down, the other hand's fingertips pointing up beneath it, thumbs spread wide so the thumbs and index fingers make an open beak-like shape.",
+      "confusable_with": [],
+      "status": "draft"
+    },
+    "boar": {
+      "description": "Both hands curled into loose fists held low in front of the chest, backs of the hands facing outward, knuckles close together.",
+      "confusable_with": [],
+      "status": "draft"
+    },
+    "dog": {
+      "description": "One hand flat, palm down, over the other hand; the lower hand's fingers extend forward while the upper hand's thumb and fingers cover it. Fingers together, no gaps.",
+      "confusable_with": ["hare"],
+      "status": "draft"
+    },
+    "dragon": {
+      "description": "TBD by project owner. The dragon variant has not been pinned yet (the live model never detects it). Owner: choose ONE variant, describe it here finger by finger, and add public/seals/dragon.jpg.",
+      "confusable_with": [],
+      "status": "tbd"
+    },
+    "hare": {
+      "description": "Hands stacked in front of the chest: the lower hand flat palm up, the upper hand's index and middle fingers extended forward over it, remaining fingers folded, thumbs tucked.",
+      "confusable_with": ["dog"],
+      "status": "draft"
+    },
+    "horse": {
+      "description": "Palms pressed together in front of the chest, both index fingers extended and pressed together pointing up, other fingers curled over each other.",
+      "confusable_with": [],
+      "status": "draft"
+    },
+    "monkey": {
+      "description": "One hand's palm presses flat on the back of the other hand, fingers together and pointing forward, forearms roughly horizontal.",
+      "confusable_with": [],
+      "status": "draft"
+    },
+    "ox": {
+      "description": "One hand held vertically with fingers pointing up and the other held horizontally, fingers pointing sideways, the two forming a cross shape at the chest.",
+      "confusable_with": [],
+      "status": "draft"
+    },
+    "ram": {
+      "description": "One hand pointing forward with index and middle fingers extended and together, the other hand wrapping around it from beneath, thumbs overlapping; ring and little fingers curled.",
+      "confusable_with": ["rat"],
+      "status": "draft"
+    },
+    "rat": {
+      "description": "Hands together at the chest with fingers interlaced and curled; the two index fingers rest against each other pointing forward, thumbs side by side.",
+      "confusable_with": ["ram", "tiger"],
+      "status": "draft"
+    },
+    "snake": {
+      "description": "Palms together at the chest, fingers interlaced and pointing forward, thumbs resting on top of each other, forearms level.",
+      "confusable_with": [],
+      "status": "draft"
+    },
+    "tiger": {
+      "description": "Palms together, index and middle fingers of both hands extended up and pressed together; ring and little fingers curled and interlocked, thumbs against the curled fingers.",
+      "confusable_with": ["rat"],
+      "status": "draft"
+    },
+    "zero": {
+      "description": "No seal. Let both hands rest naturally in your lap or at your sides, relaxed and not touching.",
+      "confusable_with": [],
+      "status": "draft"
+    }
+  }
+}
