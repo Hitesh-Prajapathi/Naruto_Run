@@ -63,6 +63,17 @@ def live_summary(live_dir: Path) -> dict:
     return out
 
 
+def contamination() -> dict:
+    prep = pd.read_parquet(ART / "leakage_audit.prepared.parquet")
+    train_paths = set(prep[(prep.prep_split == "train") & (~prep.is_aug)].raw_path.dropna())
+    out = {}
+    for sp in ("s0", "s1a"):
+        test = pd.read_csv(ART / "splits" / sp / "test.csv")
+        out[sp] = {"n": int(len(test)),
+                   "pct_in_prepared_train": float(100 * test["path"].isin(train_paths).mean())}
+    return out
+
+
 def fmt_ci(x, ci):
     return f"{x:.3f} [{ci[0]:.3f}, {ci[1]:.3f}]"
 
@@ -119,6 +130,7 @@ def main() -> None:
              "ece": o["metrics"]["ece"], "ci95": o["ci95"], "worst3": o["worst3"]}
             for o in onnx
         ],
+        "contamination": contamination(),
         "retrained": [{k: v for k, v in r.items() if not k.startswith("_")} for r in rows],
         "live_camera": live_summary(a.live_dir),
     }
@@ -210,7 +222,12 @@ def main() -> None:
       "non-`nouuid` sessions. Held-out sessions can miss classes (see class x session table); macro-F1 "
       "uses classes present in that test set.\n")
     w("### Deployed `best_model_A.onnx` (CONTAMINATED: model trained on all sources)\n")
-    w("Not an honest estimate. The model saw every one of these images or near-copies in training. "
+    c = data["contamination"]
+    w("Not an honest estimate. The deployed model was trained on a random 80% of frames from every "
+      "source: "
+      f"{c['s0']['pct_in_prepared_train']:.1f}% of the S0 test images and "
+      f"{c['s1a']['pct_in_prepared_train']:.1f}% of the S1a test images were literally in its "
+      "training set (exact raw-image match to a prepared train original), and most of the remainder have near-duplicates there (section 2). "
       "`png224` = 224 PNGs from the training pipeline fed through the runtime tensor math; "
       "`rawcrop` = raw image, centre square, cv2 INTER_AREA 224 (runtime-style).\n")
     w("| set | pipeline | n | accuracy [95% CI] | macro-F1 [95% CI] | ECE |")
@@ -247,10 +264,10 @@ def main() -> None:
                 r = live.get(tag, {}).get(c)
                 cells += [f"{r['success']}/{r['n']}", ", ".join(str(p) for p in r["predicted"])] if r else ["-", "-"]
             w(f"| {c} | " + " | ".join(cells) + " |")
-        w("")
+        w("`None` = the system emitted no action event for that attempt (the raw per-frame model output may still have named a seal).\n")
 
     w("## 5. What this means\n")
-    for line in narrative(rows, by, onnx, audit):
+    for line in narrative(rows, by, onnx, audit, data['contamination']):
         w(line)
     w("")
     w("S1 is **source/session-disjoint, not subject-disjoint**: we do not know whether the same "
@@ -270,7 +287,9 @@ def main() -> None:
     w("- Early stopping uses a val set drawn from the *same sources/frames as train*, so val is "
       "leaky in every split, including s1/s2. Epochs completed differ per split because of that.")
     w("- Test predictions use ultralytics `predict` at imgsz=224 on the same 224 centre-crop PNGs.")
-    w("- Wall times are on a shared machine (other jobs were running) and are indicative only.")
+    w("- Wall times are on a shared machine (other jobs were running) and are indicative only; "
+      "the longest (s2_..._2020-02-12) completed a similar number of epochs to the others in a "
+      "several-times-longer wall time, which we attribute to machine contention (not investigated).")
     w("- Single seed per split; no seed-to-seed variance is estimated, only test-set bootstrap CIs.\n")
     w("## 7. Reproduce\n")
     w("```bash\nuv venv --python 3.14 .venv\n"
@@ -291,8 +310,36 @@ def main() -> None:
     print("wrote", OUT / "v0-baseline.md")
 
 
-def narrative(rows, by, onnx, audit) -> list[str]:
-    return ["(narrative pending)"]
+def narrative(rows, by, onnx, audit, data_c) -> list[str]:
+    s0, s1a, s1b = by["s0"], by["s1a"], by["s1b"]
+    la = audit["leakage_vs_train_originals"]["test"]
+    ox = {o["name"]: o["metrics"] for o in onnx}
+    s2 = [r for r in rows if r["split"].startswith("s2_")]
+    lo = min(s2, key=lambda r: r["macro_f1"])
+    hi = max(s2, key=lambda r: r["macro_f1"])
+    cm = np.array(s1a["confusion_matrix"])
+    to_zero = int(cm[:, CLASSES.index("zero")].sum() - cm[CLASSES.index("zero"), CLASSES.index("zero")])
+    cmb = np.array(s1b["confusion_matrix"])
+    t, r_ = CLASSES.index("tiger"), CLASSES.index("ram")
+    return [
+        f"1. Same recipe, same data, only the split changes: macro-F1 {s0['macro_f1']:.3f} (S0, random) "
+        f"vs {s1a['macro_f1']:.3f} (S1a, train burst source -> test other source) and "
+        f"{s1b['macro_f1']:.3f} (S1b, reverse). The ~99%+ figure measures memorisation of the room/session.",
+        f"2. Cause: {la['same_class_le_6_pct']:.1f}% of the old prepared test images have a same-class "
+        f"pHash near-duplicate (Hamming <= 6) among prepared train originals, and "
+        f"{audit['session_overlap']['test']['pct_session_in_train_of_all']:.1f}% come from a session also in train.",
+        f"3. The deployed ONNX scores {ox['s1a_test_png224']['accuracy']:.3f} accuracy on the S1a test "
+        f"images because it trained on those sources ({data_c['s1a']['pct_in_prepared_train']:.1f}% of those "
+        f"images were in its training set; contaminated); the honestly retrained model gets "
+        f"{s1a['accuracy']:.3f} on the same images.",
+        f"4. Failure shape is source-specific and not 'noise': S1a sends {to_zero} of {s1a['n_test']} "
+        f"images to `zero`; S1b sends {int(cmb[t, r_])} of {int(cmb[t].sum())} burst-source `tiger` images "
+        f"to `ram`. Leave-one-session-out macro-F1 over the four 0242ac1c0002 sessions ranges "
+        f"{lo['macro_f1']:.3f} ({lo['split'][3:]}) to {hi['macro_f1']:.3f} ({hi['split'][3:]}); "
+        "per-session test sets are small, so CIs are wide.",
+        "5. Caveats: a single seed per split, ultralytics `auto` optimizer, and a leaky val set used for "
+        "early stopping all make these numbers rough; the direction and size of the gap are the finding, not the third decimal.",
+    ]
 
 
 if __name__ == "__main__":
