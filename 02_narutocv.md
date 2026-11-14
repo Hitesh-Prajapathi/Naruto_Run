@@ -6,7 +6,7 @@
 - YOLOv8n (1.45M params, 5.83 MB ONNX, 3.2 ms inference), 12 hand seals (13 classes), trained with PyTorch DDP on 2,860 images
 - Reported 99.64% val / 99.11% test accuracy
 - Dual-view Bayesian fusion (0.6 centre crop + 0.4 EMA hand ROI), MediaPipe Pose body tracking, FSM combo parser
-- Lock-free 1-slot mailbox scheduler, custom 21-byte binary WebSocket protocol (NCV1), 31.2 ms pipeline
+- 1-slot latest-frame mailbox scheduler (Condition-guarded, not lock-free), custom 21-byte binary WebSocket protocol (NCV1), 31.2 ms pipeline
 - Three.js 60 FPS client, 288 Vitest + 30 Playwright tests
 - **No public repo or demo.** This is the biggest problem.
 
