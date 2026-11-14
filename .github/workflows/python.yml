@@ -50,7 +50,10 @@ jobs:
         with:
           enable-cache: true
           cache-dependency-glob: uv.lock
-      - run: uv sync --all-extras --frozen
+      - name: System libs for OpenCV/MediaPipe (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libgl1 libglib2.0-0
+      - run: uv sync --frozen --extra runtime --extra transport --extra eval --extra collect --extra dev
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run pytest
@@ -67,5 +70,8 @@ jobs:
         with:
           enable-cache: true
           cache-dependency-glob: uv.lock
-      - run: uv sync --all-extras --frozen
+      - name: System libs for OpenCV/MediaPipe (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libgl1 libglib2.0-0
+      - run: uv sync --frozen --extra runtime --extra transport --extra eval --extra collect --extra dev
       - run: uv run mypy src/narutocv

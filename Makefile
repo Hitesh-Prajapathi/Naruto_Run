@@ -7,7 +7,7 @@ help:
 	@grep -E "^[a-z-]+:.*##" $(MAKEFILE_LIST) | sed -E "s/:.*## /\t/"
 
 setup: ## uv sync --all-extras + npm ci
-	uv sync --all-extras
+	uv sync --all-extras  # local dev: includes the heavy `train` extra
 	cd $(WEB) && npm ci
 
 fetch-models: ## download + sha256-verify models listed in models/manifest.yaml

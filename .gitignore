@@ -45,3 +45,6 @@ training/dry_run_output/
 # Legacy pre-refactor directory: local untracked data (venvs, prepared_dataset*)
 # may still linger here in old checkouts. Never commit any of it.
 cv_model/
+
+# Claude Code agent worktrees / local settings
+.claude/

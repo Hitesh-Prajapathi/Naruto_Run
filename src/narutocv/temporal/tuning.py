@@ -197,9 +197,7 @@ def _dominates(a: OperatingPoint, b: OperatingPoint) -> bool:
     no_worse = (
         a.fa_per_min <= b.fa_per_min and a.recall >= b.recall and a.median_ttd_ms <= b.median_ttd_ms
     )
-    better = (
-        a.fa_per_min < b.fa_per_min or a.recall > b.recall or a.median_ttd_ms < b.median_ttd_ms
-    )
+    better = a.fa_per_min < b.fa_per_min or a.recall > b.recall or a.median_ttd_ms < b.median_ttd_ms
     return no_worse and better
 
 
