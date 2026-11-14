@@ -14,6 +14,7 @@ Usage::
 
     PYTHONPATH=src python -m narutocv.data.manifest --raw-root "$RAW_ROOT"
 """
+
 from __future__ import annotations
 
 import argparse
@@ -28,15 +29,26 @@ import pandas as pd
 from PIL import Image
 
 CLASSES = [
-    "bird", "boar", "dog", "dragon", "hare", "horse",
-    "monkey", "ox", "ram", "rat", "snake", "tiger", "zero",
+    "bird",
+    "boar",
+    "dog",
+    "dragon",
+    "hare",
+    "horse",
+    "monkey",
+    "ox",
+    "ram",
+    "rat",
+    "snake",
+    "tiger",
+    "zero",
 ]
 IMAGE_SIZE = 224
 IMAGE_EXTS = {".png", ".jpg", ".jpeg"}
 _UUID_RE = re.compile(
     r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
 )
-_UUID_EPOCH = dt.datetime(1582, 10, 15, tzinfo=dt.timezone.utc)
+_UUID_EPOCH = dt.datetime(1582, 10, 15, tzinfo=dt.UTC)
 
 
 def parse_uuid1(filename: str) -> tuple[str, dt.datetime] | None:

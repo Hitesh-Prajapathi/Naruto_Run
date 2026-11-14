@@ -19,6 +19,7 @@ Pipelines:
 
     PYTHONPATH=src python scripts/baseline/eval_onnx.py --raw-root "$RAW_ROOT" --prepared "$PREPARED_ROOT"
 """
+
 from __future__ import annotations
 
 import argparse
@@ -32,8 +33,21 @@ import pandas as pd
 
 from narutocv.eval.metrics import bootstrap_ci, compute_metrics, confusion_matrix_png, worst_classes
 
-CLASSES = ["bird", "boar", "dog", "dragon", "hare", "horse",
-           "monkey", "ox", "ram", "rat", "snake", "tiger", "zero"]
+CLASSES = [
+    "bird",
+    "boar",
+    "dog",
+    "dragon",
+    "hare",
+    "horse",
+    "monkey",
+    "ox",
+    "ram",
+    "rat",
+    "snake",
+    "tiger",
+    "zero",
+]
 MODEL = Path("cv_model/models/best_model_A.onnx")
 
 
@@ -53,8 +67,8 @@ def classify_bgr(session, in_name, out_name, crop_bgr: np.ndarray) -> np.ndarray
 def centre_square(img_bgr: np.ndarray) -> np.ndarray:
     h, w = img_bgr.shape[:2]
     s = min(h, w)
-    t, l = (h - s) // 2, (w - s) // 2
-    return img_bgr[t:t + s, l:l + s]
+    top, left = (h - s) // 2, (w - s) // 2
+    return img_bgr[top : top + s, left : left + s]
 
 
 def run(session, paths, mode: str) -> np.ndarray:
@@ -72,8 +86,7 @@ def run(session, paths, mode: str) -> np.ndarray:
 def summarise(name, y, probs, note) -> dict:
     m = compute_metrics(y, probs, CLASSES)
     ci = bootstrap_ci(y, probs, len(CLASSES), n_boot=1000, seed=0)
-    return {"name": name, "note": note, "metrics": m, "ci95": ci,
-            "worst3": worst_classes(m, 3)}
+    return {"name": name, "note": note, "metrics": m, "ci95": ci, "worst3": worst_classes(m, 3)}
 
 
 def main() -> None:
@@ -98,29 +111,43 @@ def main() -> None:
                 y.append(ci_)
         probs = run(session, paths, "png224")
         np.save(a.out / f"prepared_{split}_probs.npy", probs)
-        results.append(summarise(f"prepared_{split}", np.array(y), probs,
-                                 "claimed-split reproduction; leaky random frame split"))
+        results.append(
+            summarise(
+                f"prepared_{split}",
+                np.array(y),
+                probs,
+                "claimed-split reproduction; leaky random frame split",
+            )
+        )
     # 2. S0 / S1a test sets, both pipelines
     for sp in ("s0", "s1a"):
         test = pd.read_csv(a.splits / sp / "test.csv")
         y = np.array([CLASSES.index(c) for c in test["cls"]])
-        for mode, paths in (("png224", list(test["cache_path"])),
-                            ("rawcrop", [a.raw_root / p for p in test["path"]])):
+        for mode, paths in (
+            ("png224", list(test["cache_path"])),
+            ("rawcrop", [a.raw_root / p for p in test["path"]]),
+        ):
             probs = run(session, paths, mode)
             np.save(a.out / f"{sp}_{mode}_probs.npy", probs)
             np.save(a.out / f"{sp}_labels.npy", y)
-            res = summarise(f"{sp}_test_{mode}", y, probs,
-                            "CONTAMINATED: model trained on all sources")
+            res = summarise(
+                f"{sp}_test_{mode}", y, probs, "CONTAMINATED: model trained on all sources"
+            )
             results.append(res)
             if mode == "png224":
-                confusion_matrix_png(res["metrics"]["confusion_matrix"], CLASSES,
-                                     a.out / f"{sp}_onnx_cm.png",
-                                     f"deployed ONNX (contaminated) on {sp} test")
+                confusion_matrix_png(
+                    res["metrics"]["confusion_matrix"],
+                    CLASSES,
+                    a.out / f"{sp}_onnx_cm.png",
+                    f"deployed ONNX (contaminated) on {sp} test",
+                )
     (a.out / "onnx_results.json").write_text(json.dumps(results, indent=2))
     for r in results:
         m = r["metrics"]
-        print(f"{r['name']:24s} n={m['n']:5d} acc={m['accuracy']:.4f} f1={m['macro_f1']:.4f} "
-              f"ece={m['ece']:.4f}")
+        print(
+            f"{r['name']:24s} n={m['n']:5d} acc={m['accuracy']:.4f} f1={m['macro_f1']:.4f} "
+            f"ece={m['ece']:.4f}"
+        )
 
 
 if __name__ == "__main__":

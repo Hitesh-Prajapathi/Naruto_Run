@@ -4,6 +4,7 @@ Re-implementation of ``apply_augmentation`` from ``cv_model/data/prepare_dataset
 (same operations and parameter ranges) but driven by an explicit seeded RNG, so
 every split-building run is reproducible.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -31,9 +32,7 @@ def apply_augmentation(img: Image.Image, rng: np.random.Generator) -> Image.Imag
     new_w, new_h = int(w * scale), int(h * scale)
     left = int(rng.integers(0, w - new_w + 1))
     top = int(rng.integers(0, h - new_h + 1))
-    img = img.crop((left, top, left + new_w, top + new_h)).resize(
-        (w, h), Image.Resampling.LANCZOS
-    )
+    img = img.crop((left, top, left + new_w, top + new_h)).resize((w, h), Image.Resampling.LANCZOS)
     # 5. additive gaussian noise (p = 0.2)
     if rng.random() < 0.2:
         arr = np.asarray(img).astype(np.float32) / 255.0

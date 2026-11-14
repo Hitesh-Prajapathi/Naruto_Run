@@ -14,6 +14,7 @@ Conventions
 * Bootstrap CIs resample *within each true class* (stratified), with replacement,
   keeping class counts fixed; seeded; percentile 95% interval.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -89,8 +90,12 @@ def compute_metrics(y_true, probs, class_names: list[str], n_bins: int = 15) -> 
         "macro_recall": float(r[present].mean()),
         "ece": ece(probs, y_true, n_bins),
         "per_class": {
-            c: {"precision": float(p[i]), "recall": float(r[i]), "f1": float(f1[i]),
-                "support": int(support[i])}
+            c: {
+                "precision": float(p[i]),
+                "recall": float(r[i]),
+                "f1": float(f1[i]),
+                "support": int(support[i]),
+            }
             for i, c in enumerate(class_names)
         },
         "confusion_matrix": cm.tolist(),
@@ -99,12 +104,19 @@ def compute_metrics(y_true, probs, class_names: list[str], n_bins: int = 15) -> 
 
 def worst_classes(metrics: dict, k: int = 3) -> list[tuple[str, float, int]]:
     """k lowest-F1 classes among those with support > 0: (name, f1, support)."""
-    items = [(c, v["f1"], v["support"]) for c, v in metrics["per_class"].items() if v["support"] > 0]
+    items = [
+        (c, v["f1"], v["support"]) for c, v in metrics["per_class"].items() if v["support"] > 0
+    ]
     return sorted(items, key=lambda t: (t[1], t[0]))[:k]
 
 
 def bootstrap_ci(
-    y_true, probs, n_classes: int, n_boot: int = 1000, seed: int = 0, alpha: float = 0.05,
+    y_true,
+    probs,
+    n_classes: int,
+    n_boot: int = 1000,
+    seed: int = 0,
+    alpha: float = 0.05,
     n_bins: int = 15,
 ) -> dict:
     """Stratified (per true class) bootstrap percentile CIs for accuracy, macro-F1, ECE."""
@@ -138,8 +150,9 @@ def reliability_diagram(probs, y_true, path, n_bins: int = 15, title: str = "Rel
     nz = tab["counts"] > 0
     fig, ax = plt.subplots(figsize=(4.5, 4.5), dpi=100)
     ax.plot([0, 1], [0, 1], "--", color="gray", label="perfect")
-    ax.bar(centres[nz], tab["acc"][nz], width=1.0 / n_bins, edgecolor="k", alpha=0.7,
-           label="accuracy")
+    ax.bar(
+        centres[nz], tab["acc"][nz], width=1.0 / n_bins, edgecolor="k", alpha=0.7, label="accuracy"
+    )
     ax.plot(tab["conf"][nz], tab["acc"][nz], "o", color="C3", ms=3, label="(mean conf, acc)")
     ax.set_xlabel("confidence")
     ax.set_ylabel("accuracy")
@@ -172,8 +185,15 @@ def confusion_matrix_png(cm, class_names, path, title: str = "", normalize: bool
         for j in range(n):
             if cm[i, j] > 0:
                 txt = f"{shown[i, j]:.2f}" if normalize else f"{int(cm[i, j])}"
-                ax.text(j, i, txt, ha="center", va="center", fontsize=5,
-                        color="white" if shown[i, j] > 0.5 else "black")
+                ax.text(
+                    j,
+                    i,
+                    txt,
+                    ha="center",
+                    va="center",
+                    fontsize=5,
+                    color="white" if shown[i, j] > 0.5 else "black",
+                )
     ax.set_xlabel("predicted")
     ax.set_ylabel("true")
     ax.set_title(title, fontsize=9)

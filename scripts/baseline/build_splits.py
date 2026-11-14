@@ -1,7 +1,8 @@
 """Materialise the v0 leakage-experiment splits under artifacts/splits/.
 
-    PYTHONPATH=src python scripts/baseline/build_splits.py --raw-root "$RAW_ROOT"
+PYTHONPATH=src python scripts/baseline/build_splits.py --raw-root "$RAW_ROOT"
 """
+
 from __future__ import annotations
 
 import argparse
@@ -24,8 +25,11 @@ def main() -> None:
     args = p.parse_args()
 
     df = pd.read_parquet(args.manifest)
-    df = ensure_crop_cache(df[df["source_node"] != "nouuid"].reset_index(drop=True),
-                           args.raw_root, args.cache.resolve())
+    df = ensure_crop_cache(
+        df[df["source_node"] != "nouuid"].reset_index(drop=True),
+        args.raw_root,
+        args.cache.resolve(),
+    )
     summary = {}
     for name in args.only or split_names(df):
         split = build_split(df, name)

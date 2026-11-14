@@ -12,6 +12,7 @@ Hashes are 64-bit pHash of the centre-crop-224 image.
     PYTHONPATH=src python -m narutocv.data.dedup --raw-root "$RAW_ROOT" \
         --prepared "$PREPARED_ROOT" --out artifacts/leakage_audit.json
 """
+
 from __future__ import annotations
 
 import argparse
@@ -92,11 +93,16 @@ def load_prepared(prepared_root: Path) -> pd.DataFrame:
             for f in sorted(d.glob("*.png")):
                 with Image.open(f) as im:
                     im = im.convert("RGB")
-                    rows.append({
-                        "prep_split": split, "cls": cls, "file": f.name,
-                        "is_aug": "_aug_" in f.name, "phash": phash_hex(im),
-                        "sha1": crop_sha1(im),
-                    })
+                    rows.append(
+                        {
+                            "prep_split": split,
+                            "cls": cls,
+                            "file": f.name,
+                            "is_aug": "_aug_" in f.name,
+                            "phash": phash_hex(im),
+                            "sha1": crop_sha1(im),
+                        }
+                    )
     return pd.DataFrame(rows)
 
 
@@ -182,7 +188,10 @@ def audit(raw_root_unused, manifest: pd.DataFrame, prepared_root: Path) -> dict:
         "n_prepared": int(len(prep)),
         "n_prepared_non_aug": int(len(non_aug)),
         "n_aug": int(prep["is_aug"].sum()),
-        "by_split": prep.groupby(["prep_split", "is_aug"]).size().rename("n").reset_index()
+        "by_split": prep.groupby(["prep_split", "is_aug"])
+        .size()
+        .rename("n")
+        .reset_index()
         .to_dict("records"),
         "map_kind_counts": non_aug["map_kind"].value_counts().to_dict(),
         "n_non_aug_with_multiple_raw_candidates": int((non_aug["n_raw_candidates"] > 1).sum()),

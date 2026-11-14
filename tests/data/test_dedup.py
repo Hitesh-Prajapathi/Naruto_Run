@@ -31,12 +31,14 @@ def test_parse_uuid1():
 
 def test_leakage_vs_train_ignores_aug():
     h = "0000000000000000"
-    prep = pd.DataFrame([
-        {"prep_split": "train", "cls": "a", "is_aug": False, "phash": "ffffffffffffffff"},
-        {"prep_split": "train", "cls": "a", "is_aug": True, "phash": h},  # aug must be ignored
-        {"prep_split": "test", "cls": "a", "is_aug": False, "phash": h},
-        {"prep_split": "val", "cls": "a", "is_aug": False, "phash": "fffffffffffffff0"},
-    ])
+    prep = pd.DataFrame(
+        [
+            {"prep_split": "train", "cls": "a", "is_aug": False, "phash": "ffffffffffffffff"},
+            {"prep_split": "train", "cls": "a", "is_aug": True, "phash": h},  # aug must be ignored
+            {"prep_split": "test", "cls": "a", "is_aug": False, "phash": h},
+            {"prep_split": "val", "cls": "a", "is_aug": False, "phash": "fffffffffffffff0"},
+        ]
+    )
     r = dedup.leakage_vs_train(prep, thresholds=(0, 6))
     assert r["test"]["same_class_le_6_pct"] == 0.0  # only the aug matched
     assert r["val"]["same_class_le_6_pct"] == 100.0  # distance 4 to the original
