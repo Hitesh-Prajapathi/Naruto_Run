@@ -25,6 +25,7 @@ connection_id: contextvars.ContextVar[Optional[str]] = contextvars.ContextVar(
 )
 
 MAX_FIELD_CHARS = 500
+MAX_EXC_CHARS = 4000
 
 # Attributes every LogRecord has; anything else came from `extra=`.
 _STANDARD_ATTRS = frozenset(
@@ -33,9 +34,9 @@ _STANDARD_ATTRS = frozenset(
 )
 
 
-def _clip(value: Any) -> Any:
-    if isinstance(value, str) and len(value) > MAX_FIELD_CHARS:
-        return value[:MAX_FIELD_CHARS] + "...(truncated)"
+def _clip(value: Any, limit: int = MAX_FIELD_CHARS) -> Any:
+    if isinstance(value, str) and len(value) > limit:
+        return value[:limit] + "...(truncated)"
     return value
 
 
@@ -56,7 +57,7 @@ class JsonFormatter(logging.Formatter):
                 continue
             payload[key] = _clip(value)
         if record.exc_info:
-            payload["exc"] = _clip(self.formatException(record.exc_info))
+            payload["exc"] = _clip(self.formatException(record.exc_info), MAX_EXC_CHARS)
         return json.dumps(payload, default=str, separators=(",", ":"))
 
 
