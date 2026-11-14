@@ -1,0 +1,57 @@
+# Install once: `uv run pre-commit install`
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: end-of-file-fixer
+        exclude: ^(apps/web/public/|.*\.(svg|png|jpe?g|fbx|obj|dae|mtl|onnx|task)$)
+      - id: trailing-whitespace
+        exclude: ^(apps/web/public/|docs/archive/|apps/web/README\.md$)
+      - id: check-added-large-files
+        args: ["--maxkb=2048"]
+        # Tracked on purpose: legacy v0 model and the game's 3D assets.
+        exclude: ^(models/best_model_A\.onnx|apps/web/public/|apps/web/package-lock\.json|uv\.lock)
+      - id: check-yaml
+      - id: check-merge-conflict
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.0
+    hooks:
+      - id: ruff
+      - id: ruff-format
+
+  - repo: https://github.com/kynan/nbstripout
+    rev: 0.8.1
+    hooks:
+      - id: nbstripout
+
+  - repo: local
+    hooks:
+      # mypy (strict on narutocv.inference only; config in pyproject.toml).
+      # Manual until the 23 pre-existing strict errors in narutocv.inference are
+      # fixed: `uv run pre-commit run mypy --hook-stage manual --all-files`.
+      - id: mypy
+        name: mypy
+        entry: uv run mypy src/narutocv
+        language: system
+        types: [python]
+        pass_filenames: false
+        stages: [manual]
+      - id: eslint
+        name: eslint (apps/web)
+        entry: npm --prefix apps/web run lint --
+        language: system
+        files: ^apps/web/(src|tests)/.*\.ts$
+        pass_filenames: false
+      - id: prettier
+        name: prettier (apps/web)
+        entry: bash -c 'cd apps/web && npx prettier --check "${@#apps/web/}"' --
+        language: system
+        files: ^apps/web/(src|tests)/.*\.ts$
+        stages: [manual]
+      - id: typecheck
+        name: tsc --noEmit (apps/web)
+        entry: npm --prefix apps/web run typecheck
+        language: system
+        files: ^apps/web/.*\.ts$
+        pass_filenames: false
