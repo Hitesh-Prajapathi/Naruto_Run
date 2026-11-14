@@ -27,7 +27,11 @@ import { CameraController, type CameraState } from "../camera/cameraController";
 import { FramePublisher, type CaptureSurface } from "../camera/framePublisher";
 import { WebSocketClient } from "../transport/websocketClient";
 import type { ConnectionState } from "../transport/eventSource";
-import type { StateSnapshotMessage } from "../transport/protocol";
+import {
+  parseHandSealPayload,
+  type HandSealPayload,
+  type StateSnapshotMessage,
+} from "../transport/protocol";
 import { toPoseSample, type PoseSample } from "./poseAdapter";
 import type { SealName } from "../config/bossConfig";
 import {
@@ -69,7 +73,8 @@ export interface CameraPoseSourceOptions {
   transportUrl?: string;
   onSample?: (sample: PoseSample) => void;
   onStatusChange?: (status: CameraSourceStatus) => void;
-  onHandSeal?: (seal: SealName) => void;
+  /** `detail` carries the 1.2.0 decoder fields (t_start_ms, t_emit_ms, ...) when present. */
+  onHandSeal?: (seal: SealName, detail: HandSealPayload) => void;
   onAttackTriggered?: (attackName: string) => void;
 }
 
@@ -198,8 +203,10 @@ export class CameraPoseSource {
     );
     this.unsubscribes.push(
       this.client.onEvent((event) => {
-        if (event.event_type === "HAND_SEAL" && typeof event.payload?.seal === "string") {
-          this.options.onHandSeal?.(event.payload.seal as SealName);
+        const handSeal =
+          event.event_type === "HAND_SEAL" ? parseHandSealPayload(event.payload) : null;
+        if (handSeal !== null) {
+          this.options.onHandSeal?.(handSeal.seal as SealName, handSeal);
         } else if (
           event.event_type === "ATTACK_TRIGGERED" &&
           typeof event.payload?.attack_name === "string"

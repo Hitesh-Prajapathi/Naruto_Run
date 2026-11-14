@@ -13,6 +13,7 @@ import {
   type AckMessage,
   type ControlCommand,
   type ErrorMessage,
+  type HandDecoderMode,
   type PipelineEventV1,
   type ServerReadyMessage,
   type StateSnapshotMessage,
@@ -88,6 +89,11 @@ export class WebSocketClient implements PipelineEventSource {
    * capabilities); null until the handshake completes. */
   get serverReady(): ServerReadyMessage | null {
     return this.serverInfo;
+  }
+
+  /** Decoder behind HAND_SEAL events per the last server_ready ("legacy" before 1.2.0). */
+  get handDecoder(): HandDecoderMode {
+    return this.serverInfo?.capabilities?.hand_decoder === "v1" ? "v1" : "legacy";
   }
 
   connect(): void {
