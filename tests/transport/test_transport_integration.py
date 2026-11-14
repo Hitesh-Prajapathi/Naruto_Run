@@ -12,7 +12,6 @@ listed in the `transport` extra of pyproject.toml even though this file never ru
 from __future__ import annotations
 
 import asyncio
-import struct
 import unittest
 from typing import Optional
 

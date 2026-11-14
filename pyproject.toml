@@ -1,0 +1,121 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "narutocv"
+dynamic = ["version"]
+description = "Real-time hand-seal and body-movement recognition engine (NarutoCV)."
+requires-python = ">=3.12"
+# The core package is dependency-free on purpose: pure-Python modules such as
+# narutocv.inference.output_schema import without MediaPipe/OpenCV. Everything
+# else is an extra (install with `uv sync --all-extras` or `make setup`).
+dependencies = []
+
+[project.optional-dependencies]
+# Camera / recognition runtime.
+runtime = [
+    "numpy>=1.26",
+    "opencv-python>=4.10",
+    "mediapipe>=0.10.20",
+    "onnxruntime>=1.18",
+    "pyyaml>=6",  # models/manifest.yaml (scripts/fetch_models.py)
+]
+# WebSocket bridge for the browser game. It reuses the runtime stack above.
+# NOTE: the old standalone transport venv used opencv-python-headless because
+# the server never opens a window. opencv-python and opencv-python-headless
+# cannot be installed side by side, so the unified env uses opencv-python.
+# For a server-only deployment, install `aiohttp` + `opencv-python-headless`
+# by hand instead of this extra.
+transport = [
+    "narutocv[runtime]",
+    "aiohttp>=3.9",
+]
+# Honest evaluation: manifests, splits, metrics, plots.
+eval = [
+    "scikit-learn>=1.5",
+    "pandas>=2.2",
+    "pyarrow>=16",
+    "matplotlib>=3.9",
+    "imagehash>=4.3",
+    "scipy>=1.13",
+]
+# Model training / export.
+train = [
+    "torch>=2.4",
+    "ultralytics>=8.3",
+]
+dev = [
+    "pytest>=8.3",
+    "hypothesis>=6.100",
+    "ruff>=0.8",
+    "mypy>=1.13",
+    "pre-commit>=4.0",
+]
+
+[project.scripts]
+narutocv-serve = "narutocv.transport.__main__:main"
+
+[tool.hatch.version]
+path = "src/narutocv/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/narutocv"]
+
+# --- pytest ---------------------------------------------------------------
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ["--import-mode=importlib", "-ra"]
+python_files = ["test_*.py"]
+
+# --- ruff -----------------------------------------------------------------
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests", "scripts"]
+extend-exclude = ["apps", "scripts/archive", "training/exploration", "training/legacy"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
+ignore = [
+    "E501",  # line length is the formatter's job
+    # Pre-existing style debt, deliberately not bulk-fixed during the restructure.
+    # Re-enable one at a time (ruff check --select <rule> --fix) as code is touched.
+    "UP045",  # Optional[X] -> X | None
+    "UP035",  # deprecated typing imports
+    "UP006",  # typing.Deque/List -> builtins
+    "UP037",  # quoted annotations
+    "UP041",  # asyncio.TimeoutError alias
+    "UP042",  # (str, Enum) -> StrEnum
+    "B905",   # zip() without strict=
+    "I001",   # import sorting
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["B011"]
+
+# --- mypy -----------------------------------------------------------------
+# Lenient everywhere; strict for narutocv.inference only (plan 0.C / 6).
+[tool.mypy]
+python_version = "3.12"
+mypy_path = "src"
+explicit_package_bases = true
+ignore_missing_imports = true
+warn_unused_configs = true
+check_untyped_defs = false
+
+[[tool.mypy.overrides]]
+module = "narutocv.inference.*"
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+disallow_untyped_calls = true
+disallow_untyped_decorators = true
+disallow_any_generics = true
+disallow_subclassing_any = true
+check_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_return_any = true
+no_implicit_reexport = true
+strict_equality = true
