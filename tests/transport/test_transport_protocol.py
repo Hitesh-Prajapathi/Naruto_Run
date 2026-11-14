@@ -128,7 +128,9 @@ class ControlPlaneMessageBuilderTests(unittest.TestCase):
 
     def test_error_message_shape(self) -> None:
         message = build_error(code="invalid_frame", message="bad header")
-        self.assertEqual(message, {"type": "error", "code": "invalid_frame", "message": "bad header"})
+        self.assertEqual(
+            message, {"type": "error", "code": "invalid_frame", "message": "bad header"}
+        )
 
     def test_state_snapshot_copies_the_output_mapping(self) -> None:
         output = {"schema_version": "1.0.0"}
@@ -146,7 +148,9 @@ class ControlPlaneMessageBuilderTests(unittest.TestCase):
 
 class ParseClientHelloTests(unittest.TestCase):
     def test_returns_the_protocol_version(self) -> None:
-        self.assertEqual(parse_client_hello({"type": "client_hello", "protocol_version": "1.0.0"}), "1.0.0")
+        self.assertEqual(
+            parse_client_hello({"type": "client_hello", "protocol_version": "1.0.0"}), "1.0.0"
+        )
 
     def test_rejects_wrong_type(self) -> None:
         with self.assertRaises(ProtocolError):

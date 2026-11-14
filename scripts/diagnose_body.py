@@ -144,13 +144,27 @@ def main() -> int:
             )
             if not args.no_window:
                 for x, y in pts:
-                    cv2.circle(frame, (int(x * frame.shape[1]), int(y * frame.shape[0])), 2, (0, 255, 0), -1)
+                    cv2.circle(
+                        frame,
+                        (int(x * frame.shape[1]), int(y * frame.shape[0])),
+                        2,
+                        (0, 255, 0),
+                        -1,
+                    )
         else:
             line += "  no pose"
         print(line)
 
         if not args.no_window:
-            cv2.putText(frame, result.stable_label, (10, 25), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
+            cv2.putText(
+                frame,
+                result.stable_label,
+                (10, 25),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.7,
+                (0, 255, 255),
+                2,
+            )
             cv2.imshow("diagnose_body (q to quit)", cv2.flip(frame, 1))
             if cv2.waitKey(1) & 0xFF == ord("q"):
                 break
@@ -178,8 +192,10 @@ def main() -> int:
     if reachable > 0:
         print(f"suggested leanEnter ~ {reachable * 0.55:.2f}   leanExit ~ {reachable * 0.30:.2f}")
     if peak_rise > 0:
-        print(f"suggested jumpHeightFraction ~ {peak_rise * 0.45:.2f}"
-              f"   jumpMinVelocity ~ {peak_velocity * 0.30:.2f}")
+        print(
+            f"suggested jumpHeightFraction ~ {peak_rise * 0.45:.2f}"
+            f"   jumpMinVelocity ~ {peak_velocity * 0.30:.2f}"
+        )
     print("=" * 68)
     return 0
 

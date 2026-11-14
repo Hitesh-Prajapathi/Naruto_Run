@@ -23,11 +23,7 @@ from narutocv.inference.output_schema import (
 )
 
 
-SCHEMA_PATH = (
-    Path(__file__).resolve().parents[2]
-    / "schemas"
-    / "pipeline_output_v1.schema.json"
-)
+SCHEMA_PATH = Path(__file__).resolve().parents[2] / "schemas" / "pipeline_output_v1.schema.json"
 
 
 def _frame_result() -> FrameResult:

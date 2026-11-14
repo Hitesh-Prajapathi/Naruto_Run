@@ -61,9 +61,7 @@ def main() -> int:
                 and classes[second_index] == "rat"
                 and float(probabilities[second_index]) >= 0.12
             )
-            accepted_prediction_index = (
-                classes.index("rat") if pair_resolved else prediction_index
-            )
+            accepted_prediction_index = classes.index("rat") if pair_resolved else prediction_index
             accepted = pair_resolved or (
                 confidence >= HAND_CONFIDENCE_THRESHOLDS[prediction]
                 and margin >= HAND_MARGIN_THRESHOLDS[prediction]
@@ -87,9 +85,7 @@ def main() -> int:
         raw_tp = int(confusion[index, index])
         precision = raw_tp / max(int(confusion[:, index].sum()), 1)
         accepted_tp = int(accepted_confusion[index, index])
-        accepted_precision = accepted_tp / max(
-            int(accepted_confusion[:, index].sum()), 1
-        )
+        accepted_precision = accepted_tp / max(int(accepted_confusion[:, index].sum()), 1)
         print(
             f"{label:8s} {raw_tp / max(class_total, 1):10.2%}"
             f" {precision:9.2%} {accepted_tp / max(class_total, 1):15.2%}"

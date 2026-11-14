@@ -114,9 +114,7 @@ class HandAcceptanceCalibrationTests(unittest.TestCase):
         tiger_confusion = Classification("dog", 0.70, "snake", 0.12)
 
         self.assertEqual(recognizer._accept(accepted, 2), ("dog", None))
-        self.assertEqual(
-            recognizer._accept(tiger_confusion, 1), ("zero", "dog_pair_guard")
-        )
+        self.assertEqual(recognizer._accept(tiger_confusion, 1), ("zero", "dog_pair_guard"))
 
     def test_dragon_uses_live_camera_confidence_range(self) -> None:
         recognizer = self.make_recognizer()
@@ -231,9 +229,7 @@ class BodyMovementTests(unittest.TestCase):
 
     def test_supported_body_movements(self) -> None:
         self.assertEqual(self.classify(jump_height=0.06), "jumping")
-        self.assertEqual(
-            self.classify(torso_angle=30.0, arms_back=True), "naruto_run"
-        )
+        self.assertEqual(self.classify(torso_angle=30.0, arms_back=True), "naruto_run")
         self.assertEqual(self.classify(lean_x=0.08), "bending_right")
         self.assertEqual(self.classify(lean_x=-0.08), "bending_left")
         self.assertEqual(self.classify(), "idle")
@@ -281,9 +277,7 @@ class CombinedPipelineIsolationTests(unittest.TestCase):
     def test_body_events_never_gate_or_trigger_attacks(self) -> None:
         pipeline = object.__new__(CombinedNarutoPipeline)
         pipeline.hand = _FakeHandRecognizer(["dog", "rat"])
-        pipeline.body = _FakeBodyRecognizer(
-            ["jumping", "naruto_run"]
-        )
+        pipeline.body = _FakeBodyRecognizer(["jumping", "naruto_run"])
         pipeline.attacks = AttackRecognizer()
         frame = np.zeros((2, 2, 3), dtype=np.uint8)
 

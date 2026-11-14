@@ -62,9 +62,7 @@ class BoundedEventQueue:
 
     def push(self, item: dict) -> None:
         if len(self._items) >= self.max_size:
-            raise EventQueueOverflow(
-                f"event queue exceeded {self.max_size} buffered events"
-            )
+            raise EventQueueOverflow(f"event queue exceeded {self.max_size} buffered events")
         self._items.append(item)
 
     def pop_all(self) -> list[dict]:

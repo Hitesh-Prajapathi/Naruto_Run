@@ -37,17 +37,31 @@ POSE_CONNECTIONS = (
     (26, 28),
 )
 HAND_CONNECTIONS = (
-    (0, 1), (1, 2), (2, 3), (3, 4),
-    (0, 5), (5, 6), (6, 7), (7, 8),
-    (5, 9), (9, 10), (10, 11), (11, 12),
-    (9, 13), (13, 14), (14, 15), (15, 16),
-    (13, 17), (0, 17), (17, 18), (18, 19), (19, 20),
+    (0, 1),
+    (1, 2),
+    (2, 3),
+    (3, 4),
+    (0, 5),
+    (5, 6),
+    (6, 7),
+    (7, 8),
+    (5, 9),
+    (9, 10),
+    (10, 11),
+    (11, 12),
+    (9, 13),
+    (13, 14),
+    (14, 15),
+    (15, 16),
+    (13, 17),
+    (0, 17),
+    (17, 18),
+    (18, 19),
+    (19, 20),
 )
 
 
-def _mirror_bbox(
-    bbox: tuple[int, int, int, int], width: int
-) -> tuple[int, int, int, int]:
+def _mirror_bbox(bbox: tuple[int, int, int, int], width: int) -> tuple[int, int, int, int]:
     x1, y1, x2, y2 = bbox
     return width - x2, y1, width - x1, y2
 
@@ -63,8 +77,7 @@ def _mirror_result_for_display(result: FrameResult, width: int) -> FrameResult:
             else None
         ),
         landmarks=tuple(
-            tuple((1.0 - x, y) for x, y in landmarks)
-            for landmarks in result.hand.landmarks
+            tuple((1.0 - x, y) for x, y in landmarks) for landmarks in result.hand.landmarks
         ),
     )
     body = replace(
@@ -386,9 +399,7 @@ def main() -> int:
                     print("Neutral calibration complete; no false labels needed adjustment.")
             instant_fps = 1.0 / max(now - previous, 1e-6)
             smoothed_fps = (
-                instant_fps
-                if smoothed_fps == 0
-                else 0.9 * smoothed_fps + 0.1 * instant_fps
+                instant_fps if smoothed_fps == 0 else 0.9 * smoothed_fps + 0.1 * instant_fps
             )
             previous = now
 

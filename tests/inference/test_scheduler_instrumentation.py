@@ -20,9 +20,7 @@ class _BlockingRuntime:
         self.release_first = threading.Event()
         self.processed: list[int] = []
 
-    def process_frame(
-        self, frame: int, *, captured_at_ms: int | None = None
-    ) -> SimpleNamespace:
+    def process_frame(self, frame: int, *, captured_at_ms: int | None = None) -> SimpleNamespace:
         if frame == 0:
             self.first_started.set()
             if not self.release_first.wait(2.0):
@@ -35,9 +33,7 @@ class _RecoveringRuntime:
     def __init__(self) -> None:
         self.calls = 0
 
-    def process_frame(
-        self, frame: str, *, captured_at_ms: int | None = None
-    ) -> SimpleNamespace:
+    def process_frame(self, frame: str, *, captured_at_ms: int | None = None) -> SimpleNamespace:
         self.calls += 1
         if frame == "bad":
             raise ValueError("invalid frame")

@@ -259,7 +259,10 @@ class TransportServerTestCase(AioHTTPTestCase):
         attack_event = None
         for _ in range(5):
             message = await asyncio.wait_for(ws.receive_json(), RECEIVE_TIMEOUT_SECONDS)
-            if message.get("type") == "pipeline_event" and message["event"]["event_type"] == "ATTACK_TRIGGERED":
+            if (
+                message.get("type") == "pipeline_event"
+                and message["event"]["event_type"] == "ATTACK_TRIGGERED"
+            ):
                 attack_event = message
                 break
         self.assertIsNotNone(attack_event, "expected an ATTACK_TRIGGERED event")

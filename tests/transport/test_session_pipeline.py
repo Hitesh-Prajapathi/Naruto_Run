@@ -47,9 +47,7 @@ class SessionScopedPipelineTests(unittest.TestCase):
         original = instance.body
         replacement = FakeRecognizer()
 
-        with mock.patch.object(
-            pipeline_module, "BodyMovementRecognizer", return_value=replacement
-        ):
+        with mock.patch.object(pipeline_module, "BodyMovementRecognizer", return_value=replacement):
             instance._rebuild_body()
 
         self.assertIs(instance.body, replacement)
@@ -89,10 +87,9 @@ class SessionScopedPipelineTests(unittest.TestCase):
         instance = make_pipeline()
         replacement = FakeRecognizer()
 
-        with mock.patch.object(
-            pipeline_module.CombinedNarutoPipeline, "reset"
-        ) as base_reset, mock.patch.object(
-            pipeline_module, "BodyMovementRecognizer", return_value=replacement
+        with (
+            mock.patch.object(pipeline_module.CombinedNarutoPipeline, "reset") as base_reset,
+            mock.patch.object(pipeline_module, "BodyMovementRecognizer", return_value=replacement),
         ):
             instance.reset()
 
@@ -117,9 +114,7 @@ class BodyOnlyModeTests(unittest.TestCase):
         instance._body_only = True
         instance._idle_hand = mock.sentinel.idle_hand
         instance.body.process.return_value = mock.Mock(timings_ms={"body_total_ms": 9.0})
-        instance.attacks.update_detailed.return_value = mock.Mock(
-            attack=None, queue=()
-        )
+        instance.attacks.update_detailed.return_value = mock.Mock(attack=None, queue=())
         return instance
 
     def test_hand_recognition_is_not_run(self) -> None:

@@ -127,9 +127,7 @@ class BenchmarkCollectorTests(unittest.TestCase):
     def test_summary_contains_rates_and_interpolated_latency_statistics(self) -> None:
         collector = BenchmarkCollector()
         for index, value in enumerate((10.0, 20.0, 30.0, 40.0)):
-            collector.record(
-                _scheduled(frame_id=index, runtime_ms=value, end_to_end_ms=value + 4)
-            )
+            collector.record(_scheduled(frame_id=index, runtime_ms=value, end_to_end_ms=value + 4))
 
         summary = collector.summary(
             initial_stats=_stats(submitted=10, processed=8, dropped=2),
@@ -194,9 +192,7 @@ class SessionDiagnosticsRecorderTests(unittest.TestCase):
             )
             recorder.close(summary={"processed": 1})
 
-            jsonl_records = [
-                json.loads(line) for line in jsonl_path.read_text().splitlines()
-            ]
+            jsonl_records = [json.loads(line) for line in jsonl_path.read_text().splitlines()]
             with csv_path.open(newline="", encoding="utf-8") as csv_file:
                 csv_records = list(csv.DictReader(csv_file))
 

@@ -58,9 +58,7 @@ def combine_dispatch_reports(*reports: DispatchReport) -> DispatchReport:
         events=tuple(event for report in reports for event in report.events),
         failures=tuple(failure for report in reports for failure in report.failures),
         derivation_ms=sum(report.derivation_ms for report in reports),
-        callback_delivery_ms=sum(
-            report.callback_delivery_ms for report in reports
-        ),
+        callback_delivery_ms=sum(report.callback_delivery_ms for report in reports),
         total_ms=sum(report.total_ms for report in reports),
     )
 
@@ -140,9 +138,7 @@ class PipelineEventDispatcher:
                 try:
                     callback(event)
                 except Exception as error:  # Keep recognition alive if a consumer fails.
-                    failures.append(
-                        DispatchFailure(subscription_id, event_type, error)
-                    )
+                    failures.append(DispatchFailure(subscription_id, event_type, error))
         callback_delivery_ms = (time.perf_counter() - delivery_started) * 1000.0
         return DispatchReport(
             events=event_tuple,

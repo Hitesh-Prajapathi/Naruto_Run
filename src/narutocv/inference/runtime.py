@@ -81,9 +81,7 @@ class RuntimeFrame:
     dispatch: DispatchReport
     calibration_active: bool
     calibration_remaining_ms: int
-    calibration_adjustments: dict[str, tuple[float, float]] = field(
-        default_factory=dict
-    )
+    calibration_adjustments: dict[str, tuple[float, float]] = field(default_factory=dict)
     timings_ms: dict[str, float] = field(default_factory=dict)
 
 
@@ -158,9 +156,7 @@ class PipelineRuntimeController:
                 self._pipeline = self._pipeline_factory()
             except Exception as error:
                 self._pipeline = None
-                raise RuntimeError(
-                    "failed to initialize the recognition pipeline"
-                ) from error
+                raise RuntimeError("failed to initialize the recognition pipeline") from error
             self._state = RuntimeState.RUNNING
         return self
 
@@ -191,9 +187,7 @@ class PipelineRuntimeController:
         self.pipeline.attacks.reset()
 
     def _complete_calibration(self, captured_at_ms: int) -> CalibrationOutcome:
-        adjustments = self.pipeline.hand.calibrate_neutral(
-            tuple(self._calibration_samples)
-        )
+        adjustments = self.pipeline.hand.calibrate_neutral(tuple(self._calibration_samples))
         self.pipeline.reset()
         self._calibration_deadline_ms = None
         self._calibration_samples = []
@@ -207,9 +201,7 @@ class PipelineRuntimeController:
         return CalibrationOutcome(dict(adjustments), dispatch)
 
     @_serialized_operation
-    def process_frame(
-        self, frame: Any, *, captured_at_ms: Optional[int] = None
-    ) -> RuntimeFrame:
+    def process_frame(self, frame: Any, *, captured_at_ms: Optional[int] = None) -> RuntimeFrame:
         runtime_started = time.perf_counter()
         self._require_running()
         timestamp_ms = self._timestamp_ms(captured_at_ms)
@@ -249,9 +241,7 @@ class PipelineRuntimeController:
             else 0
         )
         recognition_ms = (recognition_finished - recognition_started) * 1000.0
-        serialization_ms = (
-            serialization_finished - serialization_started
-        ) * 1000.0
+        serialization_ms = (serialization_finished - serialization_started) * 1000.0
         runtime_total_ms = (runtime_finished - runtime_started) * 1000.0
         timings_ms = {
             **getattr(result, "timings_ms", {}),
@@ -262,10 +252,7 @@ class PipelineRuntimeController:
             "event_dispatch_total_ms": dispatch.total_ms,
             "runtime_overhead_ms": max(
                 0.0,
-                runtime_total_ms
-                - recognition_ms
-                - serialization_ms
-                - dispatch.total_ms,
+                runtime_total_ms - recognition_ms - serialization_ms - dispatch.total_ms,
             ),
             "runtime_total_ms": runtime_total_ms,
         }
@@ -360,9 +347,7 @@ class PipelineRuntimeController:
         return self._complete_calibration(self._timestamp_ms(captured_at_ms))
 
     @_serialized_operation
-    def cancel_neutral_calibration(
-        self, *, captured_at_ms: Optional[int] = None
-    ) -> DispatchReport:
+    def cancel_neutral_calibration(self, *, captured_at_ms: Optional[int] = None) -> DispatchReport:
         self._require_running()
         if not self.calibration_active:
             raise RuntimeStateError("neutral calibration is not active")
@@ -378,9 +363,7 @@ class PipelineRuntimeController:
         )
 
     @_serialized_operation
-    def handle_capture_failure(
-        self, *, captured_at_ms: Optional[int] = None
-    ) -> DispatchReport:
+    def handle_capture_failure(self, *, captured_at_ms: Optional[int] = None) -> DispatchReport:
         self._require_running()
         self._capture_failures += 1
         if self._capture_failures < self.config.capture_failure_reset_threshold:

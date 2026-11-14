@@ -208,9 +208,7 @@ class TransportServer:
             self.health.active_controller = False
             # A reconnect starts fresh: old temporal/attack evidence must
             # never cross into whatever client controls the session next.
-            await self._run_controller(
-                lambda: self.controller.reset(reason="client_disconnected")
-            )
+            await self._run_controller(lambda: self.controller.reset(reason="client_disconnected"))
         return ws
 
     async def _handshake(self, ws: web.WebSocketResponse) -> None:
@@ -225,9 +223,7 @@ class TransportServer:
         assert self.controller is not None
         await ws.send_json(build_server_ready(session_id=self.controller.session_id))
 
-    async def _serve_client(
-        self, ws: web.WebSocketResponse, session: ClientSession
-    ) -> None:
+    async def _serve_client(self, ws: web.WebSocketResponse, session: ClientSession) -> None:
         sender_task = asyncio.create_task(self._sender_loop(ws, session))
         try:
             async for msg in ws:
@@ -289,9 +285,7 @@ class TransportServer:
             elif command is ControlCommand.RESET:
                 if self.scheduler is not None:
                     self.scheduler.clear_pending()
-                await self._run_controller(
-                    lambda: controller.reset(reason="client_requested")
-                )
+                await self._run_controller(lambda: controller.reset(reason="client_requested"))
             elif command is ControlCommand.BEGIN_CALIBRATION:
                 if self.scheduler is not None:
                     self.scheduler.clear_pending()
@@ -312,9 +306,7 @@ class TransportServer:
             return
         await ws.send_json(build_ack(command=command.value, ok=True, request_id=request_id))
 
-    async def _sender_loop(
-        self, ws: web.WebSocketResponse, session: ClientSession
-    ) -> None:
+    async def _sender_loop(self, ws: web.WebSocketResponse, session: ClientSession) -> None:
         """Deliver events immediately and snapshots at a capped rate.
 
         Runs as one task per connection so a slow client stalls only its own
@@ -380,9 +372,7 @@ class TransportServer:
             if ws is not None and not ws.closed:
                 asyncio.ensure_future(ws.close(code=CLOSE_CODE_BACKPRESSURE))
 
-    async def _safe_send_error(
-        self, ws: web.WebSocketResponse, code: str, message: str
-    ) -> None:
+    async def _safe_send_error(self, ws: web.WebSocketResponse, code: str, message: str) -> None:
         if not ws.closed:
             await ws.send_json(build_error(code=code, message=message))
 

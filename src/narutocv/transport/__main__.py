@@ -57,9 +57,7 @@ def main(argv: list[str] | None = None) -> None:
         level=getattr(logging, args.log_level),
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
     )
-    allowed_origins = (
-        frozenset(args.allowed_origins) if args.allowed_origins else None
-    )
+    allowed_origins = frozenset(args.allowed_origins) if args.allowed_origins else None
     if args.body_only:
         logging.getLogger("narutocv.transport").info(
             "body-only mode: hand recognition skipped (roughly double the frame rate)"

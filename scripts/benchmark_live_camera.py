@@ -28,9 +28,7 @@ from narutocv.inference.scheduler import LatestFrameScheduler, ScheduledResult
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description=(
-            "Benchmark the combined hand, body, and attack pipeline on a live camera."
-        )
+        description=("Benchmark the combined hand, body, and attack pipeline on a live camera.")
     )
     parser.add_argument("--camera", type=int, default=0, help="Camera index (default: 0)")
     parser.add_argument("--width", type=int, default=1280)
@@ -183,9 +181,7 @@ def main() -> int:
                 raise TimeoutError("recognition worker did not finish warmup")
             warmup_result = scheduler.poll_result()
             if warmup_result is not None and warmup_result.error is not None:
-                raise RuntimeError(
-                    f"scheduled recognition failed: {warmup_result.error}"
-                )
+                raise RuntimeError(f"scheduled recognition failed: {warmup_result.error}")
 
         collector = BenchmarkCollector()
         initial_stats = scheduler.stats()

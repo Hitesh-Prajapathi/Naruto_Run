@@ -10,9 +10,7 @@ from typing import Any, Callable, Optional, Protocol
 
 
 class FrameRuntime(Protocol):
-    def process_frame(
-        self, frame: Any, *, captured_at_ms: Optional[int] = None
-    ) -> Any: ...
+    def process_frame(self, frame: Any, *, captured_at_ms: Optional[int] = None) -> Any: ...
 
 
 class SchedulerState(str, Enum):
@@ -105,11 +103,7 @@ class LatestFrameScheduler:
 
     def submit(self, frame: Any, *, captured_at_ms: Optional[int] = None) -> int:
         submitted_at = self.clock()
-        timestamp_ms = (
-            int(submitted_at * 1000.0)
-            if captured_at_ms is None
-            else int(captured_at_ms)
-        )
+        timestamp_ms = int(submitted_at * 1000.0) if captured_at_ms is None else int(captured_at_ms)
         if timestamp_ms < 0:
             raise ValueError("captured_at_ms cannot be negative")
         with self._condition:
@@ -151,9 +145,7 @@ class LatestFrameScheduler:
             while self._latest_result is None:
                 if self._state == SchedulerState.STOPPED:
                     return None
-                remaining = (
-                    None if deadline is None else max(0.0, deadline - time.monotonic())
-                )
+                remaining = None if deadline is None else max(0.0, deadline - time.monotonic())
                 if remaining == 0.0:
                     return None
                 self._condition.wait(remaining)
@@ -165,9 +157,7 @@ class LatestFrameScheduler:
         deadline = None if timeout is None else time.monotonic() + timeout
         with self._condition:
             while self._pending is not None or self._processing:
-                remaining = (
-                    None if deadline is None else max(0.0, deadline - time.monotonic())
-                )
+                remaining = None if deadline is None else max(0.0, deadline - time.monotonic())
                 if remaining == 0.0:
                     return False
                 self._condition.wait(remaining)
@@ -218,9 +208,7 @@ class LatestFrameScheduler:
             with self._condition:
                 while self._pending is None and not self._stop_requested:
                     self._condition.wait()
-                if self._stop_requested and (
-                    not self._drain_on_stop or self._pending is None
-                ):
+                if self._stop_requested and (not self._drain_on_stop or self._pending is None):
                     self._state = SchedulerState.STOPPED
                     self._condition.notify_all()
                     return

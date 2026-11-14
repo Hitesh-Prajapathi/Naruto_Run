@@ -125,9 +125,7 @@ class SessionScopedPipeline(CombinedNarutoPipeline):
             "attack_queue_ms": attack_queue_ms,
             "pipeline_overhead_ms": max(
                 0.0,
-                processing_ms
-                - body_result.timings_ms.get("body_total_ms", 0.0)
-                - attack_queue_ms,
+                processing_ms - body_result.timings_ms.get("body_total_ms", 0.0) - attack_queue_ms,
             ),
             "recognition_total_ms": processing_ms,
         }

@@ -195,9 +195,7 @@ def build_frame_diagnostic(
         "record_type": "frame",
         "diagnostics_version": DIAGNOSTICS_VERSION,
         "recorded_at_ms": (
-            int(time.time() * 1000.0)
-            if recorded_at_ms is None
-            else int(recorded_at_ms)
+            int(time.time() * 1000.0) if recorded_at_ms is None else int(recorded_at_ms)
         ),
         "session_id": output["session_id"],
         "frame_id": output["frame_id"],
@@ -211,53 +209,55 @@ def build_frame_diagnostic(
         "events": [dict(event) for event in runtime_frame.dispatch.events],
         "timings_ms": scheduled_timings_ms(scheduled),
         "scheduler": asdict(scheduler_stats),
-        "evaluation": (
-            dict(evaluation_context) if evaluation_context is not None else None
-        ),
+        "evaluation": (dict(evaluation_context) if evaluation_context is not None else None),
     }
 
 
 CSV_FIELDS = (
-    "record_type",
-    "diagnostics_version",
-    "recorded_at_ms",
-    "session_id",
-    "frame_id",
-    "capture_sequence",
-    "captured_at_ms",
-    "processing_ms",
-    "evaluation_mode",
-    "evaluation_target",
-    "evaluation_attempt_index",
-    "evaluation_phase",
-    "hand_raw_label",
-    "hand_raw_confidence",
-    "hand_raw_margin",
-    "hand_accepted_label",
-    "hand_rejection_reason",
-    "hand_stable_label",
-    "hand_emitted_seal",
-    "body_raw_label",
-    "body_stable_label",
-    "body_emitted_movement",
-    "queue_seals",
-    "queue_accepted_seal",
-    "queue_duplicate_ignored",
-    "queue_timeout_cleared",
-    "queue_max_length_cleared",
-    "queue_cooldown_suppressed",
-    "attack_name",
-    "attack_display_name",
-    "event_types",
-    "submitted_frames",
-    "processed_frames",
-    "dropped_frames",
-    "failed_frames",
-    "superseded_results",
-    "timings_json",
-    "events_json",
-    "summary_json",
-) + RUNTIME_TIMING_KEYS + SCHEDULER_TIMING_KEYS
+    (
+        "record_type",
+        "diagnostics_version",
+        "recorded_at_ms",
+        "session_id",
+        "frame_id",
+        "capture_sequence",
+        "captured_at_ms",
+        "processing_ms",
+        "evaluation_mode",
+        "evaluation_target",
+        "evaluation_attempt_index",
+        "evaluation_phase",
+        "hand_raw_label",
+        "hand_raw_confidence",
+        "hand_raw_margin",
+        "hand_accepted_label",
+        "hand_rejection_reason",
+        "hand_stable_label",
+        "hand_emitted_seal",
+        "body_raw_label",
+        "body_stable_label",
+        "body_emitted_movement",
+        "queue_seals",
+        "queue_accepted_seal",
+        "queue_duplicate_ignored",
+        "queue_timeout_cleared",
+        "queue_max_length_cleared",
+        "queue_cooldown_suppressed",
+        "attack_name",
+        "attack_display_name",
+        "event_types",
+        "submitted_frames",
+        "processed_frames",
+        "dropped_frames",
+        "failed_frames",
+        "superseded_results",
+        "timings_json",
+        "events_json",
+        "summary_json",
+    )
+    + RUNTIME_TIMING_KEYS
+    + SCHEDULER_TIMING_KEYS
+)
 
 
 def _csv_frame(record: Mapping[str, Any]) -> dict[str, Any]:
@@ -391,9 +391,7 @@ class SessionDiagnosticsRecorder:
                 "summary": dict(summary),
             }
             if self._jsonl_file is not None:
-                self._jsonl_file.write(
-                    json.dumps(summary_record, separators=(",", ":")) + "\n"
-                )
+                self._jsonl_file.write(json.dumps(summary_record, separators=(",", ":")) + "\n")
             if self._csv_writer is not None:
                 row = {field: "" for field in CSV_FIELDS}
                 row.update(

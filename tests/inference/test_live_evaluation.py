@@ -59,9 +59,7 @@ def _output(
             "cooldown_suppressed": cooldown,
         },
         "attack": (
-            {"name": attack, "display_name": attack.upper()}
-            if attack is not None
-            else None
+            {"name": attack, "display_name": attack.upper()} if attack is not None else None
         ),
     }
 
@@ -208,14 +206,22 @@ class AttackAttemptEvaluatorTests(unittest.TestCase):
         attempt = AttackAttemptEvaluator("ikazuchi", 1)
         attempt.record(
             _output(
-                hand_raw="hare", hand_accepted="hare", hand_stable="hare",
-                hand_emitted="hare", accepted_seal="hare", attack="ikazuchi",
+                hand_raw="hare",
+                hand_accepted="hare",
+                hand_stable="hare",
+                hand_emitted="hare",
+                accepted_seal="hare",
+                attack="ikazuchi",
             )
         )
         attempt.record(
             _output(
-                hand_raw="dog", hand_accepted="dog", hand_stable="dog",
-                hand_emitted="dog", accepted_seal="dog", attack="shippu",
+                hand_raw="dog",
+                hand_accepted="dog",
+                hand_stable="dog",
+                hand_emitted="dog",
+                accepted_seal="dog",
+                attack="shippu",
             )
         )
 
@@ -238,8 +244,12 @@ class AttackAttemptEvaluatorTests(unittest.TestCase):
         )
         attempt.record(
             _output(
-                hand_raw="rat", hand_accepted="rat", hand_stable="rat",
-                hand_emitted="rat", accepted_seal="rat", attack="shippu",
+                hand_raw="rat",
+                hand_accepted="rat",
+                hand_stable="rat",
+                hand_emitted="rat",
+                accepted_seal="rat",
+                attack="shippu",
             )
         )
 

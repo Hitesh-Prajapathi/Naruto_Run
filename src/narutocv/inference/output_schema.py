@@ -103,10 +103,7 @@ def _hand_geometry(result: FrameResult) -> HandGeometryV1:
     return {
         "classification_bbox": _bbox(hand.classification_bbox),
         "hand_bbox": _bbox(hand.hand_bbox) if hand.hand_bbox is not None else None,
-        "landmarks": [
-            [[float(x), float(y)] for x, y in landmarks]
-            for landmarks in hand.landmarks
-        ],
+        "landmarks": [[[float(x), float(y)] for x, y in landmarks] for landmarks in hand.landmarks],
     }
 
 
@@ -139,9 +136,7 @@ def _ensure_json_compatible(value: Any, path: str = "output") -> None:
     raise SerializationError(f"{path} contains unsupported type {type(value).__name__}")
 
 
-def _require_exact_keys(
-    value: Mapping[str, Any], expected: set[str], path: str
-) -> None:
+def _require_exact_keys(value: Mapping[str, Any], expected: set[str], path: str) -> None:
     actual = set(value)
     if actual != expected:
         missing = sorted(expected - actual)
@@ -257,17 +252,11 @@ def validate_pipeline_output_v1(output: Mapping[str, Any]) -> None:
         "output",
     )
     if output["schema_version"] != SCHEMA_VERSION:
-        raise SerializationError(
-            f"unsupported schema version: {output['schema_version']!r}"
-        )
+        raise SerializationError(f"unsupported schema version: {output['schema_version']!r}")
     if not isinstance(output["session_id"], str) or not output["session_id"]:
         raise SerializationError("session_id must be a non-empty string")
     for key in ("frame_id", "captured_at_ms"):
-        if (
-            isinstance(output[key], bool)
-            or not isinstance(output[key], int)
-            or output[key] < 0
-        ):
+        if isinstance(output[key], bool) or not isinstance(output[key], int) or output[key] < 0:
             raise SerializationError(f"{key} must be a non-negative integer")
     processing_ms = output["processing_ms"]
     if (
@@ -329,9 +318,7 @@ def validate_pipeline_output_v1(output: Mapping[str, Any]) -> None:
         or not isinstance(detected_hand_count, int)
         or not 0 <= detected_hand_count <= 2
     ):
-        raise SerializationError(
-            "output.hand.detected_hand_count must be from zero to two"
-        )
+        raise SerializationError("output.hand.detected_hand_count must be from zero to two")
     _validate_hand_geometry(hand["geometry"])
 
     for key in ("raw_label", "stable_label"):
@@ -430,9 +417,7 @@ class PipelineOutputSerializer:
                 "raw_label": str(body.raw_label),
                 "stable_label": str(body.stable_label),
                 "emitted_movement": body.emitted_movement,
-                "metrics": {
-                    str(name): float(value) for name, value in body.metrics.items()
-                },
+                "metrics": {str(name): float(value) for name, value in body.metrics.items()},
                 "geometry": _body_geometry(result) if self.include_geometry else None,
             },
             "queue": {

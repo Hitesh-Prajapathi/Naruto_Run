@@ -43,9 +43,7 @@ BODY_PROMPTS = {
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description=(
-            "Measure live trial-level accuracy without creating a camera dataset."
-        ),
+        description=("Measure live trial-level accuracy without creating a camera dataset."),
         epilog=(
             "Hand labels: "
             + ", ".join(HAND_LABELS)
@@ -149,9 +147,7 @@ def parse_args() -> argparse.Namespace:
     if len(outputs) != len(set(outputs)):
         parser.error("all output paths must refer to different files")
     if args.action_seconds is None:
-        args.action_seconds = {"hand": 3.5, "body": 4.0, "attack": 10.0}[
-            args.mode
-        ]
+        args.action_seconds = {"hand": 3.5, "body": 4.0, "attack": 10.0}[args.mode]
     return args
 
 
@@ -304,13 +300,14 @@ def _print_summary(summary: dict[str, Any]) -> None:
             if not metric["attempts"]:
                 continue
             rate = f"{metric['success_rate']:.1%}"
-            failures = ", ".join(
-                f"{reason}={count}"
-                for reason, count in metric["failure_reasons"].items()
-            ) or "-"
+            failures = (
+                ", ".join(
+                    f"{reason}={count}" for reason, count in metric["failure_reasons"].items()
+                )
+                or "-"
+            )
             print(
-                f"{label:12} {metric['attempts']:8d} {metric['successes']:8d} "
-                f"{rate:8} {failures}"
+                f"{label:12} {metric['attempts']:8d} {metric['successes']:8d} {rate:8} {failures}"
             )
         return
     print("label          attempts  first  eventual  FP  duplicates  false-event")
@@ -323,9 +320,7 @@ def _print_summary(summary: dict[str, Any]) -> None:
             else "-"
         )
         eventual_recall = (
-            f"{metric['eventual_recall']:.1%}"
-            if metric["eventual_recall"] is not None
-            else "-"
+            f"{metric['eventual_recall']:.1%}" if metric["eventual_recall"] is not None else "-"
         )
         print(
             f"{label:14} {metric['attempts']:8d} {first_recall:7} "
@@ -350,10 +345,7 @@ def main() -> int:
         )
     ).start()
     if args.self_check:
-        print(
-            f"Evaluation self-check passed for {args.mode}: "
-            + ", ".join(args.labels)
-        )
+        print(f"Evaluation self-check passed for {args.mode}: " + ", ".join(args.labels))
         runtime.close()
         return 0
 
@@ -386,9 +378,7 @@ def main() -> int:
     ]
     session: LabelEvaluationSession | AttackEvaluationSession
     session = (
-        AttackEvaluationSession()
-        if args.mode == "attack"
-        else LabelEvaluationSession(args.mode)
+        AttackEvaluationSession() if args.mode == "attack" else LabelEvaluationSession(args.mode)
     )
     work_index = 0
     phase = "ready"
@@ -416,14 +406,10 @@ def main() -> int:
             label, attempt_index = work[work_index]
 
             if phase != "ready":
-                crossed_action_boundary = (
-                    phase == "prepare" and now_ms >= action_started_at_ms
-                )
+                crossed_action_boundary = phase == "prepare" and now_ms >= action_started_at_ms
                 if crossed_action_boundary:
                     if not scheduler.wait_until_idle(timeout=5.0):
-                        raise TimeoutError(
-                            "recognition worker did not finish preparation"
-                        )
+                        raise TimeoutError("recognition worker did not finish preparation")
                     latest = _record_scheduled(
                         scheduler.poll_result(),
                         evaluator=evaluator,
@@ -497,9 +483,8 @@ def main() -> int:
                     elif args.mode == "attack":
                         last_result = f"MISS: {result['failure_reason']}"
                     else:
-                        last_result = (
-                            "MISS: predicted "
-                            + str(result["system_prediction"] or "no detection")
+                        last_result = "MISS: predicted " + str(
+                            result["system_prediction"] or "no detection"
                         )
                     print(
                         f"{label} attempt {attempt_index}: "
@@ -539,12 +524,8 @@ def main() -> int:
                 scheduler.poll_result()
                 runtime.reset(reason="evaluation_attempt")
                 started_at_ms = int(time.monotonic() * 1000.0)
-                action_started_at_ms = started_at_ms + int(
-                    round(args.prepare_seconds * 1000.0)
-                )
-                action_ends_at_ms = action_started_at_ms + int(
-                    round(args.action_seconds * 1000.0)
-                )
+                action_started_at_ms = started_at_ms + int(round(args.prepare_seconds * 1000.0))
+                action_ends_at_ms = action_started_at_ms + int(round(args.action_seconds * 1000.0))
                 evaluator = (
                     AttackAttemptEvaluator(label, attempt_index)
                     if args.mode == "attack"

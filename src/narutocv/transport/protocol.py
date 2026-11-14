@@ -107,16 +107,15 @@ def decode_frame(data: bytes) -> FrameEnvelope:
     """Parse and validate the binary header of an inbound frame message."""
     if len(data) < FRAME_HEADER_SIZE:
         raise ProtocolError("frame shorter than the binary header")
-    magic, version, sequence, captured_at_ms, width, height, payload_len = (
-        FRAME_HEADER.unpack_from(data, 0)
+    magic, version, sequence, captured_at_ms, width, height, payload_len = FRAME_HEADER.unpack_from(
+        data, 0
     )
     if magic != FRAME_MAGIC:
         raise ProtocolError("frame magic bytes do not match the protocol")
     payload = data[FRAME_HEADER_SIZE:]
     if len(payload) != payload_len:
         raise ProtocolError(
-            f"declared payload length {payload_len} does not match "
-            f"{len(payload)} received bytes"
+            f"declared payload length {payload_len} does not match {len(payload)} received bytes"
         )
     envelope = FrameEnvelope(version, sequence, captured_at_ms, width, height, payload)
     envelope.validate()
@@ -140,9 +139,7 @@ def build_server_ready(*, session_id: str) -> dict:
     }
 
 
-def build_error(
-    *, code: str, message: str, request_id: Optional[str] = None
-) -> dict:
+def build_error(*, code: str, message: str, request_id: Optional[str] = None) -> dict:
     payload: dict[str, Any] = {"type": "error", "code": code, "message": message}
     if request_id is not None:
         payload["request_id"] = request_id

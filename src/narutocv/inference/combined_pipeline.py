@@ -279,9 +279,7 @@ class HandSignRecognizer:
         self.confidence_override = confidence_threshold
         self.confidence_thresholds = dict(HAND_CONFIDENCE_THRESHOLDS)
         self.margin_thresholds = dict(HAND_MARGIN_THRESHOLDS)
-        self.session = ort.InferenceSession(
-            str(model_path), providers=["CPUExecutionProvider"]
-        )
+        self.session = ort.InferenceSession(str(model_path), providers=["CPUExecutionProvider"])
         self.input_name = self.session.get_inputs()[0].name
         self.output_name = self.session.get_outputs()[0].name
         metadata = self.session.get_modelmeta().custom_metadata_map
@@ -310,9 +308,7 @@ class HandSignRecognizer:
                 return tuple(str(parsed[index]) for index in sorted(parsed))
         return FALLBACK_HAND_CLASSES
 
-    def _classify_crop_timed(
-        self, crop_bgr: np.ndarray
-    ) -> tuple[Classification, dict[str, float]]:
+    def _classify_crop_timed(self, crop_bgr: np.ndarray) -> tuple[Classification, dict[str, float]]:
         started = time.perf_counter()
         rgb = cv2.cvtColor(crop_bgr, cv2.COLOR_BGR2RGB)
         resized = cv2.resize(rgb, (224, 224), interpolation=cv2.INTER_AREA)
@@ -336,9 +332,7 @@ class HandSignRecognizer:
         prediction, _timings = self._classify_crop_timed(crop_bgr)
         return prediction
 
-    def _classification_from_probabilities(
-        self, probabilities: Sequence[float]
-    ) -> Classification:
+    def _classification_from_probabilities(self, probabilities: Sequence[float]) -> Classification:
         values = np.asarray(probabilities, dtype=np.float64).reshape(-1)
         total = float(values.sum())
         if total <= 0.0:
@@ -354,9 +348,7 @@ class HandSignRecognizer:
             probabilities=tuple(float(value) for value in values),
         )
 
-    def _smooth_hand_bbox(
-        self, bbox: tuple[int, int, int, int]
-    ) -> tuple[int, int, int, int]:
+    def _smooth_hand_bbox(self, bbox: tuple[int, int, int, int]) -> tuple[int, int, int, int]:
         current = np.asarray(bbox, dtype=np.float64)
         if self._smoothed_hand_bbox is None:
             smoothed = current
@@ -366,9 +358,7 @@ class HandSignRecognizer:
         self._smoothed_hand_bbox = smoothed
         return tuple(int(round(value)) for value in smoothed)
 
-    def _fuse_predictions(
-        self, center: Classification, roi: Classification
-    ) -> Classification:
+    def _fuse_predictions(self, center: Classification, roi: Classification) -> Classification:
         if not center.probabilities or not roi.probabilities:
             return center
         center_values = np.asarray(center.probabilities, dtype=np.float64)
@@ -387,9 +377,7 @@ class HandSignRecognizer:
             and prediction.label not in allowed
         )
 
-    def _accept(
-        self, prediction: Classification, detected_hands: int
-    ) -> tuple[str, Optional[str]]:
+    def _accept(self, prediction: Classification, detected_hands: int) -> tuple[str, Optional[str]]:
         # Rat and Ram are the model's dominant live-camera confusion pair.
         # Do not use the detected-hand count alone: the camera evaluator showed
         # genuine Ram alternating between one and two detected hands.  Resolve
@@ -465,24 +453,18 @@ class HandSignRecognizer:
         self._last_timestamp_ms = max(candidate, self._last_timestamp_ms + 1)
         return self._last_timestamp_ms
 
-    def process(
-        self, frame_bgr: np.ndarray, timestamp: Optional[float] = None
-    ) -> HandResult:
+    def process(self, frame_bgr: np.ndarray, timestamp: Optional[float] = None) -> HandResult:
         started = time.perf_counter()
         height, width = frame_bgr.shape[:2]
         classification_bbox = _center_square_bbox(width, height)
         cx1, cy1, cx2, cy2 = classification_bbox
-        center_prediction, center_timings = self._classify_crop_timed(
-            frame_bgr[cy1:cy2, cx1:cx2]
-        )
+        center_prediction, center_timings = self._classify_crop_timed(frame_bgr[cy1:cy2, cx1:cx2])
 
         hand_preprocess_started = time.perf_counter()
         rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
         hand_detection_started = time.perf_counter()
-        detected = self.landmarker.detect_for_video(
-            mp_image, self._video_timestamp_ms(timestamp)
-        )
+        detected = self.landmarker.detect_for_video(mp_image, self._video_timestamp_ms(timestamp))
         hand_detection_finished = time.perf_counter()
         detected_hands = len(detected.hand_landmarks)
         prediction = center_prediction
@@ -501,9 +483,7 @@ class HandSignRecognizer:
             hand_bbox = self._smooth_hand_bbox(raw_hand_bbox)
             hx1, hy1, hx2, hy2 = hand_bbox
             if hx2 > hx1 and hy2 > hy1:
-                roi_prediction, roi_timings = self._classify_crop_timed(
-                    frame_bgr[hy1:hy2, hx1:hx2]
-                )
+                roi_prediction, roi_timings = self._classify_crop_timed(frame_bgr[hy1:hy2, hx1:hx2])
                 prediction = self._fuse_predictions(center_prediction, roi_prediction)
             if roi_prediction is None:
                 fusion_status = "center_only_invalid_roi"
@@ -525,8 +505,7 @@ class HandSignRecognizer:
             accepted_label, rejection_reason = self._accept(prediction, detected_hands)
         stable, emitted = self.filter.update(accepted_label)
         landmark_points = tuple(
-            tuple((point.x, point.y) for point in hand)
-            for hand in detected.hand_landmarks
+            tuple((point.x, point.y) for point in hand) for hand in detected.hand_landmarks
         )
         finished = time.perf_counter()
         measured_ms = (
@@ -540,14 +519,9 @@ class HandSignRecognizer:
             "hand_center_preprocess_ms": center_timings["preprocess_ms"],
             "hand_center_onnx_ms": center_timings["onnx_ms"],
             "hand_center_postprocess_ms": center_timings["postprocess_ms"],
-            "hand_landmarker_preprocess_ms": (
-                hand_detection_started - hand_preprocess_started
-            )
+            "hand_landmarker_preprocess_ms": (hand_detection_started - hand_preprocess_started)
             * 1000.0,
-            "hand_landmarker_ms": (
-                hand_detection_finished - hand_detection_started
-            )
-            * 1000.0,
+            "hand_landmarker_ms": (hand_detection_finished - hand_detection_started) * 1000.0,
             "hand_roi_preprocess_ms": roi_timings["preprocess_ms"],
             "hand_roi_onnx_ms": roi_timings["onnx_ms"],
             "hand_roi_postprocess_ms": roi_timings["postprocess_ms"],
@@ -640,10 +614,7 @@ class BodyMovementRecognizer:
                 {},
                 timings_ms={
                     "pose_preprocess_ms": (detection_started - started) * 1000.0,
-                    "pose_landmarker_ms": (
-                        detection_finished - detection_started
-                    )
-                    * 1000.0,
+                    "pose_landmarker_ms": (detection_finished - detection_started) * 1000.0,
                     "body_postprocess_ms": (finished - detection_finished) * 1000.0,
                     "body_total_ms": (finished - started) * 1000.0,
                 },
@@ -683,9 +654,9 @@ class BodyMovementRecognizer:
         depth = self.config.arms_back_depth_threshold
         arms_back = wlw.z > wlh.z + depth and wrw.z > wrh.z + depth
 
-        crossed_distance = (
-            _point_distance(lw, re) + _point_distance(rw, le)
-        ) / (2.0 * shoulder_width)
+        crossed_distance = (_point_distance(lw, re) + _point_distance(rw, le)) / (
+            2.0 * shoulder_width
+        )
 
         # Body movement events remain independent from hand-seal attacks. Dodge
         # and stone are attacks in the hand catalog, not body movement labels.
@@ -716,8 +687,7 @@ class BodyMovementRecognizer:
             landmark_points,
             timings_ms={
                 "pose_preprocess_ms": (detection_started - started) * 1000.0,
-                "pose_landmarker_ms": (detection_finished - detection_started)
-                * 1000.0,
+                "pose_landmarker_ms": (detection_finished - detection_started) * 1000.0,
                 "body_postprocess_ms": (finished - detection_finished) * 1000.0,
                 "body_total_ms": (finished - started) * 1000.0,
             },
@@ -803,14 +773,9 @@ class AttackRecognizer:
             for index in range(1, len(events))
         )
 
-    def _trigger(
-        self, attack: AttackDefinition, now: float
-    ) -> tuple[Optional[AttackEvent], bool]:
+    def _trigger(self, attack: AttackDefinition, now: float) -> tuple[Optional[AttackEvent], bool]:
         self.seals.clear()
-        if (
-            now - self.last_triggered.get(attack.name, -math.inf)
-            < self.config.trigger_cooldown
-        ):
+        if now - self.last_triggered.get(attack.name, -math.inf) < self.config.trigger_cooldown:
             return None, True
         self.last_triggered[attack.name] = now
         return AttackEvent(attack.name, attack.display_name, now), False

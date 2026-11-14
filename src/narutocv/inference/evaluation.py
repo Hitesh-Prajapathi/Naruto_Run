@@ -207,15 +207,12 @@ class LabelEvaluationSession:
         metrics: dict[str, Any] = {}
         for label in allowed:
             expected_attempts = [
-                attempt
-                for attempt in self.attempts
-                if attempt["expected_label"] == label
+                attempt for attempt in self.attempts if attempt["expected_label"] == label
             ]
             tp = sum(bool(attempt["first_event_success"]) for attempt in expected_attempts)
             fn = len(expected_attempts) - tp
             first_cross_label_fp = sum(
-                attempt["expected_label"] != label
-                and attempt["system_prediction"] == label
+                attempt["expected_label"] != label and attempt["system_prediction"] == label
                 for attempt in self.attempts
             )
             emitted_cross_label_fp = sum(
@@ -231,19 +228,14 @@ class LabelEvaluationSession:
             )
             fp = first_cross_label_fp + neutral_fp
             eventual_tp = sum(
-                bool(attempt["target_event_detected"])
-                for attempt in expected_attempts
+                bool(attempt["target_event_detected"]) for attempt in expected_attempts
             )
-            action_event_count = sum(
-                len(attempt["action_events"]) for attempt in expected_attempts
-            )
+            action_event_count = sum(len(attempt["action_events"]) for attempt in expected_attempts)
             unexpected_event_count = sum(
-                len(attempt["unexpected_action_events"])
-                for attempt in expected_attempts
+                len(attempt["unexpected_action_events"]) for attempt in expected_attempts
             )
             duplicate_emissions = sum(
-                int(attempt["duplicate_emissions"])
-                for attempt in expected_attempts
+                int(attempt["duplicate_emissions"]) for attempt in expected_attempts
             )
             latencies = [
                 float(attempt["detection_latency_ms"])
@@ -264,16 +256,12 @@ class LabelEvaluationSession:
                 "recall": tp / (tp + fn) if tp + fn else None,
                 "first_event_recall": tp / len(expected_attempts) if expected_attempts else None,
                 "eventual_recall": (
-                    eventual_tp / len(expected_attempts)
-                    if expected_attempts
-                    else None
+                    eventual_tp / len(expected_attempts) if expected_attempts else None
                 ),
                 "action_event_count": action_event_count,
                 "unexpected_action_event_count": unexpected_event_count,
                 "false_event_rate": (
-                    unexpected_event_count / action_event_count
-                    if action_event_count
-                    else 0.0
+                    unexpected_event_count / action_event_count if action_event_count else 0.0
                 ),
                 "duplicate_emissions": duplicate_emissions,
                 "detection_latency_ms": _sample_summary(latencies),
@@ -282,12 +270,10 @@ class LabelEvaluationSession:
             sum(attempt["prepare_raw_counts"].values()) for attempt in self.attempts
         )
         prepare_false_events = sum(
-            len(attempt["prepare_false_positive_events"])
-            for attempt in self.attempts
+            len(attempt["prepare_false_positive_events"]) for attempt in self.attempts
         )
         prepare_false_attempts = sum(
-            bool(attempt["prepare_false_positive_events"])
-            for attempt in self.attempts
+            bool(attempt["prepare_false_positive_events"]) for attempt in self.attempts
         )
         return {
             "evaluation_version": EVALUATION_VERSION,
@@ -295,20 +281,16 @@ class LabelEvaluationSession:
             "attempt_count": len(self.attempts),
             "overall": {
                 "first_event_successes": sum(
-                    bool(attempt["first_event_success"])
-                    for attempt in self.attempts
+                    bool(attempt["first_event_success"]) for attempt in self.attempts
                 ),
                 "eventual_target_detections": sum(
-                    bool(attempt["target_event_detected"])
-                    for attempt in self.attempts
+                    bool(attempt["target_event_detected"]) for attempt in self.attempts
                 ),
                 "duplicate_emissions": sum(
-                    int(attempt["duplicate_emissions"])
-                    for attempt in self.attempts
+                    int(attempt["duplicate_emissions"]) for attempt in self.attempts
                 ),
                 "unexpected_action_events": sum(
-                    len(attempt["unexpected_action_events"])
-                    for attempt in self.attempts
+                    len(attempt["unexpected_action_events"]) for attempt in self.attempts
                 ),
             },
             "preparation": {
@@ -316,9 +298,7 @@ class LabelEvaluationSession:
                 "false_event_count": prepare_false_events,
                 "attempts_with_false_events": prepare_false_attempts,
                 "false_event_attempt_rate": (
-                    prepare_false_attempts / len(self.attempts)
-                    if self.attempts
-                    else 0.0
+                    prepare_false_attempts / len(self.attempts) if self.attempts else 0.0
                 ),
                 "false_events_per_100_frames": (
                     100.0 * prepare_false_events / prepare_frame_count
@@ -328,8 +308,7 @@ class LabelEvaluationSession:
             },
             "metrics": metrics,
             "confusion": {
-                expected: dict(predictions)
-                for expected, predictions in sorted(confusion.items())
+                expected: dict(predictions) for expected, predictions in sorted(confusion.items())
             },
             "attempts": list(self.attempts),
         }
@@ -446,9 +425,7 @@ class AttackEvaluationSession:
         metrics: dict[str, Any] = {}
         for attack in ATTACK_LABELS:
             attempts = [
-                attempt
-                for attempt in self.attempts
-                if attempt["expected_attack"] == attack
+                attempt for attempt in self.attempts if attempt["expected_attack"] == attack
             ]
             successes = sum(bool(attempt["success"]) for attempt in attempts)
             failure_reasons = Counter(
@@ -519,11 +496,7 @@ def write_evaluation_reports(
             is_attack = attempt["attempt_type"] == "attack"
             row = {
                 "mode": "attack" if is_attack else attempt["mode"],
-                "target": (
-                    attempt["expected_attack"]
-                    if is_attack
-                    else attempt["expected_label"]
-                ),
+                "target": (attempt["expected_attack"] if is_attack else attempt["expected_label"]),
                 "attempt_index": attempt["attempt_index"],
                 "success": attempt["success"],
                 "first_event_success": attempt.get(
@@ -541,9 +514,7 @@ def write_evaluation_reports(
                 ),
                 "failure_reason": attempt.get("failure_reason"),
                 "detection_latency_ms": attempt.get("detection_latency_ms"),
-                "expected_sequence": (
-                    ">".join(attempt["expected_seals"]) if is_attack else ""
-                ),
+                "expected_sequence": (">".join(attempt["expected_seals"]) if is_attack else ""),
                 "observed_sequence": (
                     ">".join(attempt["accepted_seals"])
                     if is_attack
@@ -552,9 +523,7 @@ def write_evaluation_reports(
                 "prepare_false_positive_events": "|".join(
                     attempt.get("prepare_false_positive_events", [])
                 ),
-                "unexpected_action_events": "|".join(
-                    attempt.get("unexpected_action_events", [])
-                ),
+                "unexpected_action_events": "|".join(attempt.get("unexpected_action_events", [])),
                 "duplicate_emissions": attempt.get("duplicate_emissions", 0),
                 "details_json": json.dumps(attempt, separators=(",", ":")),
             }

@@ -25,18 +25,12 @@ from narutocv.inference.runtime import (
 
 
 EVENT_SCHEMA_PATH = (
-    Path(__file__).resolve().parents[2]
-    / "schemas"
-    / "pipeline_event_v1.schema.json"
+    Path(__file__).resolve().parents[2] / "schemas" / "pipeline_event_v1.schema.json"
 )
 
 
 def _result(*, include_body: bool = True, include_attack: bool = True) -> FrameResult:
-    attack = (
-        AttackEvent("ikazuchi", "IKAZUCHI / LIGHTNING", 2.0)
-        if include_attack
-        else None
-    )
+    attack = AttackEvent("ikazuchi", "IKAZUCHI / LIGHTNING", 2.0) if include_attack else None
     hand = HandResult(
         raw=Classification("dog", 0.90, "zero", 0.05),
         accepted_label="dog",
@@ -100,15 +94,11 @@ class PipelineEventDispatcherTests(unittest.TestCase):
                 "QUEUE_CLEARED",
             ],
         )
-        self.assertEqual(
-            [event["event_sequence"] for event in report.events], [0, 1, 2, 3]
-        )
+        self.assertEqual([event["event_sequence"] for event in report.events], [0, 1, 2, 3])
         self.assertEqual(report.events[0]["event_id"], "events-test:00000000")
         self.assertEqual(received, list(report.events))
         self.assertEqual([event["event_type"] for event in attacks], ["ATTACK_TRIGGERED"])
-        self.assertEqual(
-            report.events[-1]["payload"]["reasons"], ["attack_triggered"]
-        )
+        self.assertEqual(report.events[-1]["payload"]["reasons"], ["attack_triggered"])
 
     def test_failing_subscriber_does_not_block_other_consumers(self) -> None:
         dispatcher = PipelineEventDispatcher()
@@ -119,9 +109,7 @@ class PipelineEventDispatcherTests(unittest.TestCase):
 
         dispatcher.subscribe(fail)
         dispatcher.subscribe(delivered.append)
-        report = dispatcher.dispatch_frame(
-            _output(include_body=False, include_attack=False)
-        )
+        report = dispatcher.dispatch_frame(_output(include_body=False, include_attack=False))
 
         self.assertEqual(len(report.events), 1)
         self.assertEqual(len(report.failures), 1)
@@ -233,12 +221,8 @@ class PipelineRuntimeControllerTests(unittest.TestCase):
             runtime.process_frame(np.zeros((2, 2, 3), dtype=np.uint8))
 
         runtime.start()
-        first = runtime.process_frame(
-            np.zeros((2, 2, 3), dtype=np.uint8), captured_at_ms=100
-        )
-        second = runtime.process_frame(
-            np.zeros((2, 2, 3), dtype=np.uint8), captured_at_ms=100
-        )
+        first = runtime.process_frame(np.zeros((2, 2, 3), dtype=np.uint8), captured_at_ms=100)
+        second = runtime.process_frame(np.zeros((2, 2, 3), dtype=np.uint8), captured_at_ms=100)
 
         self.assertEqual(first.output["frame_id"], 0)
         self.assertEqual(second.output["frame_id"], 1)
@@ -272,9 +256,7 @@ class PipelineRuntimeControllerTests(unittest.TestCase):
             session_id="startup-recovery-test",
         )
 
-        with self.assertRaisesRegex(
-            RuntimeError, "failed to initialize the recognition pipeline"
-        ):
+        with self.assertRaisesRegex(RuntimeError, "failed to initialize the recognition pipeline"):
             runtime.start()
         self.assertEqual(runtime.state, RuntimeState.CREATED)
 
@@ -351,12 +333,8 @@ class PipelineRuntimeControllerTests(unittest.TestCase):
             captured_at_ms=100,
         )
 
-        calibrating = runtime.process_frame(
-            np.zeros((2, 2, 3), dtype=np.uint8), captured_at_ms=105
-        )
-        completed = runtime.process_frame(
-            np.zeros((2, 2, 3), dtype=np.uint8), captured_at_ms=110
-        )
+        calibrating = runtime.process_frame(np.zeros((2, 2, 3), dtype=np.uint8), captured_at_ms=105)
+        completed = runtime.process_frame(np.zeros((2, 2, 3), dtype=np.uint8), captured_at_ms=110)
 
         self.assertTrue(calibrating.calibration_active)
         self.assertEqual(calibrating.dispatch.events, ())
@@ -375,9 +353,7 @@ class PipelineRuntimeControllerTests(unittest.TestCase):
         runtime, pipeline = self.make_runtime()
         runtime.start()
         runtime.begin_neutral_calibration(duration_seconds=1.0, captured_at_ms=100)
-        runtime.process_frame(
-            np.zeros((2, 2, 3), dtype=np.uint8), captured_at_ms=110
-        )
+        runtime.process_frame(np.zeros((2, 2, 3), dtype=np.uint8), captured_at_ms=110)
 
         outcome = runtime.finish_neutral_calibration(captured_at_ms=120)
 
