@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { WebSocketClient } from "../../src/transport/websocketClient";
+import { PROTOCOL_VERSION } from "../../src/transport/protocol";
 
 /** Minimal WebSocket double: enough surface for websocketClient.ts, plus
  * test-only `simulate*` helpers to drive it from the outside. readyState
@@ -106,7 +107,7 @@ describe("WebSocketClient", () => {
 
     sockets[0]!.simulateOpen();
 
-    expect(sockets[0]!.lastSentJson()).toMatchObject({ type: "client_hello", protocol_version: "1.1.0" });
+    expect(sockets[0]!.lastSentJson()).toMatchObject({ type: "client_hello", protocol_version: PROTOCOL_VERSION });
     // No expected model configured: the optional field must be absent so a
     // 1.0.0-era server sees exactly the hello it always did.
     expect(sockets[0]!.lastSentJson()).not.toHaveProperty("expected_model_id");
@@ -131,6 +132,32 @@ describe("WebSocketClient", () => {
     expect(client.connectionState).toBe("open");
     expect(client.serverReady?.model?.id).toBe("narutocv-abc123");
     expect(client.serverReady?.classes?.hand).toEqual(["dog"]);
+  });
+
+  it("advertises the hand decoder from a 1.2.0 server_ready, defaulting to legacy", () => {
+    const client = makeClient();
+    expect(client.handDecoder).toBe("legacy");
+    client.connect();
+    sockets[0]!.simulateOpen();
+    sockets[0]!.simulateMessage(
+      serverReady("s", { model: MODEL, capabilities: { hand_decoder: "v1" } }, "1.2.0"),
+    );
+
+    expect(client.connectionState).toBe("open");
+    expect(client.serverReady?.capabilities?.hand_decoder).toBe("v1");
+    expect(client.handDecoder).toBe("v1");
+  });
+
+  it("treats a 1.1.0 server (no hand_decoder capability) as legacy and still opens", () => {
+    const client = makeClient();
+    client.connect();
+    sockets[0]!.simulateOpen();
+    sockets[0]!.simulateMessage(
+      serverReady("s", { model: MODEL, capabilities: { max_fps: 60 } }, "1.1.0"),
+    );
+
+    expect(client.connectionState).toBe("open");
+    expect(client.handDecoder).toBe("legacy");
   });
 
   it("still opens against a 1.0.0 server that sends no model info", () => {

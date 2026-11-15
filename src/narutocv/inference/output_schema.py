@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import math
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Mapping, Optional, TypedDict
+from typing import TYPE_CHECKING, Any, Mapping, NotRequired, Optional, TypedDict
 
 if TYPE_CHECKING:
     from .combined_pipeline import Classification, FrameResult
@@ -32,6 +32,20 @@ class HandGeometryV1(TypedDict):
     landmarks: list[list[list[float]]]
 
 
+class SealEventOutputV1(TypedDict):
+    label: str
+    t_start_ms: float
+    t_emit_ms: float
+    confidence: float
+
+
+class HandDecoderOutputV1(TypedDict):
+    """Present only when the v1 decoder is active (absent for the legacy decoder)."""
+
+    mode: str
+    event: Optional[SealEventOutputV1]
+
+
 class HandOutputV1(TypedDict):
     raw: PredictionOutputV1
     center: PredictionOutputV1
@@ -43,6 +57,7 @@ class HandOutputV1(TypedDict):
     fusion_status: str
     detected_hand_count: int
     geometry: Optional[HandGeometryV1]
+    decoder: NotRequired[HandDecoderOutputV1]
 
 
 class BodyGeometryV1(TypedDict):
@@ -104,6 +119,23 @@ def _hand_geometry(result: FrameResult) -> HandGeometryV1:
         "classification_bbox": _bbox(hand.classification_bbox),
         "hand_bbox": _bbox(hand.hand_bbox) if hand.hand_bbox is not None else None,
         "landmarks": [[[float(x), float(y)] for x, y in landmarks] for landmarks in hand.landmarks],
+    }
+
+
+def _hand_decoder(result: FrameResult) -> HandDecoderOutputV1:
+    event = result.hand.seal_event
+    return {
+        "mode": str(result.hand.decoder),
+        "event": (
+            {
+                "label": str(event.label),
+                "t_start_ms": float(event.t_start_ms),
+                "t_emit_ms": float(event.t_emit_ms),
+                "confidence": float(event.confidence),
+            }
+            if event is not None
+            else None
+        ),
     }
 
 
@@ -232,6 +264,27 @@ def _validate_body_geometry(value: Any) -> None:
     _validate_points(value["landmarks"], "output.body.geometry.landmarks", nested=False)
 
 
+def _validate_hand_decoder(value: Any) -> None:
+    path = "output.hand.decoder"
+    if not isinstance(value, Mapping):
+        raise SerializationError(f"{path} must be an object")
+    _require_exact_keys(value, {"mode", "event"}, path)
+    if value["mode"] != "v1":
+        raise SerializationError(f"{path}.mode must be 'v1' (legacy output omits the object)")
+    event = value["event"]
+    if event is None:
+        return
+    if not isinstance(event, Mapping):
+        raise SerializationError(f"{path}.event must be an object or null")
+    _require_exact_keys(event, {"label", "t_start_ms", "t_emit_ms", "confidence"}, f"{path}.event")
+    _require_string(event["label"], f"{path}.event.label")
+    _require_number(event["t_start_ms"], f"{path}.event.t_start_ms", minimum=0.0)
+    _require_number(event["t_emit_ms"], f"{path}.event.t_emit_ms", minimum=0.0)
+    _require_number(event["confidence"], f"{path}.event.confidence", minimum=0.0, maximum=1.0)
+    if event["t_emit_ms"] < event["t_start_ms"]:
+        raise SerializationError(f"{path}.event.t_emit_ms must not precede t_start_ms")
+
+
 def validate_pipeline_output_v1(output: Mapping[str, Any]) -> None:
     """Validate the stable shape and fundamental invariants of a V1 output."""
     if not isinstance(output, Mapping):
@@ -284,9 +337,13 @@ def validate_pipeline_output_v1(output: Mapping[str, Any]) -> None:
             "fusion_status",
             "detected_hand_count",
             "geometry",
+            # Optional (protocol 1.2.0): only present when the v1 decoder is active.
+            *(("decoder",) if "decoder" in hand else ()),
         },
         "output.hand",
     )
+    if "decoder" in hand:
+        _validate_hand_decoder(hand["decoder"])
     _require_exact_keys(
         body,
         {"raw_label", "stable_label", "emitted_movement", "metrics", "geometry"},
@@ -412,6 +469,8 @@ class PipelineOutputSerializer:
                 "fusion_status": str(hand.fusion_status),
                 "detected_hand_count": len(hand.landmarks),
                 "geometry": _hand_geometry(result) if self.include_geometry else None,
+                # Legacy output stays byte-identical: the key exists only for the v1 decoder.
+                **({"decoder": _hand_decoder(result)} if result.hand.decoder != "legacy" else {}),
             },
             "body": {
                 "raw_label": str(body.raw_label),

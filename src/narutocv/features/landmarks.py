@@ -19,7 +19,7 @@ from typing import Any
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
-FEATURE_SPEC_VERSION = "1.0.0"
+FEATURE_SPEC_VERSION = "1.0.1"
 
 NUM_LANDMARKS = 21
 FINGER_NAMES: tuple[str, ...] = ("thumb", "index", "middle", "ring", "pinky")
@@ -217,13 +217,20 @@ def _mean_x(pts: Array) -> float:
     return float(pts[:, 0].mean())
 
 
+def _rank_score(score: float) -> float:
+    """Score used to rank hands: non-finite values count as 0.0 (total order, spec 1.0.1)."""
+    value = float(score)
+    return value if math.isfinite(value) else 0.0
+
+
 def assign_slots(
     hands: Sequence[HandObservation], image_size: tuple[int, int]
 ) -> tuple[HandObservation | None, HandObservation | None]:
     """Assign up to two hands to the (Left, Right) slots.
 
     1. Hands with non-finite or degenerate landmarks are dropped; if more than two
-       remain, the two highest-scoring are kept (ties: input order).
+       remain, the two highest-scoring are kept (ties: input order).  A non-finite
+       score (NaN, +/-inf) ranks as 0.0, so the order is total and deterministic.
     2. One hand: slot by its handedness label.
     3. Two hands with different labels: slot by label.
     4. Two hands claiming the *same* label: the hand with the smaller mean landmark
@@ -238,7 +245,7 @@ def assign_slots(
         if canonicalize_hand(h.landmarks, h.handedness, image_size=image_size).valid:
             valid.append(h)
     if len(valid) > 2:
-        order = sorted(range(len(valid)), key=lambda j: (-float(valid[j].score), j))[:2]
+        order = sorted(range(len(valid)), key=lambda j: (-_rank_score(valid[j].score), j))[:2]
         valid = [valid[j] for j in sorted(order)]
     if not valid:
         return None, None

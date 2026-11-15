@@ -306,6 +306,35 @@ def test_more_than_two_hands_keeps_best_scores() -> None:
     assert left is hands[2] and right is hands[1]
 
 
+def test_non_finite_scores_rank_as_zero_with_more_than_two_hands() -> None:
+    """Spec 1.0.1: NaN / +-inf rank 0.0, so the surviving pair is deterministic."""
+    hands = [
+        HandObservation(make_hand(1, origin=(0.2, 0.5)), "Left", float("nan")),
+        HandObservation(make_hand(2, origin=(0.5, 0.5)), "Right", 0.5),
+        HandObservation(make_hand(3, origin=(0.8, 0.5)), "Left", 0.9),
+    ]
+    left, right = assign_slots(hands, SIZE)
+    assert left is hands[2] and right is hands[1]
+
+    # Two non-finite scores tie at 0.0: the earlier input survives next to the 0.3 hand.
+    hands = [
+        HandObservation(make_hand(1, origin=(0.2, 0.5)), "Left", float("nan")),
+        HandObservation(make_hand(2, origin=(0.5, 0.5)), "Left", float("inf")),
+        HandObservation(make_hand(3, origin=(0.8, 0.5)), "Right", 0.3),
+    ]
+    left, right = assign_slots(hands, SIZE)
+    assert left is hands[0] and right is hands[2]
+
+    # -inf ranks 0.0, which is above a negative finite score.
+    hands = [
+        HandObservation(make_hand(1, origin=(0.2, 0.5)), "Left", float("-inf")),
+        HandObservation(make_hand(2, origin=(0.5, 0.5)), "Right", -0.25),
+        HandObservation(make_hand(3, origin=(0.8, 0.5)), "Right", 0.1),
+    ]
+    left, right = assign_slots(hands, SIZE)
+    assert left is hands[0] and right is hands[2]
+
+
 def test_palms_facing_indicator() -> None:
     """Mirror-symmetric pair: rotating one way makes palms face, the other way face away."""
     size = (640, 640)

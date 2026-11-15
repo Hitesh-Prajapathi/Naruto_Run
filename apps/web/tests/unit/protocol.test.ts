@@ -9,6 +9,7 @@ import {
   PROTOCOL_VERSION,
   buildClientHello,
   parseProtocolMajor,
+  parseHandSealPayload,
   buildControl,
   decodeFrame,
   encodeFrame,
@@ -176,6 +177,10 @@ describe("JSON message builders", () => {
     expect(parseProtocolMajor(PROTOCOL_VERSION)).toBe(PROTOCOL_MAJOR);
   });
 
+  it("is protocol 1.2.0", () => {
+    expect(PROTOCOL_VERSION).toBe("1.2.0");
+  });
+
   it("omits request_id from control when not given", () => {
     const withId = buildControl("reset", "req-1");
     const withoutId = buildControl("ping");
@@ -209,5 +214,51 @@ describe("parseTransportMessage", () => {
     expect(() => parseTransportMessage({ type: "state_snapshot", session_id: "s1" })).toThrow(
       ProtocolError,
     );
+  });
+});
+
+describe("parseHandSealPayload (protocol 1.2.0 optional fields)", () => {
+  it("parses a 1.0/1.1 payload with no decoder fields", () => {
+    const parsed = parseHandSealPayload({ seal: "tiger", stable_label: "tiger", confidence: 0.94 });
+    expect(parsed).toEqual({ seal: "tiger", stable_label: "tiger", confidence: 0.94 });
+    expect(parsed).not.toHaveProperty("t_start_ms");
+    expect(parsed).not.toHaveProperty("decoder");
+  });
+
+  it("parses the v1 decoder fields", () => {
+    expect(
+      parseHandSealPayload({
+        seal: "ram",
+        stable_label: "ram",
+        confidence: 0.8,
+        decoder: "v1",
+        t_start_ms: 1000.5,
+        t_emit_ms: 1133,
+        decoder_confidence: 0.91,
+        some_future_field: true,
+      }),
+    ).toEqual({
+      seal: "ram",
+      stable_label: "ram",
+      confidence: 0.8,
+      decoder: "v1",
+      t_start_ms: 1000.5,
+      t_emit_ms: 1133,
+      decoder_confidence: 0.91,
+    });
+  });
+
+  it("accepts decoder: legacy and ignores optional fields of the wrong type", () => {
+    expect(
+      parseHandSealPayload({ seal: "dog", decoder: "legacy", t_start_ms: "soon", t_emit_ms: null }),
+    ).toEqual({ seal: "dog", decoder: "legacy" });
+    expect(parseHandSealPayload({ seal: "dog", decoder: "v2" })).toEqual({ seal: "dog" });
+  });
+
+  it("returns null without a string seal", () => {
+    expect(parseHandSealPayload({})).toBeNull();
+    expect(parseHandSealPayload({ seal: 3 })).toBeNull();
+    expect(parseHandSealPayload(null)).toBeNull();
+    expect(parseHandSealPayload("tiger")).toBeNull();
   });
 });

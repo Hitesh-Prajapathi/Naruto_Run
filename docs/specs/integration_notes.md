@@ -1,6 +1,8 @@
 # Integration notes: replacing `EvidenceHandFilter` with calibration + `SealDecoder`
 
-Bridge document only. No existing file was modified. It describes how the new
+Bridge document, written before the integration. **Status:** the integration now exists behind
+a feature flag (`hand_decoder: "legacy" | "v1"`, default `legacy`); sections 2-5 describe the
+*target* design and section 6 records what was actually wired and where it deviates. It describes how the new
 model-agnostic core (`narutocv.features`, `narutocv.models.calibration`,
 `narutocv.temporal`) plugs into `cv_model/inference/combined_pipeline.py` and the
 transport layer, and what moves into the model bundle.
@@ -147,3 +149,40 @@ Needed by the game / transport:
   (today `AttackRecognizer` keeps a rolling queue only).
 - Golden streams (recorded probability sequences + expected events) should be exported
   from the Python decoder to test the TypeScript port.
+
+## 6. What was actually wired (flag `hand_decoder`, default `legacy`)
+
+The integration exists behind `hand_decoder: "legacy" | "v1"` (`PipelineConfig`, `--hand-decoder`,
+`NARUTOCV_HAND_DECODER`); see `docs/transport.md` for the protocol 1.2.0 contract and
+`src/narutocv/inference/hand_decoder.py` for the code. Deviations from sections 2-5 above:
+
+- **Nothing was deleted.** `hand_config.py`, `_accept`, `EvidenceHandFilter` and
+  `calibrate_neutral` stay for the legacy path; v1 bypasses the thresholds. `calibrate_neutral`
+  returns `{}` in v1.
+- **Single branch, no `StackedFusion`.** The input to the decoder is the existing centre/ROI fused
+  probability vector: `TemperatureScaler.transform(log(clip(p, 1e-12)))` -> `SealDecoder.update`.
+  At the shipped `T = 1.0` that is an identity. The unused hook is `STACKED_FUSION_HOOK` in
+  `hand_decoder.py`; a fitted `T != 1` should be refit on *fused probabilities*, not on logits.
+- **Calibration source** is `models/calibration_v0.json` (`temperature`, `decoder`, `provenance`),
+  tracked in `models/manifest.yaml`. Its decoder block is `DecoderConfig` defaults except
+  `use_prior: false`.
+- **No-hands gate kept** as a structural gate (idle vector into the decoder), because the
+  landmarker's "no hand" is evidence, not a per-class threshold. The ram/rat and dog/tiger guards are
+  not applied in v1.
+- **Grammar prior**: `AttackRecognizer.expected_next(now)` returns the sorted union of the next
+  seals of every attack whose sequence has the current queue as a strict prefix (empty queue,
+  expired queue, or no matching attack: `()`). It is passed to `SealDecoder.update(expected_next=)`
+  by both `CombinedNarutoPipeline.process` and the `hand_only` branch of
+  `SessionScopedPipeline.process`, and only when `use_prior` is on (default off).
+- **Clock**: the decoder gets `timestamp * 1000.0` (not MediaPipe's bumped integer timestamp). In
+  the transport that equals the frame's `captured_at_ms`.
+- **`t_start_ms`** stays at the smoothed `tau_on` crossing with no lag correction (documented in
+  `hand_decoder.py` and `docs/transport.md`).
+- **Event path**: the decoder event travels in `output.hand.decoder` (v1 only) because
+  `dispatch_frame` builds events purely from `PipelineOutputV1`.
+- Section 5 is resolved: the combo FSM exposes `expected_next`, golden streams exist
+  (`tests/golden/decoder_v1.json`), and `StackedFusion` is deferred until there is a second branch.
+
+**Untested on a real camera.** The v1 path is covered by unit tests on synthetic probability
+streams, a stubbed-classifier run of `HandSignRecognizer.process`, and a real-model transport smoke
+run on synthetic frames. Its thresholds are a placeholder; do not read accuracy from it.

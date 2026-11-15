@@ -20,3 +20,12 @@ models:
     url: https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task
     sha256: 59929e1d1ee95287735ddd833b19cf4ac46d29bc7afddbbf6753c459690d574a
     size: 5777746
+
+  # Calibration + decoder configuration for the v1 hand decoder (hand_decoder: "v1").
+  # Part of the bundle identity: changing it changes the model-bundle id the
+  # transport advertises. Identity placeholder until a v1 model has a held-out set.
+  - name: calibration_v0.json
+    version: v0
+    url: null # tracked in git
+    sha256: 2416586722518b37613007813b6ce2557fdd7ce475dc8a625c7cdf6475afa0d6
+    size: 735

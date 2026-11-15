@@ -62,7 +62,27 @@
       "properties": {
         "seal": {"type": "string"},
         "stable_label": {"type": "string"},
-        "confidence": {"type": "number", "minimum": 0, "maximum": 1}
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "decoder": {
+          "enum": ["legacy", "v1"],
+          "description": "Optional (protocol 1.2.0). Which decoder produced the seal."
+        },
+        "t_start_ms": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Optional (1.2.0, v1 decoder only). First update of the uninterrupted run with smoothed p >= tau_on, in ms on the pipeline clock (the basis of captured_at_ms). Lags the true onset by the smoother's rise time."
+        },
+        "t_emit_ms": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Optional (1.2.0, v1 decoder only). Timestamp of the update that emitted the seal, ms on the pipeline clock; equals the frame's captured_at_ms."
+        },
+        "decoder_confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Optional (1.2.0, v1 decoder only). Smoothed calibrated probability of the seal at emission. 'confidence' stays the raw frame confidence."
+        }
       }
     },
     "bodyMovement": {

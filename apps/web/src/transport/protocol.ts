@@ -15,8 +15,11 @@
 
 // 1.1.0 is additive over 1.0.0 (see schemas/transport_message_v1.schema.json):
 // the hello may carry `expected_model_id`; server_ready adds `model`,
-// `classes` and `capabilities`. Peers are compatible when MAJOR matches.
-export const PROTOCOL_VERSION = "1.1.0";
+// `classes` and `capabilities`. 1.2.0 is additive over 1.1.0:
+// `capabilities.hand_decoder`, and the HAND_SEAL payload gains `decoder`,
+// `t_start_ms`, `t_emit_ms` and `decoder_confidence` (see HandSealPayload).
+// Peers are compatible when MAJOR matches.
+export const PROTOCOL_VERSION = "1.2.0";
 export const PROTOCOL_MAJOR = 1;
 
 /** WebSocket close codes (mirror src/narutocv/transport/server.py). */
@@ -200,6 +203,20 @@ export interface BodyGeometry {
   landmarks: Point[];
 }
 
+/** The hand-seal decoder behind HAND_SEAL events (protocol 1.2.0). */
+export type HandDecoderMode = "legacy" | "v1";
+
+/** `output.hand.decoder` (1.2.0): present only when the v1 decoder is active. */
+export interface HandDecoderOutput {
+  mode: "v1";
+  event: {
+    label: string;
+    t_start_ms: number;
+    t_emit_ms: number;
+    confidence: number;
+  } | null;
+}
+
 export interface HandOutput {
   raw: Prediction;
   center: Prediction;
@@ -211,6 +228,8 @@ export interface HandOutput {
   fusion_status: string;
   detected_hand_count: number;
   geometry: HandGeometry | null;
+  /** 1.2.0, optional: absent on older servers and for the legacy decoder. */
+  decoder?: HandDecoderOutput;
 }
 
 export interface BodyOutput {
@@ -256,6 +275,49 @@ export const PIPELINE_EVENT_TYPES = [
   "PIPELINE_RESET",
 ] as const;
 export type PipelineEventType = (typeof PIPELINE_EVENT_TYPES)[number];
+
+/**
+ * HAND_SEAL event payload. `seal`, `stable_label` and `confidence` (the raw frame
+ * confidence) exist since 1.0.0; everything else is 1.2.0 and optional. `t_start_ms` /
+ * `t_emit_ms` are on the pipeline clock, i.e. the same basis as the frame's
+ * `captured_at_ms` (the browser's `performance.now()` for frames this client sent), and are
+ * only present for the v1 decoder. `t_start_ms` is the smoothed tau_on crossing, so it lags
+ * the true onset by the smoother's rise time.
+ */
+export interface HandSealPayload {
+  seal: string;
+  stable_label?: string;
+  confidence?: number;
+  decoder?: HandDecoderMode;
+  t_start_ms?: number;
+  t_emit_ms?: number;
+  decoder_confidence?: number;
+}
+
+function finiteNumber(value: unknown): number | undefined {
+  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
+}
+
+/**
+ * Narrow an untyped event payload to a HandSealPayload. Returns null when there is no
+ * string `seal`; ignores optional fields of the wrong type instead of throwing, so a
+ * 1.0/1.1 server (no new fields) and a future one (extra fields) both parse.
+ */
+export function parseHandSealPayload(payload: unknown): HandSealPayload | null {
+  if (!isRecord(payload) || typeof payload.seal !== "string") return null;
+  const out: HandSealPayload = { seal: payload.seal };
+  if (typeof payload.stable_label === "string") out.stable_label = payload.stable_label;
+  const confidence = finiteNumber(payload.confidence);
+  if (confidence !== undefined) out.confidence = confidence;
+  if (payload.decoder === "legacy" || payload.decoder === "v1") out.decoder = payload.decoder;
+  const tStart = finiteNumber(payload.t_start_ms);
+  if (tStart !== undefined) out.t_start_ms = tStart;
+  const tEmit = finiteNumber(payload.t_emit_ms);
+  if (tEmit !== undefined) out.t_emit_ms = tEmit;
+  const decoderConfidence = finiteNumber(payload.decoder_confidence);
+  if (decoderConfidence !== undefined) out.decoder_confidence = decoderConfidence;
+  return out;
+}
 
 export interface PipelineEventV1 {
   schema_version: "1.0.0";
@@ -306,6 +368,8 @@ export interface ServerCapabilities {
   max_frame_height?: number;
   idle_timeout_s?: number;
   heartbeat_s?: number;
+  /** 1.2.0: decoder behind HAND_SEAL events. Absent on older servers, which are legacy. */
+  hand_decoder?: HandDecoderMode;
   [key: string]: unknown;
 }
 

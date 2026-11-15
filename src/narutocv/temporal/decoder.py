@@ -18,6 +18,10 @@ from numpy.typing import ArrayLike, NDArray
 
 Array = NDArray[np.float64]
 
+#: Version of ``docs/specs/seal_decoder_v1.md``.  1.0.1: configuration validation rejects
+#: non-finite numbers (NaN / inf) in both languages.
+DECODER_SPEC_VERSION = "1.0.1"
+
 DEFAULT_LABELS: tuple[str, ...] = (
     "bird",
     "boar",
@@ -53,6 +57,20 @@ class SealEvent:
         return asdict(self)
 
 
+_NUMERIC_FIELDS = (
+    "half_life_ms",
+    "tau_on",
+    "tau_off",
+    "tau_reject",
+    "min_dwell_ms",
+    "refractory_ms",
+    "max_gap_ms",
+    "prior_boost",
+    "hmm_p_stay",
+    "hmm_ref_ms",
+)
+
+
 @dataclass(frozen=True)
 class DecoderConfig:
     labels: tuple[str, ...] = DEFAULT_LABELS
@@ -78,15 +96,19 @@ class DecoderConfig:
             raise ValueError("idle_label must be one of labels")
         if self.smoother not in ("ema", "hmm"):
             raise ValueError("smoother must be 'ema' or 'hmm'")
+        for name in _NUMERIC_FIELDS:
+            if not math.isfinite(getattr(self, name)):
+                raise ValueError(f"{name} must be finite")
         if not 0.0 < self.tau_reject <= self.tau_off < self.tau_on <= 1.0:
             raise ValueError("require 0 < tau_reject <= tau_off < tau_on <= 1")
-        if self.half_life_ms <= 0.0 or self.hmm_ref_ms <= 0.0:
+        # Written as `not (x > 0)` so that a NaN can never slip through a comparison.
+        if not (self.half_life_ms > 0.0 and self.hmm_ref_ms > 0.0):
             raise ValueError("half_life_ms and hmm_ref_ms must be positive")
-        if self.min_dwell_ms < 0.0 or self.refractory_ms < 0.0:
+        if not (self.min_dwell_ms >= 0.0 and self.refractory_ms >= 0.0):
             raise ValueError("min_dwell_ms and refractory_ms must be >= 0")
-        if self.max_gap_ms <= 0.0:
+        if not self.max_gap_ms > 0.0:
             raise ValueError("max_gap_ms must be positive")
-        if self.prior_boost < 1.0:
+        if not self.prior_boost >= 1.0:
             raise ValueError("prior_boost must be >= 1")
         if not 1.0 / k < self.hmm_p_stay < 1.0:
             raise ValueError("hmm_p_stay must be in (1/K, 1)")

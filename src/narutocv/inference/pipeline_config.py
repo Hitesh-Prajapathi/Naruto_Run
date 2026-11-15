@@ -3,6 +3,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Optional
+
+#: Hand-sign decoding back ends. ``legacy``: per-class thresholds (``hand_config.py``) +
+#: ``EvidenceHandFilter``. ``v1``: temperature calibration + ``SealDecoder``
+#: (``docs/specs/seal_decoder_v1.md``). Legacy stays the default until the v1 thresholds can be
+#: tuned on multi-subject data.
+HAND_DECODER_MODES = ("legacy", "v1")
+DEFAULT_HAND_DECODER = "legacy"
 
 
 @dataclass(frozen=True)
@@ -94,6 +103,20 @@ class PipelineConfig:
     hand_fusion: HandFusionConfig = field(default_factory=HandFusionConfig)
     body: BodyMovementConfig = field(default_factory=BodyMovementConfig)
     attacks: AttackQueueConfig = field(default_factory=AttackQueueConfig)
+    #: ``"legacy"`` or ``"v1"`` (see :data:`HAND_DECODER_MODES`).
+    hand_decoder: str = DEFAULT_HAND_DECODER
+    #: v1 only. ``None`` keeps the calibration file's ``decoder.use_prior`` (false in
+    #: ``models/calibration_v0.json``); ``True``/``False`` overrides it.
+    hand_decoder_use_prior: Optional[bool] = None
+    #: v1 only. ``None`` loads ``models/calibration_v0.json``.
+    calibration_path: Optional[Path] = None
+
+    def __post_init__(self) -> None:
+        if self.hand_decoder not in HAND_DECODER_MODES:
+            raise ValueError(
+                f"hand_decoder must be one of {', '.join(HAND_DECODER_MODES)}, "
+                f"got {self.hand_decoder!r}"
+            )
 
 
 DEFAULT_PIPELINE_CONFIG = PipelineConfig()

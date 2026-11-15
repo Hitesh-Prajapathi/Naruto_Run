@@ -12,6 +12,9 @@
  * `DecoderConfig` can be loaded straight from `calibration.json`.
  */
 
+/** Version of `docs/specs/seal_decoder_v1.md` this port implements (mirrors Python). */
+export const DECODER_SPEC_VERSION = "1.0.1";
+
 export const DEFAULT_LABELS: readonly string[] = [
   "bird",
   "boar",
@@ -99,6 +102,19 @@ export function defaultDecoderConfig(): DecoderConfig {
   };
 }
 
+const NUMERIC_FIELDS = [
+  "half_life_ms",
+  "tau_on",
+  "tau_off",
+  "tau_reject",
+  "min_dwell_ms",
+  "refractory_ms",
+  "max_gap_ms",
+  "prior_boost",
+  "hmm_p_stay",
+  "hmm_ref_ms",
+] as const;
+
 /** Validate a full config (same rules and order as Python's `DecoderConfig.__post_init__`). */
 export function validateDecoderConfig(cfg: DecoderConfig): DecoderConfig {
   const k = cfg.labels.length;
@@ -111,18 +127,21 @@ export function validateDecoderConfig(cfg: DecoderConfig): DecoderConfig {
   if (cfg.smoother !== "ema" && cfg.smoother !== "hmm") {
     throw new Error("smoother must be 'ema' or 'hmm'");
   }
+  for (const name of NUMERIC_FIELDS) {
+    if (!Number.isFinite(cfg[name])) throw new Error(`${name} must be finite`);
+  }
   if (!(0.0 < cfg.tau_reject && cfg.tau_reject <= cfg.tau_off && cfg.tau_off < cfg.tau_on && cfg.tau_on <= 1.0)) {
     throw new Error("require 0 < tau_reject <= tau_off < tau_on <= 1");
   }
-  // Written as `x <= 0` (not `!(x > 0)`) to match Python, which lets NaN through here.
-  if (cfg.half_life_ms <= 0.0 || cfg.hmm_ref_ms <= 0.0) {
+  // `!(x > 0)` forms (not `x <= 0`) so that a NaN can never slip through a comparison.
+  if (!(cfg.half_life_ms > 0.0 && cfg.hmm_ref_ms > 0.0)) {
     throw new Error("half_life_ms and hmm_ref_ms must be positive");
   }
-  if (cfg.min_dwell_ms < 0.0 || cfg.refractory_ms < 0.0) {
+  if (!(cfg.min_dwell_ms >= 0.0 && cfg.refractory_ms >= 0.0)) {
     throw new Error("min_dwell_ms and refractory_ms must be >= 0");
   }
-  if (cfg.max_gap_ms <= 0.0) throw new Error("max_gap_ms must be positive");
-  if (cfg.prior_boost < 1.0) throw new Error("prior_boost must be >= 1");
+  if (!(cfg.max_gap_ms > 0.0)) throw new Error("max_gap_ms must be positive");
+  if (!(cfg.prior_boost >= 1.0)) throw new Error("prior_boost must be >= 1");
   if (!(1.0 / k < cfg.hmm_p_stay && cfg.hmm_p_stay < 1.0)) {
     throw new Error("hmm_p_stay must be in (1/K, 1)");
   }

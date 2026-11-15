@@ -53,6 +53,9 @@ def download(url: str, dest: Path) -> None:
         with urllib.request.urlopen(url, timeout=60) as response, tmp_path.open("wb") as out:
             while chunk := response.read(CHUNK):
                 out.write(chunk)
+        # NamedTemporaryFile creates the file 0600; a model file is not a secret, and a
+        # container that runs as another uid must be able to read it.
+        tmp_path.chmod(0o644)
         tmp_path.replace(dest)
     finally:
         tmp_path.unlink(missing_ok=True)

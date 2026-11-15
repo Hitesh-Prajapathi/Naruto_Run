@@ -16,6 +16,10 @@ from narutocv.inference.combined_pipeline import (
     DEFAULT_POSE_MODEL,
     CombinedNarutoPipeline,
 )
+from narutocv.inference.hand_decoder import (
+    add_hand_decoder_arguments,
+    pipeline_config_from_args,
+)
 from narutocv.inference.diagnostics import SessionDiagnosticsRecorder
 from narutocv.inference.evaluation import (
     ATTACK_LABELS,
@@ -110,7 +114,9 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Validate labels and load models without opening the camera.",
     )
+    add_hand_decoder_arguments(parser)
     args = parser.parse_args()
+    args.pipeline_config = pipeline_config_from_args(args, parser)
     if args.attempts < 1:
         parser.error("--attempts must be positive")
     if args.prepare_seconds < 0:
@@ -335,13 +341,16 @@ def _print_summary(summary: dict[str, Any]) -> None:
 
 def main() -> int:
     args = parse_args()
-    print("Loading locked hand-sign and pose models...")
+    print(
+        f"Loading locked hand-sign and pose models (hand decoder: {args.pipeline_config.hand_decoder})..."
+    )
     runtime = PipelineRuntimeController(
         pipeline_factory=lambda: CombinedNarutoPipeline(
             hand_model=args.hand_model,
             hand_landmarker=args.hand_landmarker,
             pose_model=args.pose_model,
             hand_confidence=args.hand_confidence,
+            config=args.pipeline_config,
         )
     ).start()
     if args.self_check:

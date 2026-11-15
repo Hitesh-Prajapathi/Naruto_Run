@@ -23,6 +23,7 @@ import time
 import unittest
 import urllib.request
 from pathlib import Path
+from typing import Optional
 from unittest import mock
 
 import cv2
@@ -32,6 +33,7 @@ from aiohttp.client_exceptions import WSServerHandshakeError
 from aiohttp.test_utils import AioHTTPTestCase
 
 from narutocv.inference.runtime import RuntimeConfig, RuntimeState
+from narutocv.temporal.decoder import SealEvent
 from narutocv.transport import frame_decoder
 from narutocv.transport.config import DEFAULT_ALLOWED_ORIGINS, TransportConfig, parse_origins
 from narutocv.transport.connection import TokenBucket
@@ -615,7 +617,12 @@ class ModelBundleTests(unittest.TestCase):
         self.assertTrue(bundle.id.startswith("narutocv-"))
         self.assertEqual(
             {f.name for f in bundle.files},
-            {"best_model_A.onnx", "hand_landmarker.task", "pose_landmarker.task"},
+            {
+                "best_model_A.onnx",
+                "calibration_v0.json",
+                "hand_landmarker.task",
+                "pose_landmarker.task",
+            },
         )
 
     def test_missing_manifest_reports_unversioned(self) -> None:
@@ -648,6 +655,150 @@ class SchemaConformanceTests(HardeningTestCase):
         validator.validate({"type": "control", "command": "set_mode", "mode": "full"})
 
 
+# --- protocol 1.2.0: hand decoder capability and HAND_SEAL payload -----------------------
+
+_result = _integration._result
+
+
+def _v1_result(*, event: Optional[SealEvent], accepted_seal: str = "tiger"):
+    """A FrameResult as the v1 decoder produces it (the fake pipeline hands it straight back)."""
+    base = _result(accepted_seal=accepted_seal)
+    hand = dataclasses.replace(base.hand, decoder="v1", seal_event=event)
+    return dataclasses.replace(base, hand=hand)
+
+
+class HandDecoderLegacyTests(HardeningTestCase):
+    async def test_server_ready_advertises_legacy_by_default(self) -> None:
+        ws, ready = await self.connect(protocol_version=PROTOCOL_VERSION)
+        self.assertEqual(ready["protocol_version"], "1.2.0")
+        self.assertEqual(ready["capabilities"]["hand_decoder"], "legacy")
+        await ws.close()
+
+    async def test_legacy_hand_seal_payload_has_no_timing_fields(self) -> None:
+        ws, _ = await self.connect(protocol_version=PROTOCOL_VERSION)
+        self.fake_pipeline.next_result = _result(accepted_seal="tiger")
+        await ws.send_bytes(_encode_test_jpeg_frame(sequence=1))
+        payload = await self.next_hand_seal(ws)
+        self.assertEqual(payload["decoder"], "legacy")
+        for key in ("t_start_ms", "t_emit_ms", "decoder_confidence"):
+            self.assertNotIn(key, payload)
+        await ws.close()
+
+    async def next_hand_seal(self, ws) -> dict:
+        for _ in range(6):
+            message = await asyncio.wait_for(ws.receive_json(), TIMEOUT)
+            if message.get("type") == "pipeline_event" and (
+                message["event"]["event_type"] == "HAND_SEAL"
+            ):
+                return message["event"]["payload"]
+        self.fail("no HAND_SEAL event")
+
+    async def test_1_0_and_1_1_clients_are_accepted_and_still_get_events(self) -> None:
+        for version in ("1.0.0", "1.1.0"):
+            ws, ready = await self.connect(protocol_version=version)
+            self.assertEqual(ready["protocol_version"], "1.2.0")
+            self.fake_pipeline.next_result = _result(accepted_seal="ram")
+            await ws.send_bytes(_encode_test_jpeg_frame(sequence=1))
+            payload = await self.next_hand_seal(ws)
+            self.assertEqual(payload["seal"], "ram")
+            await ws.close()
+            await asyncio.sleep(0.05)
+
+
+class HandDecoderV1Tests(HardeningTestCase):
+    async def get_application(self):
+        app = await super().get_application()
+        self.fake_pipeline.hand.decoder_mode = "v1"
+        return app
+
+    async def test_server_ready_advertises_v1_from_the_live_pipeline(self) -> None:
+        ws, ready = await self.connect(protocol_version=PROTOCOL_VERSION)
+        self.assertEqual(ready["capabilities"]["hand_decoder"], "v1")
+        await ws.close()
+
+    async def test_hand_seal_payload_has_the_decoder_fields(self) -> None:
+        ws, _ = await self.connect(protocol_version=PROTOCOL_VERSION)
+        event = SealEvent("tiger", 1000.0, 1133.0, 0.88)
+        self.fake_pipeline.next_result = _v1_result(event=event)
+        await ws.send_bytes(_encode_test_jpeg_frame(sequence=1, captured_at_ms=1133))
+        for _ in range(6):
+            message = await asyncio.wait_for(ws.receive_json(), TIMEOUT)
+            if message.get("type") == "pipeline_event":
+                payload = message["event"]["payload"]
+                if message["event"]["event_type"] == "HAND_SEAL":
+                    break
+        else:
+            self.fail("no HAND_SEAL event")
+        self.assertEqual(payload["decoder"], "v1")
+        self.assertEqual(payload["t_start_ms"], 1000.0)
+        self.assertEqual(payload["t_emit_ms"], 1133.0)
+        self.assertEqual(payload["decoder_confidence"], 0.88)
+        self.assertEqual(payload["seal"], "tiger")
+        self.assertEqual(message["event"]["captured_at_ms"], 1133)
+        await ws.close()
+
+    async def test_state_snapshot_carries_hand_decoder_output(self) -> None:
+        ws, _ = await self.connect(protocol_version=PROTOCOL_VERSION)
+        event = SealEvent("tiger", 1000.0, 1133.0, 0.88)
+        self.fake_pipeline.next_result = _v1_result(event=event)
+        await ws.send_bytes(_encode_test_jpeg_frame(sequence=1, captured_at_ms=1133))
+        for _ in range(6):
+            message = await asyncio.wait_for(ws.receive_json(), TIMEOUT)
+            if message.get("type") == "state_snapshot":
+                break
+        else:
+            self.fail("no state_snapshot")
+        self.assertEqual(message["output"]["hand"]["decoder"]["mode"], "v1")
+        self.assertEqual(message["output"]["hand"]["decoder"]["event"]["t_emit_ms"], 1133.0)
+        await ws.close()
+
+    async def test_messages_conform_to_the_published_schemas(self) -> None:
+        try:
+            import jsonschema
+        except ImportError:
+            self.skipTest("jsonschema is not installed")
+        schemas = Path(__file__).parents[2] / "schemas"
+        message_schema = json.loads((schemas / "transport_message_v1.schema.json").read_text())
+        event_schema = json.loads((schemas / "pipeline_event_v1.schema.json").read_text())
+        ws, ready = await self.connect(protocol_version=PROTOCOL_VERSION)
+        jsonschema.Draft202012Validator(message_schema).validate(ready)
+        self.fake_pipeline.next_result = _v1_result(event=SealEvent("tiger", 1.0, 2.0, 0.7))
+        await ws.send_bytes(_encode_test_jpeg_frame(sequence=1))
+        seen = 0
+        for _ in range(6):
+            message = await asyncio.wait_for(ws.receive_json(), TIMEOUT)
+            jsonschema.Draft202012Validator(message_schema).validate(message)
+            if message["type"] == "pipeline_event":
+                jsonschema.Draft202012Validator(event_schema).validate(message["event"])
+                seen += 1
+            if seen:
+                break
+        self.assertEqual(seen, 1)
+        await ws.close()
+
+
+class HandDecoderCapabilitySchemaTests(unittest.TestCase):
+    def test_server_ready_rejects_an_unknown_decoder_name(self) -> None:
+        try:
+            import jsonschema
+        except ImportError:
+            self.skipTest("jsonschema is not installed")
+        schema_path = Path(__file__).parents[2] / "schemas" / "transport_message_v1.schema.json"
+        validator = jsonschema.Draft202012Validator(json.loads(schema_path.read_text()))
+        ready = {
+            "type": "server_ready",
+            "protocol_version": "1.2.0",
+            "schema_version": "1.0.0",
+            "session_id": "s",
+            "supported_controls": ["ping"],
+            "capabilities": {"hand_decoder": "v1"},
+        }
+        validator.validate(ready)
+        ready["capabilities"] = {"hand_decoder": "v9"}
+        with self.assertRaises(jsonschema.ValidationError):
+            validator.validate(ready)
+
+
 # --- metrics, health, live -----------------------------------------------------
 
 
@@ -667,7 +818,9 @@ class MetricsEndpointTests(HardeningTestCase):
                 self.assertRegex(line, r"^[a-z_]+(\{[^}]*\})? [-+0-9.eEInf]+$")
         self.assertIn("# TYPE narutocv_stage_latency_ms histogram", text)
         self.assertIn(
-            'narutocv_build_info{protocol_version="1.1.0",model_id="narutocv-testbundle"} 1', text
+            f'narutocv_build_info{{protocol_version="{PROTOCOL_VERSION}",'
+            'model_id="narutocv-testbundle"} 1',
+            text,
         )
         self.assertIn("narutocv_ready 1", text)
 

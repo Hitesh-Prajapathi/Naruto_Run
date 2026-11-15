@@ -34,7 +34,12 @@ from narutocv.models.calibration import (
     VectorScaler,
     build_fusion_features,
 )
-from narutocv.temporal.decoder import DEFAULT_LABELS, DecoderConfig, SealDecoder
+from narutocv.temporal.decoder import (
+    DECODER_SPEC_VERSION,
+    DEFAULT_LABELS,
+    DecoderConfig,
+    SealDecoder,
+)
 from numpy.typing import NDArray
 
 GOLDEN_DIR = Path(__file__).resolve().parents[2] / "tests" / "golden"
@@ -339,6 +344,44 @@ def build_features_fixture() -> dict[str, Json]:
         ],
     )
 
+    # --- non-finite scores with more than two hands (spec 1.0.1: they rank as 0.0) ---
+    add(
+        "three_hands_nan_score_dropped",
+        "NaN score ranks 0.0: the NaN hand (first) is the one cut, not a higher-scored one",
+        [
+            _hand_dict(h[0], "Left", math.nan),
+            _hand_dict(h[1], "Right", 0.5),
+            _hand_dict(h[2], "Left", 0.9),
+        ],
+    )
+    add(
+        "three_hands_two_nan_scores_tie_by_index",
+        "two NaN scores tie at 0.0 (earlier input wins) and lose only to the 0.3 hand",
+        [
+            _hand_dict(h[0], "Left", math.nan),
+            _hand_dict(h[1], "Left", math.nan),
+            _hand_dict(h[2], "Right", 0.3),
+        ],
+    )
+    add(
+        "three_hands_inf_score_ranks_zero",
+        "an infinite score ranks 0.0, below 0.4 and 0.2",
+        [
+            _hand_dict(h[0], "Left", math.inf),
+            _hand_dict(h[1], "Right", 0.4),
+            _hand_dict(h[2], "Left", 0.2),
+        ],
+    )
+    add(
+        "three_hands_neg_inf_score_ranks_zero",
+        "-inf ranks 0.0, above a negative finite score",
+        [
+            _hand_dict(h[0], "Left", -math.inf),
+            _hand_dict(h[1], "Right", -0.25),
+            _hand_dict(h[2], "Right", 0.1),
+        ],
+    )
+
     # --- no hands / degenerate -----------------------------------------------------
     add("no_hands", "empty input", [])
     add(
@@ -546,6 +589,47 @@ def _run_stream(
             "final_active": dec.active_label,
         },
     }
+
+
+def build_config_error_cases() -> list[dict[str, Json]]:
+    """``DecoderConfig`` validation: the exact error message (or null when valid)."""
+    nan, inf = math.nan, math.inf
+    specs: list[tuple[str, dict[str, Json]]] = [
+        ("valid_defaults", {}),
+        ("valid_custom", {"half_life_ms": 40.0, "prior_boost": 1.0, "min_dwell_ms": 0.0}),
+        ("nan_half_life", {"half_life_ms": nan}),
+        ("inf_half_life", {"half_life_ms": inf}),
+        ("zero_half_life", {"half_life_ms": 0.0}),
+        ("negative_half_life", {"half_life_ms": -1.0}),
+        ("nan_hmm_ref", {"hmm_ref_ms": nan}),
+        ("nan_min_dwell", {"min_dwell_ms": nan}),
+        ("inf_min_dwell", {"min_dwell_ms": inf}),
+        ("negative_min_dwell", {"min_dwell_ms": -1.0}),
+        ("nan_refractory", {"refractory_ms": nan}),
+        ("neg_inf_refractory", {"refractory_ms": -inf}),
+        ("nan_max_gap", {"max_gap_ms": nan}),
+        ("inf_max_gap", {"max_gap_ms": inf}),
+        ("zero_max_gap", {"max_gap_ms": 0.0}),
+        ("nan_prior_boost", {"prior_boost": nan}),
+        ("inf_prior_boost", {"prior_boost": inf}),
+        ("sub_one_prior_boost", {"prior_boost": 0.5}),
+        ("nan_tau_on", {"tau_on": nan}),
+        ("nan_tau_reject", {"tau_reject": nan}),
+        ("inf_tau_on", {"tau_on": inf}),
+        ("bad_tau_order", {"tau_on": 0.3}),
+        ("nan_hmm_p_stay", {"hmm_p_stay": nan}),
+        ("hmm_p_stay_one", {"hmm_p_stay": 1.0}),
+        ("unknown_smoother", {"smoother": "kalman"}),
+    ]
+    out: list[dict[str, Json]] = []
+    for name, cfg in specs:
+        try:
+            DecoderConfig(**cfg)  # type: ignore[arg-type]
+            error: str | None = None
+        except ValueError as exc:
+            error = str(exc)
+        out.append({"name": name, "config": cfg, "error": error})
+    return out
 
 
 def build_decoder_fixture() -> dict[str, Json]:
@@ -835,8 +919,10 @@ def build_decoder_fixture() -> dict[str, Json]:
     )
 
     return {
+        "spec_version": DECODER_SPEC_VERSION,
         "label_order": LABELS,
         "default_config": DecoderConfig().to_dict(),
+        "config_errors": build_config_error_cases(),
         "tolerances": {"confidence": 1e-9, "times": "exact"},
         "cases": cases,
     }

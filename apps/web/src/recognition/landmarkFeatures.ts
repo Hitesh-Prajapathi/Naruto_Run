@@ -10,7 +10,7 @@
  * No dependencies, no DOM, no MediaPipe import.
  */
 
-export const FEATURE_SPEC_VERSION = "1.0.0";
+export const FEATURE_SPEC_VERSION = "1.0.1";
 
 export const NUM_LANDMARKS = 21;
 export const FINGER_NAMES = ["thumb", "index", "middle", "ring", "pinky"] as const;
@@ -271,6 +271,12 @@ function meanX(lm: Vec3[]): number {
 
 type Slot = HandObservation | null;
 
+/** Score used to rank hands: non-finite values count as 0 (total order, spec 1.0.1). */
+function rankScore(score: number | undefined): number {
+  const value = Number(score ?? 1);
+  return Number.isFinite(value) ? value : 0;
+}
+
 /**
  * Assign up to two hands to the (Left, Right) slots (spec section 3).
  *
@@ -285,7 +291,7 @@ export function assignSlots(hands: readonly HandObservation[], imageSize: readon
   let valid: HandObservation[] = hands.filter((h) => canonicalizeHand(h.landmarks, h.handedness, imageSize).valid);
   if (valid.length > 2) {
     const order = valid
-      .map((h, j) => ({ negScore: -Number(h.score ?? 1), j }))
+      .map((h, j) => ({ negScore: -rankScore(h.score), j }))
       .sort((a, b) => (a.negScore < b.negScore ? -1 : a.negScore > b.negScore ? 1 : a.j - b.j))
       .slice(0, 2)
       .map((o) => o.j)

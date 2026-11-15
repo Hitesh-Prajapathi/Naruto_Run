@@ -1,4 +1,8 @@
-# Landmark feature spec v1 (`FEATURE_SPEC_VERSION = "1.0.0"`)
+# Landmark feature spec v1 (`FEATURE_SPEC_VERSION = "1.0.1"`)
+
+Changelog: **1.0.1** -- slot assignment ranks non-finite handedness scores as 0.0 (section 3.1),
+which makes the "keep the two best hands" cut a total order that Python and TypeScript agree on.
+The feature vector itself is unchanged for every input whose scores are finite. 1.0.0 -- initial.
 
 Reference implementation: `src/narutocv/features/landmarks.py`.
 Machine-readable listing of every feature: `docs/specs/landmark_features_v1.json`
@@ -57,7 +61,11 @@ present. Their features are zeros.
 Slots: `L` (index 0) and `R` (index 1).
 
 1. Drop degenerate hands. If more than two remain keep the two with the highest
-   `score` (ties: earlier input), preserving input order.
+   `score` (ties: earlier input), preserving input order. A non-finite score
+   (NaN, +inf, -inf) ranks as `0.0` for this cut, exactly as it counts as 0 in
+   `meta.mean_score` (4.3); the sort key is `(-rank_score, input_index)`, a total
+   order. (1.0.0 sorted on the raw score, so a NaN made the result depend on the
+   sort implementation.)
 2. One hand: slot by its label.
 3. Two hands with different labels: slot by label.
 4. Two hands with the *same* label: the hand with the smaller mean x over its 21
