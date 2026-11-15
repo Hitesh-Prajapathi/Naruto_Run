@@ -1,12 +1,12 @@
 > **HISTORICAL DOCUMENT.** Archived from the repo root; paths below describe the pre-refactor `cv_model/` layout.
-> Its accuracy claims (e.g. "state-of-the-art", ">=99% Top-1") are superseded by the honest-evaluation work (03_refinement_execution_plan.md).
+> Its accuracy claims (e.g. "state-of-the-art", ">=99% Top-1") are superseded by the honest-evaluation work (docs/plan/03_refinement_execution_plan.md).
 > Do not cite these numbers; group-disjoint results will be published in docs/results/.
 
 # 🌀 NarutoCV — Master Architecture, History & Technical Context
 
 > **Project:** NarutoCV — Real-Time Computer Vision Jutsu & Gesture Recognition Engine  
 > **Version:** 1.9.0 (Revised Attack Catalog and Runtime Hardening)
-> **Repository Root:** `/Users/hiteshprajapathi/Desktop/Naruto_Run/`
+> **Repository Root:** repository root
 > **Status:** Locked recognition with measurable live label and attack evaluation
 
 ---

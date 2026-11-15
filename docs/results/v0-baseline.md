@@ -83,7 +83,7 @@ Not an honest estimate. The deployed model was trained on a random 80% of frames
 | s1a_test_png224 | png224 | 437 | 0.991 [0.982, 0.998] | 0.989 [0.979, 0.997] | 0.013 |
 | s1a_test_rawcrop | rawcrop | 437 | 0.991 [0.982, 0.998] | 0.989 [0.979, 0.997] | 0.017 |
 
-Preprocessing self-check: on the prepared val/test PNGs this reproduction gives 99.55% / 98.67%, against the *claimed* 99.64% / 99.11% (taken from `03_refinement_execution_plan.md`, not re-measured by ultralytics here). The small gap is within a few images; the preprocessing and class order are right.
+Preprocessing self-check: on the prepared val/test PNGs this reproduction gives 99.55% / 98.67%, against the *claimed* 99.64% / 99.11% (taken from `docs/plan/03_refinement_execution_plan.md`, not re-measured by ultralytics here). The small gap is within a few images; the preprocessing and class order are right.
 
 ### Confusion matrices (row-normalised)
 

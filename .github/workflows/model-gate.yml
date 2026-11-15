@@ -9,7 +9,7 @@ name: model-gate
 #   - ECE (expected calibration error) rises by more than 0.02
 #   - the model bundle exceeds the size budget (to be set in the gate config)
 #   - the CPU latency benchmark regresses by more than 15%
-# See 03_refinement_execution_plan.md, Phase 6 "CI/CD".
+# See docs/plan/03_refinement_execution_plan.md, Phase 6 "CI/CD".
 
 on:
   push:

@@ -6,7 +6,7 @@ Status: Accepted
 
 The v0 image model reported 99.64% validation and 99.11% test accuracy. Live webcam tests contradicted this: dragon was detected 0/3 in both live runs, ram was predicted as rat 5 of 6 times, and the code carried 13 hand-tuned confidence floors to patch individual failures.
 
-Investigating the data (see `03_refinement_execution_plan.md` section 0.2) showed:
+Investigating the data (see `docs/plan/03_refinement_execution_plan.md` section 0.2) showed:
 
 - Filenames are UUID1s, which encode the capturing machine and time. 1,797 of 2,245 images (80%) came from one machine within 21 minutes on one day; the other 437 came from one other source over 4 days. This is effectively one subject and two sessions.
 - `prepare_dataset.py` merged the original train and test folders and then did a random stratified 80/10/10 split per frame. Near-identical consecutive burst frames therefore landed in train, val and test.

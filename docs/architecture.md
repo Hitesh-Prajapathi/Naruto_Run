@@ -1,6 +1,6 @@
 # Architecture
 
-Two views: the system as it is implemented today (v0), and the target system from the [refinement plan](../03_refinement_execution_plan.md) (section 3.1 and Phase 5). Component names in the first diagram are real classes and files; the second is a design and none of it is implemented yet.
+Two views: the system as it is implemented today (v0), and the target system from the [refinement plan](plan/03_refinement_execution_plan.md) (section 3.1 and Phase 5). Component names in the first diagram are real classes and files; the second is the design target, parts of which now exist (see the status note in section 2).
 
 ## 1. Current system (v0, implemented)
 
@@ -45,7 +45,7 @@ Notes:
 - **Wire protocol (NCV1).** A fixed big-endian header (`magic "NCV1"`, version, sequence, capture timestamp, width, height, payload length) followed by a JPEG of at most 2 MiB. Replies are JSON: `state_snapshot` (capped at 15 Hz) and `pipeline_event`, plus `ack` and typed `error` messages. Schemas live in `schemas/`. See `src/narutocv/transport/protocol.py`.
 - **One controlling client.** A second connection is rejected, and the runtime is reset on disconnect so temporal state cannot leak between sessions.
 - **Event source abstraction.** The game depends on `PipelineEventSource` (`apps/web/src/transport/eventSource.ts`), with a WebSocket implementation and a mock one. A future in-browser source plugs in here.
-- **Known weaknesses** (see the [diagnosis](../03_refinement_execution_plan.md) and [ADR 0001](adr/0001-leakage-finding-and-subject-disjoint-evaluation.md)): the hand classifier is a whole-frame model trained on effectively one subject, and `hand_config.py` holds 13 hand-tuned confidence floors and 13 margin floors.
+- **Known weaknesses** (see the [diagnosis](plan/03_refinement_execution_plan.md) and [ADR 0001](adr/0001-leakage-finding-and-subject-disjoint-evaluation.md)): the hand classifier is a whole-frame model trained on effectively one subject, and `hand_config.py` holds 13 hand-tuned confidence floors and 13 margin floors.
 
 ### Scheduler (`src/narutocv/inference/scheduler.py`)
 
@@ -56,7 +56,9 @@ Notes:
 - `clear_pending()` discards a queued frame before a reset or calibration boundary.
 - Precision note: the slot is guarded by a `threading.Condition`, so it is a mutex-protected mailbox, not a lock-free structure. Earlier project text calls it "lock-free"; the code does not support that wording.
 
-## 2. Target system (planned, not implemented)
+## 2. Target system (partly implemented)
+
+**Status (2026-11-15).** Implemented: landmark feature extraction (`src/narutocv/features`), temperature scaling and stacked-fusion code (`src/narutocv/models`), the hysteresis `SealDecoder` (`src/narutocv/temporal`), a TypeScript port of all three in `apps/web/src/recognition` with golden-fixture parity tests, and an opt-in `--hand-decoder v1` path in the Python pipeline (calibration is an identity placeholder; StackedFusion is not wired because there is only one branch). Not implemented: the hybrid model itself (needs multi-subject data), the in-browser worker, and use of the TS port by the game. Live comparison of the two decoders: [results](results/live_2026-11-15/README.md).
 
 From plan section 3.1 (hand-centric hybrid), 3.3 (temporal decoder) and Phase 5 (in-browser). Component names are design names.
 

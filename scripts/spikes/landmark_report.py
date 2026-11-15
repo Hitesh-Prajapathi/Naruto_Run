@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 
 REPO = Path(__file__).resolve().parents[2]
-DATA = Path("/Users/hiteshprajapathi/Desktop/Naruto_Run/Pure Naruto Hand Sign Data")
+DATA = REPO / "Pure Naruto Hand Sign Data"
 PRIMARY = "full_0.50"
 BIG, SMALL = "48f17fc25591", "0242ac1c0002"
 CONNECT = [

@@ -1,5 +1,5 @@
 > **HISTORICAL DOCUMENT.** Archived from the repo root; paths below describe the pre-refactor `cv_model/` layout.
-> Its accuracy claims (e.g. "state-of-the-art", ">=99% Top-1") are superseded by the honest-evaluation work (03_refinement_execution_plan.md).
+> Its accuracy claims (e.g. "state-of-the-art", ">=99% Top-1") are superseded by the honest-evaluation work (docs/plan/03_refinement_execution_plan.md).
 > Do not cite these numbers; group-disjoint results will be published in docs/results/.
 
 # NarutoCV — Modular Component Breakdown & Dependency Analysis

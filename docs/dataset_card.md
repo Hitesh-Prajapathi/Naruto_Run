@@ -16,7 +16,7 @@ Two datasets: the **legacy v0 dataset** (documented, with its known flaws) and t
 | Used for | Training and evaluating the v0 `best_model_A.onnx`; the landmark spike |
 | Status | **Legacy. Do not use to claim generalisation.** |
 
-### Provenance (from `03_refinement_execution_plan.md` section 0.2)
+### Provenance (from `docs/plan/03_refinement_execution_plan.md` section 0.2)
 
 Filenames are UUID1s, which encode the capturing machine and a timestamp.
 

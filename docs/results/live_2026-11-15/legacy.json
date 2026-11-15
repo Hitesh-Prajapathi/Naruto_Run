@@ -1,0 +1,2841 @@
+{
+  "attempt_count": 39,
+  "attempts": [
+    {
+      "action_accepted_counts": {
+        "bird": 27,
+        "zero": 49
+      },
+      "action_events": [
+        "bird",
+        "bird"
+      ],
+      "action_raw_counts": {
+        "bird": 32,
+        "dog": 1,
+        "dragon": 1,
+        "horse": 6,
+        "monkey": 2,
+        "snake": 2,
+        "tiger": 31,
+        "zero": 1
+      },
+      "action_stable_counts": {
+        "bird": 24,
+        "zero": 52
+      },
+      "attempt_index": 1,
+      "attempt_type": "label",
+      "detection_latency_ms": 2041,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "bird",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 1,
+      "expected_confidence": {
+        "count": 32,
+        "max": 0.9954763500101363,
+        "mean": 0.8419946883909293,
+        "median": 0.9106765984786858,
+        "p95": 0.9832057152609708
+      },
+      "expected_label": "bird",
+      "expected_margin": {
+        "count": 32,
+        "max": 0.9931678629282054,
+        "mean": 0.7208303132042957,
+        "median": 0.8356788867932474,
+        "p95": 0.9775786579850078
+      },
+      "first_event_prediction": "bird",
+      "first_event_success": true,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "tiger": 15,
+        "zero": 24
+      },
+      "rejection_reasons": {
+        "confidence<0.45": 1,
+        "confidence<0.50": 1,
+        "confidence<0.65": 2,
+        "confidence<0.68": 4,
+        "confidence<0.70": 5,
+        "confidence<0.88": 6,
+        "no_hand_landmarks": 30
+      },
+      "success": true,
+      "system_prediction": "bird",
+      "target_emission_count": 2,
+      "target_event_detected": true,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "bird": 5,
+        "zero": 75
+      },
+      "action_events": [
+        "bird"
+      ],
+      "action_raw_counts": {
+        "bird": 19,
+        "dog": 12,
+        "ram": 22,
+        "snake": 1,
+        "tiger": 13,
+        "zero": 13
+      },
+      "action_stable_counts": {
+        "bird": 4,
+        "zero": 76
+      },
+      "attempt_index": 2,
+      "attempt_type": "label",
+      "detection_latency_ms": 1658,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "ram",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 19,
+        "max": 0.9628735132125793,
+        "mean": 0.696488214061901,
+        "median": 0.6563312011019703,
+        "p95": 0.9561639946073041
+      },
+      "expected_label": "bird",
+      "expected_margin": {
+        "count": 19,
+        "max": 0.9432983328335558,
+        "mean": 0.45552239839071373,
+        "median": 0.33890108117038653,
+        "p95": 0.930748120672226
+      },
+      "first_event_prediction": "bird",
+      "first_event_success": true,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "tiger": 21,
+        "zero": 17
+      },
+      "rejection_reasons": {
+        "confidence<0.45": 13,
+        "confidence<0.65": 1,
+        "confidence<0.70": 13,
+        "confidence<0.92": 22,
+        "no_hand_landmarks": 26
+      },
+      "success": true,
+      "system_prediction": "bird",
+      "target_emission_count": 1,
+      "target_event_detected": true,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "bird": 29,
+        "zero": 47
+      },
+      "action_events": [
+        "bird"
+      ],
+      "action_raw_counts": {
+        "bird": 44,
+        "monkey": 1,
+        "tiger": 8,
+        "zero": 23
+      },
+      "action_stable_counts": {
+        "bird": 25,
+        "zero": 51
+      },
+      "attempt_index": 3,
+      "attempt_type": "label",
+      "detection_latency_ms": 2259,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "bird",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 44,
+        "max": 0.9558020825036917,
+        "mean": 0.7712139977367937,
+        "median": 0.8024220787367051,
+        "p95": 0.9267372123555053
+      },
+      "expected_label": "bird",
+      "expected_margin": {
+        "count": 44,
+        "max": 0.9307292199349458,
+        "mean": 0.5821782576809285,
+        "median": 0.6524248580924188,
+        "p95": 0.8767156051274047
+      },
+      "first_event_prediction": "bird",
+      "first_event_success": true,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "dog": 2,
+        "tiger": 6,
+        "zero": 30
+      },
+      "rejection_reasons": {
+        "confidence<0.45": 23,
+        "confidence<0.68": 1,
+        "confidence<0.70": 15,
+        "no_hand_landmarks": 8
+      },
+      "success": true,
+      "system_prediction": "bird",
+      "target_emission_count": 1,
+      "target_event_detected": true,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "boar": 4,
+        "dragon": 3,
+        "zero": 72
+      },
+      "action_events": [
+        "boar",
+        "dragon"
+      ],
+      "action_raw_counts": {
+        "boar": 25,
+        "dragon": 9,
+        "ox": 1,
+        "snake": 4,
+        "tiger": 27,
+        "zero": 13
+      },
+      "action_stable_counts": {
+        "boar": 3,
+        "dragon": 2,
+        "zero": 74
+      },
+      "attempt_index": 1,
+      "attempt_type": "label",
+      "detection_latency_ms": 1295,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "tiger",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 25,
+        "max": 0.981194738333257,
+        "mean": 0.6596589168475472,
+        "median": 0.6566592949657709,
+        "p95": 0.971869031073183
+      },
+      "expected_label": "boar",
+      "expected_margin": {
+        "count": 25,
+        "max": 0.9709775551417519,
+        "mean": 0.5131869659761509,
+        "median": 0.4982312155985432,
+        "p95": 0.9582338431168961
+      },
+      "first_event_prediction": "boar",
+      "first_event_success": true,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "ox": 2,
+        "tiger": 33,
+        "zero": 4
+      },
+      "rejection_reasons": {
+        "confidence<0.45": 13,
+        "confidence<0.50": 6,
+        "confidence<0.65": 4,
+        "confidence<0.70": 1,
+        "confidence<0.80": 21,
+        "no_hand_landmarks": 27
+      },
+      "success": true,
+      "system_prediction": "boar",
+      "target_emission_count": 1,
+      "target_event_detected": true,
+      "unexpected_action_events": [
+        "dragon"
+      ]
+    },
+    {
+      "action_accepted_counts": {
+        "boar": 46,
+        "zero": 25
+      },
+      "action_events": [
+        "boar",
+        "boar"
+      ],
+      "action_raw_counts": {
+        "boar": 55,
+        "tiger": 13,
+        "zero": 3
+      },
+      "action_stable_counts": {
+        "boar": 45,
+        "zero": 26
+      },
+      "attempt_index": 2,
+      "attempt_type": "label",
+      "detection_latency_ms": 734,
+      "dominant_accepted_prediction": "boar",
+      "dominant_raw_prediction": "boar",
+      "dominant_stable_prediction": "boar",
+      "duplicate_emissions": 1,
+      "expected_confidence": {
+        "count": 55,
+        "max": 0.9462514510863341,
+        "mean": 0.8541862109955821,
+        "median": 0.8749953806890715,
+        "p95": 0.9398226275100404
+      },
+      "expected_label": "boar",
+      "expected_margin": {
+        "count": 55,
+        "max": 0.9206330993786606,
+        "mean": 0.7777816820039157,
+        "median": 0.8119428581492341,
+        "p95": 0.9113331671168021
+      },
+      "first_event_prediction": "boar",
+      "first_event_success": true,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "monkey": 2,
+        "snake": 2,
+        "tiger": 29,
+        "zero": 3
+      },
+      "rejection_reasons": {
+        "confidence<0.45": 3,
+        "confidence<0.80": 9,
+        "no_hand_landmarks": 13
+      },
+      "success": true,
+      "system_prediction": "boar",
+      "target_emission_count": 2,
+      "target_event_detected": true,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "boar": 47,
+        "zero": 16
+      },
+      "action_events": [
+        "boar"
+      ],
+      "action_raw_counts": {
+        "boar": 48,
+        "ox": 1,
+        "tiger": 14
+      },
+      "action_stable_counts": {
+        "boar": 45,
+        "zero": 18
+      },
+      "attempt_index": 3,
+      "attempt_type": "label",
+      "detection_latency_ms": 971,
+      "dominant_accepted_prediction": "boar",
+      "dominant_raw_prediction": "boar",
+      "dominant_stable_prediction": "boar",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 48,
+        "max": 0.98777375114221,
+        "mean": 0.9653548243716981,
+        "median": 0.9781590533118183,
+        "p95": 0.985193591065894
+      },
+      "expected_label": "boar",
+      "expected_margin": {
+        "count": 48,
+        "max": 0.9812497048307594,
+        "mean": 0.9471570816733461,
+        "median": 0.9666564526809296,
+        "p95": 0.9784244399825301
+      },
+      "first_event_prediction": "boar",
+      "first_event_success": true,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "monkey": 2,
+        "ram": 1,
+        "tiger": 20,
+        "zero": 1
+      },
+      "rejection_reasons": {
+        "confidence<0.80": 1,
+        "no_hand_landmarks": 15
+      },
+      "success": true,
+      "system_prediction": "boar",
+      "target_emission_count": 1,
+      "target_event_detected": true,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "dog": 4,
+        "ox": 2,
+        "zero": 73
+      },
+      "action_events": [
+        "dog"
+      ],
+      "action_raw_counts": {
+        "dog": 27,
+        "ox": 17,
+        "tiger": 35
+      },
+      "action_stable_counts": {
+        "dog": 4,
+        "zero": 75
+      },
+      "attempt_index": 1,
+      "attempt_type": "label",
+      "detection_latency_ms": 2702,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "tiger",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 27,
+        "max": 0.7299271712964998,
+        "mean": 0.5886153534247659,
+        "median": 0.5880715535946458,
+        "p95": 0.7244057576064319
+      },
+      "expected_label": "dog",
+      "expected_margin": {
+        "count": 27,
+        "max": 0.5457604885426848,
+        "mean": 0.24847712432574756,
+        "median": 0.23682423080119674,
+        "p95": 0.4846521686722827
+      },
+      "first_event_prediction": "dog",
+      "first_event_success": true,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "tiger": 38,
+        "zero": 4
+      },
+      "rejection_reasons": {
+        "confidence<0.68": 23,
+        "confidence<0.70": 15,
+        "dog_pair_guard": 1,
+        "no_hand_landmarks": 34
+      },
+      "success": true,
+      "system_prediction": "dog",
+      "target_emission_count": 1,
+      "target_event_detected": true,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "dog": 48,
+        "zero": 22
+      },
+      "action_events": [
+        "dog"
+      ],
+      "action_raw_counts": {
+        "boar": 1,
+        "dog": 56,
+        "ox": 2,
+        "tiger": 11
+      },
+      "action_stable_counts": {
+        "dog": 45,
+        "zero": 25
+      },
+      "attempt_index": 2,
+      "attempt_type": "label",
+      "detection_latency_ms": 1235,
+      "dominant_accepted_prediction": "dog",
+      "dominant_raw_prediction": "dog",
+      "dominant_stable_prediction": "dog",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 56,
+        "max": 0.9318773086162335,
+        "mean": 0.804348483040255,
+        "median": 0.8373079155826393,
+        "p95": 0.9213121732307148
+      },
+      "expected_label": "dog",
+      "expected_margin": {
+        "count": 56,
+        "max": 0.8779024075520839,
+        "mean": 0.6477459850457413,
+        "median": 0.7079532250355847,
+        "p95": 0.8581541181797181
+      },
+      "first_event_prediction": "dog",
+      "first_event_success": true,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "dog": 1,
+        "tiger": 30,
+        "zero": 8
+      },
+      "rejection_reasons": {
+        "confidence<0.68": 8,
+        "confidence<0.70": 2,
+        "confidence<0.80": 1,
+        "no_hand_landmarks": 11
+      },
+      "success": true,
+      "system_prediction": "dog",
+      "target_emission_count": 1,
+      "target_event_detected": true,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "dog": 46,
+        "ox": 2,
+        "zero": 15
+      },
+      "action_events": [
+        "dog",
+        "dog"
+      ],
+      "action_raw_counts": {
+        "dog": 49,
+        "ox": 4,
+        "tiger": 10
+      },
+      "action_stable_counts": {
+        "dog": 42,
+        "zero": 21
+      },
+      "attempt_index": 3,
+      "attempt_type": "label",
+      "detection_latency_ms": 965,
+      "dominant_accepted_prediction": "dog",
+      "dominant_raw_prediction": "dog",
+      "dominant_stable_prediction": "dog",
+      "duplicate_emissions": 1,
+      "expected_confidence": {
+        "count": 49,
+        "max": 0.973119362877353,
+        "mean": 0.8826049345244817,
+        "median": 0.9340781500097717,
+        "p95": 0.9661076410074126
+      },
+      "expected_label": "dog",
+      "expected_margin": {
+        "count": 49,
+        "max": 0.9509629345233003,
+        "mean": 0.7831841819794813,
+        "median": 0.8775185324481672,
+        "p95": 0.9376211835728495
+      },
+      "first_event_prediction": "dog",
+      "first_event_success": true,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "boar": 2,
+        "tiger": 31
+      },
+      "rejection_reasons": {
+        "confidence<0.68": 2,
+        "confidence<0.70": 2,
+        "dog_pair_guard": 1,
+        "no_hand_landmarks": 10
+      },
+      "success": true,
+      "system_prediction": "dog",
+      "target_emission_count": 2,
+      "target_event_detected": true,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "dragon": 10,
+        "zero": 71
+      },
+      "action_events": [
+        "dragon"
+      ],
+      "action_raw_counts": {
+        "dog": 4,
+        "dragon": 40,
+        "horse": 2,
+        "monkey": 1,
+        "ox": 2,
+        "snake": 2,
+        "tiger": 27,
+        "zero": 3
+      },
+      "action_stable_counts": {
+        "dragon": 9,
+        "zero": 72
+      },
+      "attempt_index": 1,
+      "attempt_type": "label",
+      "detection_latency_ms": 2733,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "dragon",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 40,
+        "max": 0.6544438741115711,
+        "mean": 0.4264646073517164,
+        "median": 0.4304973360155052,
+        "p95": 0.6160382718199848
+      },
+      "expected_label": "dragon",
+      "expected_margin": {
+        "count": 40,
+        "max": 0.5653869720416307,
+        "mean": 0.25408281066722493,
+        "median": 0.2525858427877146,
+        "p95": 0.5105307169664146
+      },
+      "first_event_prediction": "dragon",
+      "first_event_success": true,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "boar": 1,
+        "monkey": 2,
+        "tiger": 33
+      },
+      "rejection_reasons": {
+        "confidence<0.45": 3,
+        "confidence<0.50": 30,
+        "confidence<0.65": 2,
+        "confidence<0.68": 1,
+        "confidence<0.70": 2,
+        "confidence<0.88": 2,
+        "no_hand_landmarks": 31
+      },
+      "success": true,
+      "system_prediction": "dragon",
+      "target_emission_count": 1,
+      "target_event_detected": true,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "dragon": 42,
+        "zero": 31
+      },
+      "action_events": [
+        "dragon",
+        "dragon"
+      ],
+      "action_raw_counts": {
+        "dragon": 58,
+        "monkey": 3,
+        "tiger": 11,
+        "zero": 1
+      },
+      "action_stable_counts": {
+        "dragon": 36,
+        "zero": 37
+      },
+      "attempt_index": 2,
+      "attempt_type": "label",
+      "detection_latency_ms": 1299,
+      "dominant_accepted_prediction": "dragon",
+      "dominant_raw_prediction": "dragon",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 1,
+      "expected_confidence": {
+        "count": 58,
+        "max": 0.8004052961078048,
+        "mean": 0.6063264270599383,
+        "median": 0.6580668647412052,
+        "p95": 0.7781569433821851
+      },
+      "expected_label": "dragon",
+      "expected_margin": {
+        "count": 58,
+        "max": 0.7258202295197886,
+        "mean": 0.4770417069344398,
+        "median": 0.5229401631337327,
+        "p95": 0.6914223675002741
+      },
+      "first_event_prediction": "dragon",
+      "first_event_success": true,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "monkey": 3,
+        "tiger": 35,
+        "zero": 1
+      },
+      "rejection_reasons": {
+        "confidence<0.45": 1,
+        "confidence<0.50": 16,
+        "confidence<0.68": 3,
+        "no_hand_landmarks": 11
+      },
+      "success": true,
+      "system_prediction": "dragon",
+      "target_emission_count": 2,
+      "target_event_detected": true,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "zero": 75
+      },
+      "action_events": [],
+      "action_raw_counts": {
+        "bird": 5,
+        "dragon": 43,
+        "horse": 5,
+        "monkey": 1,
+        "ox": 10,
+        "tiger": 11
+      },
+      "action_stable_counts": {
+        "zero": 75
+      },
+      "attempt_index": 3,
+      "attempt_type": "label",
+      "detection_latency_ms": null,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "dragon",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 43,
+        "max": 0.4817891291218033,
+        "mean": 0.327503804894843,
+        "median": 0.32803515892055785,
+        "p95": 0.43362967958404564
+      },
+      "expected_label": "dragon",
+      "expected_margin": {
+        "count": 43,
+        "max": 0.29374364243279505,
+        "mean": 0.11954397968148726,
+        "median": 0.10693903528311482,
+        "p95": 0.24550481818923936
+      },
+      "first_event_prediction": null,
+      "first_event_success": false,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "boar": 2,
+        "monkey": 1,
+        "tiger": 34
+      },
+      "rejection_reasons": {
+        "confidence<0.50": 43,
+        "confidence<0.68": 1,
+        "confidence<0.70": 15,
+        "confidence<0.88": 5,
+        "no_hand_landmarks": 11
+      },
+      "success": false,
+      "system_prediction": null,
+      "target_emission_count": 0,
+      "target_event_detected": false,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "hare": 34,
+        "ox": 3,
+        "zero": 45
+      },
+      "action_events": [
+        "hare"
+      ],
+      "action_raw_counts": {
+        "boar": 1,
+        "hare": 34,
+        "ox": 10,
+        "tiger": 35,
+        "zero": 2
+      },
+      "action_stable_counts": {
+        "hare": 32,
+        "zero": 50
+      },
+      "attempt_index": 1,
+      "attempt_type": "label",
+      "detection_latency_ms": 1900,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "tiger",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 34,
+        "max": 0.6883865536391783,
+        "mean": 0.5262822426451668,
+        "median": 0.5233279720102828,
+        "p95": 0.6055063627467402
+      },
+      "expected_label": "hare",
+      "expected_margin": {
+        "count": 34,
+        "max": 0.433816815690493,
+        "mean": 0.16155208934930276,
+        "median": 0.14842756387352243,
+        "p95": 0.29474997189472507
+      },
+      "first_event_prediction": "hare",
+      "first_event_success": true,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "boar": 8,
+        "tiger": 31,
+        "zero": 3
+      },
+      "rejection_reasons": {
+        "confidence<0.45": 2,
+        "confidence<0.70": 7,
+        "confidence<0.80": 1,
+        "no_hand_landmarks": 35
+      },
+      "success": true,
+      "system_prediction": "hare",
+      "target_emission_count": 1,
+      "target_event_detected": true,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "hare": 1,
+        "ox": 26,
+        "zero": 48
+      },
+      "action_events": [
+        "ox"
+      ],
+      "action_raw_counts": {
+        "boar": 1,
+        "hare": 1,
+        "ox": 62,
+        "ram": 1,
+        "tiger": 10
+      },
+      "action_stable_counts": {
+        "ox": 22,
+        "zero": 53
+      },
+      "attempt_index": 2,
+      "attempt_type": "label",
+      "detection_latency_ms": null,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "ox",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 1,
+        "max": 0.3690719088721353,
+        "mean": 0.3690719088721353,
+        "median": 0.3690719088721353,
+        "p95": 0.3690719088721353
+      },
+      "expected_label": "hare",
+      "expected_margin": {
+        "count": 1,
+        "max": 0.19756139518535298,
+        "mean": 0.19756139518535298,
+        "median": 0.19756139518535298,
+        "p95": 0.19756139518535298
+      },
+      "first_event_prediction": "ox",
+      "first_event_success": false,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "ram": 1,
+        "snake": 1,
+        "tiger": 34
+      },
+      "rejection_reasons": {
+        "confidence<0.70": 36,
+        "confidence<0.80": 1,
+        "no_hand_landmarks": 11
+      },
+      "success": false,
+      "system_prediction": "ox",
+      "target_emission_count": 0,
+      "target_event_detected": false,
+      "unexpected_action_events": [
+        "ox"
+      ]
+    },
+    {
+      "action_accepted_counts": {
+        "hare": 20,
+        "ox": 37,
+        "zero": 17
+      },
+      "action_events": [
+        "ox",
+        "ox",
+        "hare"
+      ],
+      "action_raw_counts": {
+        "boar": 1,
+        "hare": 20,
+        "ox": 41,
+        "snake": 1,
+        "tiger": 11
+      },
+      "action_stable_counts": {
+        "hare": 17,
+        "ox": 37,
+        "zero": 20
+      },
+      "attempt_index": 3,
+      "attempt_type": "label",
+      "detection_latency_ms": 2670,
+      "dominant_accepted_prediction": "ox",
+      "dominant_raw_prediction": "ox",
+      "dominant_stable_prediction": "ox",
+      "duplicate_emissions": 1,
+      "expected_confidence": {
+        "count": 20,
+        "max": 0.9893199540919699,
+        "mean": 0.9087461615526957,
+        "median": 0.9665708153737813,
+        "p95": 0.9846775898253683
+      },
+      "expected_label": "hare",
+      "expected_margin": {
+        "count": 20,
+        "max": 0.9818735076663745,
+        "mean": 0.8422931308011403,
+        "median": 0.9367417836346098,
+        "p95": 0.9722084283939656
+      },
+      "first_event_prediction": "ox",
+      "first_event_success": false,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "boar": 1,
+        "dog": 2,
+        "monkey": 2,
+        "tiger": 26,
+        "zero": 9
+      },
+      "rejection_reasons": {
+        "confidence<0.65": 1,
+        "confidence<0.70": 4,
+        "confidence<0.80": 1,
+        "no_hand_landmarks": 11
+      },
+      "success": false,
+      "system_prediction": "ox",
+      "target_emission_count": 1,
+      "target_event_detected": true,
+      "unexpected_action_events": [
+        "ox",
+        "ox"
+      ]
+    },
+    {
+      "action_accepted_counts": {
+        "zero": 79
+      },
+      "action_events": [],
+      "action_raw_counts": {
+        "bird": 37,
+        "dog": 2,
+        "horse": 3,
+        "monkey": 1,
+        "ram": 1,
+        "tiger": 35
+      },
+      "action_stable_counts": {
+        "zero": 79
+      },
+      "attempt_index": 1,
+      "attempt_type": "label",
+      "detection_latency_ms": null,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "bird",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 3,
+        "max": 0.41717389667496063,
+        "mean": 0.3276347172561673,
+        "median": 0.31601543285700223,
+        "p95": 0.4070580502931648
+      },
+      "expected_label": "horse",
+      "expected_margin": {
+        "count": 3,
+        "max": 0.11538408719770979,
+        "mean": 0.06002904085960282,
+        "median": 0.0364752229335682,
+        "p95": 0.10749320077129562
+      },
+      "first_event_prediction": null,
+      "first_event_success": false,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "dog": 2,
+        "ox": 3,
+        "tiger": 29,
+        "zero": 6
+      },
+      "rejection_reasons": {
+        "confidence<0.68": 5,
+        "confidence<0.70": 37,
+        "confidence<0.88": 3,
+        "confidence<0.92": 1,
+        "no_hand_landmarks": 33
+      },
+      "success": false,
+      "system_prediction": null,
+      "target_emission_count": 0,
+      "target_event_detected": false,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "zero": 73
+      },
+      "action_events": [],
+      "action_raw_counts": {
+        "bird": 40,
+        "horse": 33
+      },
+      "action_stable_counts": {
+        "zero": 73
+      },
+      "attempt_index": 2,
+      "attempt_type": "label",
+      "detection_latency_ms": null,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "bird",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 33,
+        "max": 0.635175068039638,
+        "mean": 0.502390322471384,
+        "median": 0.5061385470116496,
+        "p95": 0.5912862921534531
+      },
+      "expected_label": "horse",
+      "expected_margin": {
+        "count": 33,
+        "max": 0.482759822369033,
+        "mean": 0.3042437932114918,
+        "median": 0.31644235858332537,
+        "p95": 0.42263206386931323
+      },
+      "first_event_prediction": null,
+      "first_event_success": false,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "dragon": 3,
+        "horse": 2,
+        "snake": 5,
+        "tiger": 23,
+        "zero": 3
+      },
+      "rejection_reasons": {
+        "confidence<0.70": 40,
+        "confidence<0.88": 33
+      },
+      "success": false,
+      "system_prediction": null,
+      "target_emission_count": 0,
+      "target_event_detected": false,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "zero": 75
+      },
+      "action_events": [],
+      "action_raw_counts": {
+        "bird": 20,
+        "boar": 1,
+        "horse": 13,
+        "monkey": 13,
+        "ox": 1,
+        "snake": 7,
+        "tiger": 12,
+        "zero": 8
+      },
+      "action_stable_counts": {
+        "zero": 75
+      },
+      "attempt_index": 3,
+      "attempt_type": "label",
+      "detection_latency_ms": null,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "bird",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 13,
+        "max": 0.6825200374450662,
+        "mean": 0.4978088468517897,
+        "median": 0.4560237136365997,
+        "p95": 0.6795689281037233
+      },
+      "expected_label": "horse",
+      "expected_margin": {
+        "count": 13,
+        "max": 0.5591847069787912,
+        "mean": 0.23758126948500763,
+        "median": 0.09475634508945854,
+        "p95": 0.5506255612458354
+      },
+      "first_event_prediction": null,
+      "first_event_success": false,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "boar": 1,
+        "monkey": 15,
+        "tiger": 25
+      },
+      "rejection_reasons": {
+        "confidence<0.45": 8,
+        "confidence<0.65": 7,
+        "confidence<0.68": 4,
+        "confidence<0.70": 21,
+        "confidence<0.80": 1,
+        "confidence<0.88": 13,
+        "no_hand_landmarks": 21
+      },
+      "success": false,
+      "system_prediction": null,
+      "target_emission_count": 0,
+      "target_event_detected": false,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "monkey": 1,
+        "ox": 22,
+        "zero": 57
+      },
+      "action_events": [
+        "ox",
+        "ox"
+      ],
+      "action_raw_counts": {
+        "boar": 1,
+        "monkey": 2,
+        "ox": 38,
+        "tiger": 39
+      },
+      "action_stable_counts": {
+        "ox": 19,
+        "zero": 61
+      },
+      "attempt_index": 1,
+      "attempt_type": "label",
+      "detection_latency_ms": null,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "tiger",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 1,
+      "expected_confidence": {
+        "count": 2,
+        "max": 0.9382999428372779,
+        "mean": 0.7477320706249662,
+        "median": 0.7477320706249662,
+        "p95": 0.9192431556160467
+      },
+      "expected_label": "monkey",
+      "expected_margin": {
+        "count": 2,
+        "max": 0.8801971476533975,
+        "mean": 0.5005507370227632,
+        "median": 0.5005507370227632,
+        "p95": 0.842232506590334
+      },
+      "first_event_prediction": "ox",
+      "first_event_success": false,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "tiger": 37,
+        "zero": 4
+      },
+      "rejection_reasons": {
+        "confidence<0.68": 1,
+        "confidence<0.70": 16,
+        "confidence<0.80": 1,
+        "no_hand_landmarks": 39
+      },
+      "success": false,
+      "system_prediction": "ox",
+      "target_emission_count": 0,
+      "target_event_detected": false,
+      "unexpected_action_events": [
+        "ox",
+        "ox"
+      ]
+    },
+    {
+      "action_accepted_counts": {
+        "monkey": 15,
+        "ox": 9,
+        "zero": 49
+      },
+      "action_events": [
+        "ox",
+        "monkey",
+        "monkey"
+      ],
+      "action_raw_counts": {
+        "boar": 2,
+        "monkey": 51,
+        "ox": 15,
+        "tiger": 1,
+        "zero": 4
+      },
+      "action_stable_counts": {
+        "monkey": 10,
+        "ox": 9,
+        "zero": 54
+      },
+      "attempt_index": 2,
+      "attempt_type": "label",
+      "detection_latency_ms": 1360,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "monkey",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 1,
+      "expected_confidence": {
+        "count": 51,
+        "max": 0.8964421715470695,
+        "mean": 0.5961748484369819,
+        "median": 0.6277156292663174,
+        "p95": 0.8726308101217399
+      },
+      "expected_label": "monkey",
+      "expected_margin": {
+        "count": 51,
+        "max": 0.7953523719704285,
+        "mean": 0.28994883569296304,
+        "median": 0.25917951339075723,
+        "p95": 0.7474243349232883
+      },
+      "first_event_prediction": "ox",
+      "first_event_success": false,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "monkey": 23,
+        "ox": 10,
+        "tiger": 9,
+        "zero": 1
+      },
+      "rejection_reasons": {
+        "confidence<0.45": 4,
+        "confidence<0.68": 29,
+        "confidence<0.70": 1,
+        "confidence<0.80": 2,
+        "no_hand_landmarks": 13
+      },
+      "success": false,
+      "system_prediction": "ox",
+      "target_emission_count": 2,
+      "target_event_detected": true,
+      "unexpected_action_events": [
+        "ox"
+      ]
+    },
+    {
+      "action_accepted_counts": {
+        "monkey": 8,
+        "ox": 5,
+        "zero": 69
+      },
+      "action_events": [
+        "ox",
+        "monkey"
+      ],
+      "action_raw_counts": {
+        "boar": 1,
+        "monkey": 25,
+        "ox": 18,
+        "tiger": 8,
+        "zero": 30
+      },
+      "action_stable_counts": {
+        "monkey": 5,
+        "ox": 6,
+        "zero": 71
+      },
+      "attempt_index": 3,
+      "attempt_type": "label",
+      "detection_latency_ms": 3220,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "zero",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 25,
+        "max": 0.9478933156650211,
+        "mean": 0.6398883033538412,
+        "median": 0.6083667201310903,
+        "p95": 0.9304318195378208
+      },
+      "expected_label": "monkey",
+      "expected_margin": {
+        "count": 25,
+        "max": 0.8972201991643416,
+        "mean": 0.3482981937446174,
+        "median": 0.22537633798454448,
+        "p95": 0.8629103107489439
+      },
+      "first_event_prediction": "ox",
+      "first_event_success": false,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "monkey": 6,
+        "ox": 2,
+        "tiger": 15,
+        "zero": 16
+      },
+      "rejection_reasons": {
+        "confidence<0.45": 30,
+        "confidence<0.68": 15,
+        "confidence<0.70": 13,
+        "confidence<0.80": 1,
+        "no_hand_landmarks": 10
+      },
+      "success": false,
+      "system_prediction": "ox",
+      "target_emission_count": 1,
+      "target_event_detected": true,
+      "unexpected_action_events": [
+        "ox"
+      ]
+    },
+    {
+      "action_accepted_counts": {
+        "ox": 35,
+        "tiger": 1,
+        "zero": 38
+      },
+      "action_events": [
+        "ox"
+      ],
+      "action_raw_counts": {
+        "ox": 66,
+        "tiger": 8
+      },
+      "action_stable_counts": {
+        "ox": 33,
+        "zero": 41
+      },
+      "attempt_index": 1,
+      "attempt_type": "label",
+      "detection_latency_ms": 1907,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "ox",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 66,
+        "max": 0.9998045873392256,
+        "mean": 0.7766587342382751,
+        "median": 0.940020832383373,
+        "p95": 0.9995476170881188
+      },
+      "expected_label": "ox",
+      "expected_margin": {
+        "count": 66,
+        "max": 0.9996989581951135,
+        "mean": 0.6984901932794279,
+        "median": 0.9154066800699905,
+        "p95": 0.9993259724276764
+      },
+      "first_event_prediction": "ox",
+      "first_event_success": true,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "ox": 11,
+        "tiger": 23
+      },
+      "rejection_reasons": {
+        "confidence<0.68": 1,
+        "no_hand_landmarks": 37
+      },
+      "success": true,
+      "system_prediction": "ox",
+      "target_emission_count": 1,
+      "target_event_detected": true,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "ox": 63,
+        "zero": 10
+      },
+      "action_events": [
+        "ox"
+      ],
+      "action_raw_counts": {
+        "boar": 3,
+        "ox": 64,
+        "tiger": 6
+      },
+      "action_stable_counts": {
+        "ox": 61,
+        "zero": 12
+      },
+      "attempt_index": 2,
+      "attempt_type": "label",
+      "detection_latency_ms": 615,
+      "dominant_accepted_prediction": "ox",
+      "dominant_raw_prediction": "ox",
+      "dominant_stable_prediction": "ox",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 64,
+        "max": 0.9942865905968916,
+        "mean": 0.945729029921452,
+        "median": 0.9528205691024734,
+        "p95": 0.9825436438518804
+      },
+      "expected_label": "ox",
+      "expected_margin": {
+        "count": 64,
+        "max": 0.9918106598654385,
+        "mean": 0.9245629599603106,
+        "median": 0.9347243282463706,
+        "p95": 0.9755310396208671
+      },
+      "first_event_prediction": "ox",
+      "first_event_success": true,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "boar": 5,
+        "tiger": 27
+      },
+      "rejection_reasons": {
+        "confidence<0.70": 1,
+        "confidence<0.80": 3,
+        "no_hand_landmarks": 6
+      },
+      "success": true,
+      "system_prediction": "ox",
+      "target_emission_count": 1,
+      "target_event_detected": true,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "ox": 60,
+        "zero": 13
+      },
+      "action_events": [
+        "ox"
+      ],
+      "action_raw_counts": {
+        "ox": 61,
+        "tiger": 12
+      },
+      "action_stable_counts": {
+        "ox": 58,
+        "zero": 15
+      },
+      "attempt_index": 3,
+      "attempt_type": "label",
+      "detection_latency_ms": 752,
+      "dominant_accepted_prediction": "ox",
+      "dominant_raw_prediction": "ox",
+      "dominant_stable_prediction": "ox",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 61,
+        "max": 0.9861678843025834,
+        "mean": 0.940002375267103,
+        "median": 0.9471038306703322,
+        "p95": 0.9777200835524021
+      },
+      "expected_label": "ox",
+      "expected_margin": {
+        "count": 61,
+        "max": 0.9808861617796806,
+        "mean": 0.9171916478679994,
+        "median": 0.9239772325320693,
+        "p95": 0.9699354976009347
+      },
+      "first_event_prediction": "ox",
+      "first_event_success": true,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "tiger": 30
+      },
+      "rejection_reasons": {
+        "confidence<0.68": 1,
+        "confidence<0.70": 1,
+        "no_hand_landmarks": 11
+      },
+      "success": true,
+      "system_prediction": "ox",
+      "target_emission_count": 1,
+      "target_event_detected": true,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "ox": 61,
+        "zero": 10
+      },
+      "action_events": [
+        "ox"
+      ],
+      "action_raw_counts": {
+        "boar": 1,
+        "monkey": 1,
+        "ox": 61,
+        "tiger": 4,
+        "zero": 4
+      },
+      "action_stable_counts": {
+        "ox": 59,
+        "zero": 12
+      },
+      "attempt_index": 1,
+      "attempt_type": "label",
+      "detection_latency_ms": null,
+      "dominant_accepted_prediction": "ox",
+      "dominant_raw_prediction": "ox",
+      "dominant_stable_prediction": "ox",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 0,
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null
+      },
+      "expected_label": "ram",
+      "expected_margin": {
+        "count": 0,
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null
+      },
+      "first_event_prediction": "ox",
+      "first_event_success": false,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "boar": 1,
+        "monkey": 9,
+        "ox": 7,
+        "tiger": 15,
+        "zero": 1
+      },
+      "rejection_reasons": {
+        "confidence<0.45": 4,
+        "confidence<0.68": 1,
+        "confidence<0.80": 1,
+        "no_hand_landmarks": 4
+      },
+      "success": false,
+      "system_prediction": "ox",
+      "target_emission_count": 0,
+      "target_event_detected": false,
+      "unexpected_action_events": [
+        "ox"
+      ]
+    },
+    {
+      "action_accepted_counts": {
+        "tiger": 1,
+        "zero": 73
+      },
+      "action_events": [],
+      "action_raw_counts": {
+        "bird": 9,
+        "dog": 1,
+        "dragon": 3,
+        "horse": 1,
+        "ox": 4,
+        "ram": 22,
+        "snake": 1,
+        "tiger": 31,
+        "zero": 2
+      },
+      "action_stable_counts": {
+        "zero": 74
+      },
+      "attempt_index": 2,
+      "attempt_type": "label",
+      "detection_latency_ms": null,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "tiger",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 22,
+        "max": 0.5711755489900291,
+        "mean": 0.44462908952628877,
+        "median": 0.44365894015484647,
+        "p95": 0.5433195314984034
+      },
+      "expected_label": "ram",
+      "expected_margin": {
+        "count": 22,
+        "max": 0.3889121858094553,
+        "mean": 0.10975114544798042,
+        "median": 0.0650350071551733,
+        "p95": 0.3476313603989333
+      },
+      "first_event_prediction": null,
+      "first_event_success": false,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "ox": 2,
+        "tiger": 32
+      },
+      "rejection_reasons": {
+        "confidence<0.45": 2,
+        "confidence<0.50": 3,
+        "confidence<0.65": 1,
+        "confidence<0.68": 11,
+        "confidence<0.70": 9,
+        "confidence<0.88": 1,
+        "confidence<0.92": 22,
+        "no_hand_landmarks": 24
+      },
+      "success": false,
+      "system_prediction": null,
+      "target_emission_count": 0,
+      "target_event_detected": false,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "zero": 71
+      },
+      "action_events": [],
+      "action_raw_counts": {
+        "bird": 39,
+        "boar": 2,
+        "ram": 21,
+        "tiger": 9
+      },
+      "action_stable_counts": {
+        "zero": 71
+      },
+      "attempt_index": 3,
+      "attempt_type": "label",
+      "detection_latency_ms": null,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "bird",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 21,
+        "max": 0.6591079091983452,
+        "mean": 0.5222225471174311,
+        "median": 0.5287031332554024,
+        "p95": 0.6419437656952117
+      },
+      "expected_label": "ram",
+      "expected_margin": {
+        "count": 21,
+        "max": 0.5223848653489979,
+        "mean": 0.20453651777349474,
+        "median": 0.20292813124893705,
+        "p95": 0.4497307351761961
+      },
+      "first_event_prediction": null,
+      "first_event_success": false,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "boar": 5,
+        "dog": 1,
+        "monkey": 12,
+        "ox": 2,
+        "ram": 2,
+        "tiger": 12,
+        "zero": 2
+      },
+      "rejection_reasons": {
+        "confidence<0.68": 2,
+        "confidence<0.70": 39,
+        "confidence<0.80": 2,
+        "confidence<0.92": 21,
+        "no_hand_landmarks": 7
+      },
+      "success": false,
+      "system_prediction": null,
+      "target_emission_count": 0,
+      "target_event_detected": false,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "rat": 23,
+        "tiger": 2,
+        "zero": 46
+      },
+      "action_events": [
+        "rat"
+      ],
+      "action_raw_counts": {
+        "bird": 2,
+        "ram": 10,
+        "rat": 30,
+        "snake": 6,
+        "tiger": 22,
+        "zero": 1
+      },
+      "action_stable_counts": {
+        "rat": 20,
+        "zero": 51
+      },
+      "attempt_index": 1,
+      "attempt_type": "label",
+      "detection_latency_ms": 2493,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "rat",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 30,
+        "max": 0.8174504884753426,
+        "mean": 0.6259270699874512,
+        "median": 0.7022673337984837,
+        "p95": 0.7996047583410018
+      },
+      "expected_label": "rat",
+      "expected_margin": {
+        "count": 30,
+        "max": 0.7616154137873595,
+        "mean": 0.5023567995344866,
+        "median": 0.6144484803764412,
+        "p95": 0.732477927507105
+      },
+      "first_event_prediction": "rat",
+      "first_event_success": true,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "boar": 9,
+        "ox": 5,
+        "tiger": 12,
+        "zero": 9
+      },
+      "rejection_reasons": {
+        "confidence<0.45": 7,
+        "confidence<0.65": 6,
+        "confidence<0.68": 7,
+        "confidence<0.70": 2,
+        "confidence<0.92": 10,
+        "model_zero": 1,
+        "no_hand_landmarks": 13
+      },
+      "success": true,
+      "system_prediction": "rat",
+      "target_emission_count": 1,
+      "target_event_detected": true,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "rat": 57,
+        "zero": 14
+      },
+      "action_events": [
+        "rat"
+      ],
+      "action_raw_counts": {
+        "rat": 58,
+        "tiger": 11,
+        "zero": 2
+      },
+      "action_stable_counts": {
+        "rat": 55,
+        "zero": 16
+      },
+      "attempt_index": 2,
+      "attempt_type": "label",
+      "detection_latency_ms": 883,
+      "dominant_accepted_prediction": "rat",
+      "dominant_raw_prediction": "rat",
+      "dominant_stable_prediction": "rat",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 58,
+        "max": 0.8922471950763416,
+        "mean": 0.7591823182432931,
+        "median": 0.7959557132370263,
+        "p95": 0.8829154167373433
+      },
+      "expected_label": "rat",
+      "expected_margin": {
+        "count": 58,
+        "max": 0.8657829382316656,
+        "mean": 0.6609316684514117,
+        "median": 0.7221000581457487,
+        "p95": 0.8559131565004776
+      },
+      "first_event_prediction": "rat",
+      "first_event_success": true,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "boar": 2,
+        "ox": 1,
+        "tiger": 20,
+        "zero": 11
+      },
+      "rejection_reasons": {
+        "confidence<0.45": 3,
+        "no_hand_landmarks": 11
+      },
+      "success": true,
+      "system_prediction": "rat",
+      "target_emission_count": 1,
+      "target_event_detected": true,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "rat": 41,
+        "zero": 36
+      },
+      "action_events": [
+        "rat",
+        "rat",
+        "rat"
+      ],
+      "action_raw_counts": {
+        "boar": 2,
+        "dog": 13,
+        "ram": 2,
+        "rat": 58,
+        "tiger": 2
+      },
+      "action_stable_counts": {
+        "rat": 37,
+        "zero": 40
+      },
+      "attempt_index": 3,
+      "attempt_type": "label",
+      "detection_latency_ms": 855,
+      "dominant_accepted_prediction": "rat",
+      "dominant_raw_prediction": "rat",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 2,
+      "expected_confidence": {
+        "count": 58,
+        "max": 0.7021920296852915,
+        "mean": 0.47020068193608366,
+        "median": 0.46689152865436495,
+        "p95": 0.6041099095121142
+      },
+      "expected_label": "rat",
+      "expected_margin": {
+        "count": 58,
+        "max": 0.6216811783877565,
+        "mean": 0.2807113096592561,
+        "median": 0.27437624316801923,
+        "p95": 0.4329598855160342
+      },
+      "first_event_prediction": "rat",
+      "first_event_success": true,
+      "mode": "hand",
+      "prepare_false_positive_events": [
+        "rat"
+      ],
+      "prepare_raw_counts": {
+        "boar": 10,
+        "dog": 2,
+        "rat": 7,
+        "snake": 6,
+        "tiger": 8,
+        "zero": 1
+      },
+      "rejection_reasons": {
+        "confidence<0.45": 17,
+        "confidence<0.80": 2,
+        "confidence<0.92": 2,
+        "no_hand_landmarks": 15
+      },
+      "success": true,
+      "system_prediction": "rat",
+      "target_emission_count": 3,
+      "target_event_detected": true,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "tiger": 29,
+        "zero": 45
+      },
+      "action_events": [
+        "tiger",
+        "tiger"
+      ],
+      "action_raw_counts": {
+        "tiger": 74
+      },
+      "action_stable_counts": {
+        "tiger": 26,
+        "zero": 48
+      },
+      "attempt_index": 1,
+      "attempt_type": "label",
+      "detection_latency_ms": null,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "tiger",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 1,
+      "expected_confidence": {
+        "count": 0,
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null
+      },
+      "expected_label": "snake",
+      "expected_margin": {
+        "count": 0,
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null
+      },
+      "first_event_prediction": "tiger",
+      "first_event_success": false,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "boar": 4,
+        "monkey": 13,
+        "ox": 2,
+        "rat": 7,
+        "snake": 2,
+        "tiger": 2,
+        "zero": 1
+      },
+      "rejection_reasons": {
+        "confidence<0.68": 6,
+        "no_hand_landmarks": 39
+      },
+      "success": false,
+      "system_prediction": "tiger",
+      "target_emission_count": 0,
+      "target_event_detected": false,
+      "unexpected_action_events": [
+        "tiger",
+        "tiger"
+      ]
+    },
+    {
+      "action_accepted_counts": {
+        "zero": 72
+      },
+      "action_events": [],
+      "action_raw_counts": {
+        "bird": 4,
+        "dragon": 1,
+        "ox": 1,
+        "ram": 11,
+        "snake": 37,
+        "tiger": 18
+      },
+      "action_stable_counts": {
+        "zero": 72
+      },
+      "attempt_index": 2,
+      "attempt_type": "label",
+      "detection_latency_ms": null,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "snake",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 37,
+        "max": 0.464893791219524,
+        "mean": 0.3479144954967798,
+        "median": 0.3380774761640323,
+        "p95": 0.41715609880061244
+      },
+      "expected_label": "snake",
+      "expected_margin": {
+        "count": 37,
+        "max": 0.2647102162963221,
+        "mean": 0.08691404359268233,
+        "median": 0.0667506081485486,
+        "p95": 0.19932156937298853
+      },
+      "first_event_prediction": null,
+      "first_event_success": false,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "boar": 1,
+        "monkey": 3,
+        "ox": 1,
+        "tiger": 28
+      },
+      "rejection_reasons": {
+        "confidence<0.50": 1,
+        "confidence<0.65": 37,
+        "confidence<0.68": 7,
+        "confidence<0.70": 5,
+        "confidence<0.92": 11,
+        "no_hand_landmarks": 11
+      },
+      "success": false,
+      "system_prediction": null,
+      "target_emission_count": 0,
+      "target_event_detected": false,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "zero": 71
+      },
+      "action_events": [],
+      "action_raw_counts": {
+        "bird": 44,
+        "boar": 4,
+        "ram": 4,
+        "snake": 2,
+        "tiger": 16,
+        "zero": 1
+      },
+      "action_stable_counts": {
+        "zero": 71
+      },
+      "attempt_index": 3,
+      "attempt_type": "label",
+      "detection_latency_ms": null,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "bird",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 2,
+        "max": 0.49203159206034375,
+        "mean": 0.40868722357209153,
+        "median": 0.40868722357209153,
+        "p95": 0.4836971552115185
+      },
+      "expected_label": "snake",
+      "expected_margin": {
+        "count": 2,
+        "max": 0.24912444923875782,
+        "mean": 0.15802091413666053,
+        "median": 0.15802091413666053,
+        "p95": 0.2400140957285481
+      },
+      "first_event_prediction": null,
+      "first_event_success": false,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "boar": 14,
+        "tiger": 23
+      },
+      "rejection_reasons": {
+        "confidence<0.45": 1,
+        "confidence<0.65": 2,
+        "confidence<0.68": 6,
+        "confidence<0.70": 44,
+        "confidence<0.80": 4,
+        "confidence<0.92": 4,
+        "no_hand_landmarks": 10
+      },
+      "success": false,
+      "system_prediction": null,
+      "target_emission_count": 0,
+      "target_event_detected": false,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "tiger": 33,
+        "zero": 42
+      },
+      "action_events": [
+        "tiger"
+      ],
+      "action_raw_counts": {
+        "bird": 2,
+        "monkey": 5,
+        "ox": 2,
+        "rat": 1,
+        "tiger": 62,
+        "zero": 3
+      },
+      "action_stable_counts": {
+        "tiger": 31,
+        "zero": 44
+      },
+      "attempt_index": 1,
+      "attempt_type": "label",
+      "detection_latency_ms": 2004,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "tiger",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 62,
+        "max": 0.9433213594305825,
+        "mean": 0.5934274808191271,
+        "median": 0.8447512693985779,
+        "p95": 0.9166922884969511
+      },
+      "expected_label": "tiger",
+      "expected_margin": {
+        "count": 62,
+        "max": 0.9221192957464912,
+        "mean": 0.4941803024868612,
+        "median": 0.7691455672990961,
+        "p95": 0.8891432113708456
+      },
+      "first_event_prediction": "tiger",
+      "first_event_success": true,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "bird": 14,
+        "monkey": 8,
+        "tiger": 13,
+        "zero": 1
+      },
+      "rejection_reasons": {
+        "confidence<0.45": 4,
+        "confidence<0.68": 8,
+        "confidence<0.70": 3,
+        "no_hand_landmarks": 27
+      },
+      "success": true,
+      "system_prediction": "tiger",
+      "target_emission_count": 1,
+      "target_event_detected": true,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "tiger": 54,
+        "zero": 16
+      },
+      "action_events": [
+        "tiger"
+      ],
+      "action_raw_counts": {
+        "tiger": 67,
+        "zero": 3
+      },
+      "action_stable_counts": {
+        "tiger": 52,
+        "zero": 18
+      },
+      "attempt_index": 2,
+      "attempt_type": "label",
+      "detection_latency_ms": 789,
+      "dominant_accepted_prediction": "tiger",
+      "dominant_raw_prediction": "tiger",
+      "dominant_stable_prediction": "tiger",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 67,
+        "max": 0.964124217499464,
+        "mean": 0.757226082666761,
+        "median": 0.8450092093347811,
+        "p95": 0.9353843658395028
+      },
+      "expected_label": "tiger",
+      "expected_margin": {
+        "count": 67,
+        "max": 0.9485623570925588,
+        "mean": 0.6656412600743755,
+        "median": 0.769169286563123,
+        "p95": 0.9089892006367057
+      },
+      "first_event_prediction": "tiger",
+      "first_event_success": true,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "boar": 1,
+        "monkey": 1,
+        "snake": 3,
+        "tiger": 29
+      },
+      "rejection_reasons": {
+        "confidence<0.45": 3,
+        "confidence<0.68": 3,
+        "no_hand_landmarks": 10
+      },
+      "success": true,
+      "system_prediction": "tiger",
+      "target_emission_count": 1,
+      "target_event_detected": true,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "tiger": 46,
+        "zero": 25
+      },
+      "action_events": [
+        "tiger",
+        "tiger",
+        "tiger"
+      ],
+      "action_raw_counts": {
+        "dog": 1,
+        "horse": 1,
+        "tiger": 69
+      },
+      "action_stable_counts": {
+        "tiger": 45,
+        "zero": 26
+      },
+      "attempt_index": 3,
+      "attempt_type": "label",
+      "detection_latency_ms": 904,
+      "dominant_accepted_prediction": "tiger",
+      "dominant_raw_prediction": "tiger",
+      "dominant_stable_prediction": "tiger",
+      "duplicate_emissions": 2,
+      "expected_confidence": {
+        "count": 69,
+        "max": 0.8919295399600533,
+        "mean": 0.6669499440781037,
+        "median": 0.7048520967937496,
+        "p95": 0.8376851836534334
+      },
+      "expected_label": "tiger",
+      "expected_margin": {
+        "count": 69,
+        "max": 0.8495917433853793,
+        "mean": 0.4994335759875653,
+        "median": 0.5360003261212873,
+        "p95": 0.7799021180471782
+      },
+      "first_event_prediction": "tiger",
+      "first_event_success": true,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "monkey": 3,
+        "tiger": 30
+      },
+      "rejection_reasons": {
+        "confidence<0.68": 14,
+        "confidence<0.88": 1,
+        "no_hand_landmarks": 10
+      },
+      "success": true,
+      "system_prediction": "tiger",
+      "target_emission_count": 3,
+      "target_event_detected": true,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "zero": 83
+      },
+      "action_events": [],
+      "action_raw_counts": {
+        "boar": 14,
+        "monkey": 1,
+        "ram": 11,
+        "tiger": 56,
+        "zero": 1
+      },
+      "action_stable_counts": {
+        "zero": 83
+      },
+      "attempt_index": 1,
+      "attempt_type": "label",
+      "detection_latency_ms": 32,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "tiger",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 1,
+        "max": 0.20617354407811136,
+        "mean": 0.20617354407811136,
+        "median": 0.20617354407811136,
+        "p95": 0.20617354407811136
+      },
+      "expected_label": "zero",
+      "expected_margin": {
+        "count": 1,
+        "max": 0.014890535944786037,
+        "mean": 0.014890535944786037,
+        "median": 0.014890535944786037,
+        "p95": 0.014890535944786037
+      },
+      "first_event_prediction": "zero",
+      "first_event_success": true,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "boar": 11,
+        "monkey": 3,
+        "ox": 4,
+        "ram": 1,
+        "tiger": 15,
+        "zero": 1
+      },
+      "rejection_reasons": {
+        "confidence<0.45": 1,
+        "confidence<0.80": 14,
+        "no_hand_landmarks": 68
+      },
+      "success": true,
+      "system_prediction": "zero",
+      "target_emission_count": 0,
+      "target_event_detected": true,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "zero": 77
+      },
+      "action_events": [],
+      "action_raw_counts": {
+        "tiger": 77
+      },
+      "action_stable_counts": {
+        "zero": 77
+      },
+      "attempt_index": 2,
+      "attempt_type": "label",
+      "detection_latency_ms": 26,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "tiger",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 0,
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null
+      },
+      "expected_label": "zero",
+      "expected_margin": {
+        "count": 0,
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null
+      },
+      "first_event_prediction": "zero",
+      "first_event_success": true,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "monkey": 1,
+        "ram": 12,
+        "snake": 3,
+        "tiger": 17
+      },
+      "rejection_reasons": {
+        "no_hand_landmarks": 77
+      },
+      "success": true,
+      "system_prediction": "zero",
+      "target_emission_count": 0,
+      "target_event_detected": true,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "zero": 77
+      },
+      "action_events": [],
+      "action_raw_counts": {
+        "boar": 1,
+        "monkey": 3,
+        "tiger": 59,
+        "zero": 14
+      },
+      "action_stable_counts": {
+        "zero": 77
+      },
+      "attempt_index": 3,
+      "attempt_type": "label",
+      "detection_latency_ms": 41,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "tiger",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 14,
+        "max": 0.2500679220464575,
+        "mean": 0.2108921212596781,
+        "median": 0.21132661081915194,
+        "p95": 0.24875298742345708
+      },
+      "expected_label": "zero",
+      "expected_margin": {
+        "count": 14,
+        "max": 0.09080490757466,
+        "mean": 0.034984442687020334,
+        "median": 0.03383426290197013,
+        "p95": 0.0763265262659168
+      },
+      "first_event_prediction": "zero",
+      "first_event_success": true,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "boar": 20,
+        "monkey": 3,
+        "tiger": 9,
+        "zero": 1
+      },
+      "rejection_reasons": {
+        "confidence<0.45": 14,
+        "confidence<0.80": 1,
+        "no_hand_landmarks": 62
+      },
+      "success": true,
+      "system_prediction": "zero",
+      "target_emission_count": 0,
+      "target_event_detected": true,
+      "unexpected_action_events": []
+    }
+  ],
+  "confusion": {
+    "bird": {
+      "bird": 3
+    },
+    "boar": {
+      "boar": 3
+    },
+    "dog": {
+      "dog": 3
+    },
+    "dragon": {
+      "dragon": 2,
+      "no_detection": 1
+    },
+    "hare": {
+      "hare": 1,
+      "ox": 2
+    },
+    "horse": {
+      "no_detection": 3
+    },
+    "monkey": {
+      "ox": 3
+    },
+    "ox": {
+      "ox": 3
+    },
+    "ram": {
+      "no_detection": 2,
+      "ox": 1
+    },
+    "rat": {
+      "rat": 3
+    },
+    "snake": {
+      "no_detection": 2,
+      "tiger": 1
+    },
+    "tiger": {
+      "tiger": 3
+    },
+    "zero": {
+      "zero": 3
+    }
+  },
+  "evaluation_version": "1.1.0",
+  "metrics": {
+    "bird": {
+      "action_event_count": 4,
+      "all_emitted_cross_label_false_positives": 0,
+      "attempts": 3,
+      "cross_label_false_positives": 0,
+      "detection_latency_ms": {
+        "count": 3,
+        "max": 2259.0,
+        "mean": 1986.0,
+        "median": 2041.0,
+        "p95": 2237.2
+      },
+      "duplicate_emissions": 1,
+      "eventual_recall": 1.0,
+      "eventual_true_positives": 3,
+      "false_event_rate": 0.0,
+      "false_negatives": 0,
+      "false_positives": 0,
+      "first_event_recall": 1.0,
+      "first_event_true_positives": 3,
+      "neutral_phase_false_positives": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "true_positives": 3,
+      "unexpected_action_event_count": 0
+    },
+    "boar": {
+      "action_event_count": 5,
+      "all_emitted_cross_label_false_positives": 0,
+      "attempts": 3,
+      "cross_label_false_positives": 0,
+      "detection_latency_ms": {
+        "count": 3,
+        "max": 1295.0,
+        "mean": 1000.0,
+        "median": 971.0,
+        "p95": 1262.6
+      },
+      "duplicate_emissions": 1,
+      "eventual_recall": 1.0,
+      "eventual_true_positives": 3,
+      "false_event_rate": 0.2,
+      "false_negatives": 0,
+      "false_positives": 0,
+      "first_event_recall": 1.0,
+      "first_event_true_positives": 3,
+      "neutral_phase_false_positives": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "true_positives": 3,
+      "unexpected_action_event_count": 1
+    },
+    "dog": {
+      "action_event_count": 4,
+      "all_emitted_cross_label_false_positives": 0,
+      "attempts": 3,
+      "cross_label_false_positives": 0,
+      "detection_latency_ms": {
+        "count": 3,
+        "max": 2702.0,
+        "mean": 1634.0,
+        "median": 1235.0,
+        "p95": 2555.3
+      },
+      "duplicate_emissions": 1,
+      "eventual_recall": 1.0,
+      "eventual_true_positives": 3,
+      "false_event_rate": 0.0,
+      "false_negatives": 0,
+      "false_positives": 0,
+      "first_event_recall": 1.0,
+      "first_event_true_positives": 3,
+      "neutral_phase_false_positives": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "true_positives": 3,
+      "unexpected_action_event_count": 0
+    },
+    "dragon": {
+      "action_event_count": 3,
+      "all_emitted_cross_label_false_positives": 1,
+      "attempts": 3,
+      "cross_label_false_positives": 0,
+      "detection_latency_ms": {
+        "count": 2,
+        "max": 2733.0,
+        "mean": 2016.0,
+        "median": 2016.0,
+        "p95": 2661.3
+      },
+      "duplicate_emissions": 1,
+      "eventual_recall": 0.6666666666666666,
+      "eventual_true_positives": 2,
+      "false_event_rate": 0.0,
+      "false_negatives": 1,
+      "false_positives": 0,
+      "first_event_recall": 0.6666666666666666,
+      "first_event_true_positives": 2,
+      "neutral_phase_false_positives": 0,
+      "precision": 1.0,
+      "recall": 0.6666666666666666,
+      "true_positives": 2,
+      "unexpected_action_event_count": 0
+    },
+    "hare": {
+      "action_event_count": 5,
+      "all_emitted_cross_label_false_positives": 0,
+      "attempts": 3,
+      "cross_label_false_positives": 0,
+      "detection_latency_ms": {
+        "count": 2,
+        "max": 2670.0,
+        "mean": 2285.0,
+        "median": 2285.0,
+        "p95": 2631.5
+      },
+      "duplicate_emissions": 1,
+      "eventual_recall": 0.6666666666666666,
+      "eventual_true_positives": 2,
+      "false_event_rate": 0.6,
+      "false_negatives": 2,
+      "false_positives": 0,
+      "first_event_recall": 0.3333333333333333,
+      "first_event_true_positives": 1,
+      "neutral_phase_false_positives": 0,
+      "precision": 1.0,
+      "recall": 0.3333333333333333,
+      "true_positives": 1,
+      "unexpected_action_event_count": 3
+    },
+    "horse": {
+      "action_event_count": 0,
+      "all_emitted_cross_label_false_positives": 0,
+      "attempts": 3,
+      "cross_label_false_positives": 0,
+      "detection_latency_ms": {
+        "count": 0,
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null
+      },
+      "duplicate_emissions": 0,
+      "eventual_recall": 0.0,
+      "eventual_true_positives": 0,
+      "false_event_rate": 0.0,
+      "false_negatives": 3,
+      "false_positives": 0,
+      "first_event_recall": 0.0,
+      "first_event_true_positives": 0,
+      "neutral_phase_false_positives": 0,
+      "precision": null,
+      "recall": 0.0,
+      "true_positives": 0,
+      "unexpected_action_event_count": 0
+    },
+    "monkey": {
+      "action_event_count": 7,
+      "all_emitted_cross_label_false_positives": 0,
+      "attempts": 3,
+      "cross_label_false_positives": 0,
+      "detection_latency_ms": {
+        "count": 2,
+        "max": 3220.0,
+        "mean": 2290.0,
+        "median": 2290.0,
+        "p95": 3127.0
+      },
+      "duplicate_emissions": 2,
+      "eventual_recall": 0.6666666666666666,
+      "eventual_true_positives": 2,
+      "false_event_rate": 0.5714285714285714,
+      "false_negatives": 3,
+      "false_positives": 0,
+      "first_event_recall": 0.0,
+      "first_event_true_positives": 0,
+      "neutral_phase_false_positives": 0,
+      "precision": null,
+      "recall": 0.0,
+      "true_positives": 0,
+      "unexpected_action_event_count": 4
+    },
+    "ox": {
+      "action_event_count": 3,
+      "all_emitted_cross_label_false_positives": 8,
+      "attempts": 3,
+      "cross_label_false_positives": 6,
+      "detection_latency_ms": {
+        "count": 3,
+        "max": 1907.0,
+        "mean": 1091.3333333333333,
+        "median": 752.0,
+        "p95": 1791.5
+      },
+      "duplicate_emissions": 0,
+      "eventual_recall": 1.0,
+      "eventual_true_positives": 3,
+      "false_event_rate": 0.0,
+      "false_negatives": 0,
+      "false_positives": 6,
+      "first_event_recall": 1.0,
+      "first_event_true_positives": 3,
+      "neutral_phase_false_positives": 0,
+      "precision": 0.3333333333333333,
+      "recall": 1.0,
+      "true_positives": 3,
+      "unexpected_action_event_count": 0
+    },
+    "ram": {
+      "action_event_count": 1,
+      "all_emitted_cross_label_false_positives": 0,
+      "attempts": 3,
+      "cross_label_false_positives": 0,
+      "detection_latency_ms": {
+        "count": 0,
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null
+      },
+      "duplicate_emissions": 0,
+      "eventual_recall": 0.0,
+      "eventual_true_positives": 0,
+      "false_event_rate": 1.0,
+      "false_negatives": 3,
+      "false_positives": 0,
+      "first_event_recall": 0.0,
+      "first_event_true_positives": 0,
+      "neutral_phase_false_positives": 0,
+      "precision": null,
+      "recall": 0.0,
+      "true_positives": 0,
+      "unexpected_action_event_count": 1
+    },
+    "rat": {
+      "action_event_count": 5,
+      "all_emitted_cross_label_false_positives": 0,
+      "attempts": 3,
+      "cross_label_false_positives": 0,
+      "detection_latency_ms": {
+        "count": 3,
+        "max": 2493.0,
+        "mean": 1410.3333333333333,
+        "median": 883.0,
+        "p95": 2332.0
+      },
+      "duplicate_emissions": 2,
+      "eventual_recall": 1.0,
+      "eventual_true_positives": 3,
+      "false_event_rate": 0.0,
+      "false_negatives": 0,
+      "false_positives": 1,
+      "first_event_recall": 1.0,
+      "first_event_true_positives": 3,
+      "neutral_phase_false_positives": 1,
+      "precision": 0.75,
+      "recall": 1.0,
+      "true_positives": 3,
+      "unexpected_action_event_count": 0
+    },
+    "snake": {
+      "action_event_count": 2,
+      "all_emitted_cross_label_false_positives": 0,
+      "attempts": 3,
+      "cross_label_false_positives": 0,
+      "detection_latency_ms": {
+        "count": 0,
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null
+      },
+      "duplicate_emissions": 1,
+      "eventual_recall": 0.0,
+      "eventual_true_positives": 0,
+      "false_event_rate": 1.0,
+      "false_negatives": 3,
+      "false_positives": 0,
+      "first_event_recall": 0.0,
+      "first_event_true_positives": 0,
+      "neutral_phase_false_positives": 0,
+      "precision": null,
+      "recall": 0.0,
+      "true_positives": 0,
+      "unexpected_action_event_count": 2
+    },
+    "tiger": {
+      "action_event_count": 5,
+      "all_emitted_cross_label_false_positives": 2,
+      "attempts": 3,
+      "cross_label_false_positives": 1,
+      "detection_latency_ms": {
+        "count": 3,
+        "max": 2004.0,
+        "mean": 1232.3333333333333,
+        "median": 904.0,
+        "p95": 1894.0
+      },
+      "duplicate_emissions": 2,
+      "eventual_recall": 1.0,
+      "eventual_true_positives": 3,
+      "false_event_rate": 0.0,
+      "false_negatives": 0,
+      "false_positives": 1,
+      "first_event_recall": 1.0,
+      "first_event_true_positives": 3,
+      "neutral_phase_false_positives": 0,
+      "precision": 0.75,
+      "recall": 1.0,
+      "true_positives": 3,
+      "unexpected_action_event_count": 0
+    },
+    "zero": {
+      "action_event_count": 0,
+      "all_emitted_cross_label_false_positives": 0,
+      "attempts": 3,
+      "cross_label_false_positives": 0,
+      "detection_latency_ms": {
+        "count": 3,
+        "max": 41.0,
+        "mean": 33.0,
+        "median": 32.0,
+        "p95": 40.1
+      },
+      "duplicate_emissions": 0,
+      "eventual_recall": 1.0,
+      "eventual_true_positives": 3,
+      "false_event_rate": 0.0,
+      "false_negatives": 0,
+      "false_positives": 0,
+      "first_event_recall": 1.0,
+      "first_event_true_positives": 3,
+      "neutral_phase_false_positives": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "true_positives": 3,
+      "unexpected_action_event_count": 0
+    }
+  },
+  "mode": "hand",
+  "overall": {
+    "duplicate_emissions": 12,
+    "eventual_target_detections": 27,
+    "first_event_successes": 24,
+    "unexpected_action_events": 11
+  },
+  "preparation": {
+    "attempts_with_false_events": 1,
+    "false_event_attempt_rate": 0.02564102564102564,
+    "false_event_count": 1,
+    "false_events_per_100_frames": 0.0711743772241993,
+    "frame_count": 1405
+  }
+}

@@ -27,7 +27,7 @@ LIVE_DIR = Path("reports")  # overridden by --live-dir
 CLAIMED = {
     "val": 99.64,
     "test": 99.11,
-}  # from 03_refinement_execution_plan.md section 0.2 (not re-run)
+}  # from docs/plan/03_refinement_execution_plan.md section 0.2 (not re-run)
 
 
 def run_row(name: str, desc: str) -> dict | None:
@@ -322,7 +322,7 @@ def main() -> None:
     w(
         f"Preprocessing self-check: on the prepared val/test PNGs this reproduction gives "
         f"{100 * pv:.2f}% / {100 * pt:.2f}%, against the *claimed* {CLAIMED['val']}% / {CLAIMED['test']}% "
-        "(taken from `03_refinement_execution_plan.md`, not re-measured by ultralytics here). The small "
+        "(taken from `docs/plan/03_refinement_execution_plan.md`, not re-measured by ultralytics here). The small "
         "gap is within a few images; the preprocessing and class order are right.\n"
     )
     w("### Confusion matrices (row-normalised)\n")

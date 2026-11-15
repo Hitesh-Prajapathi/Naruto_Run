@@ -17,9 +17,9 @@ import mediapipe as mp
 from mediapipe.tasks import python as mpp
 from mediapipe.tasks.python import vision
 
-ROOT = Path("/Users/hiteshprajapathi/Desktop/Naruto_Run")
+ROOT = Path(__file__).resolve().parents[2]
 DATA = ROOT / "Pure Naruto Hand Sign Data"
-MODEL = ROOT / "cv_model/models/hand_landmarker.task"
+MODEL = ROOT / "models/hand_landmarker.task"
 OUT = Path(__file__).resolve().parents[2] / "artifacts/landmarks_v0.parquet"
 UUID_RE = re.compile(r"([0-9a-f]{8})-([0-9a-f]{4})-([0-9a-f]{4})-([0-9a-f]{4})-([0-9a-f]{12})")
 CONFIGS = [
