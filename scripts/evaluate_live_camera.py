@@ -33,6 +33,7 @@ from narutocv.inference.evaluation import (
     write_evaluation_reports,
 )
 from narutocv.inference.runtime import PipelineRuntimeController
+from narutocv.inference.seal_reference import SealReferencePanel
 from narutocv.inference.scheduler import LatestFrameScheduler, ScheduledResult
 
 
@@ -113,6 +114,11 @@ def parse_args() -> argparse.Namespace:
         "--self-check",
         action="store_true",
         help="Validate labels and load models without opening the camera.",
+    )
+    parser.add_argument(
+        "--no-seal-reference",
+        action="store_true",
+        help="Hide the hand-seal reference photos shown beside the camera view.",
     )
     add_hand_decoder_arguments(parser)
     args = parser.parse_args()
@@ -353,6 +359,12 @@ def main() -> int:
             config=args.pipeline_config,
         )
     ).start()
+    reference_panel = None
+    if args.mode in ("hand", "attack") and not args.no_seal_reference:
+        reference_panel = SealReferencePanel.from_disk(HAND_LABELS)
+        missing = [name for name, image in reference_panel.images.items() if image is None]
+        if missing:
+            print("No reference photo for: " + ", ".join(missing))
     if args.self_check:
         print(f"Evaluation self-check passed for {args.mode}: " + ", ".join(args.labels))
         runtime.close()
@@ -398,6 +410,10 @@ def main() -> int:
     last_result = ""
     consecutive_failures = 0
     window_name = "NarutoCV - Guided Accuracy Evaluation"
+    # Resizable window, opened at a size that fits a laptop screen (the reference panel
+    # makes the frame wider than the camera image).
+    cv2.namedWindow(window_name, cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO)
+    window_sized = False
 
     print("Guided evaluation started. Camera images will not be saved.")
     print("Press SPACE for each attempt; press Q to save partial results and quit.")
@@ -523,6 +539,24 @@ def main() -> int:
                 last_output=last_output,
                 last_result=last_result,
             )
+            if reference_panel is not None:
+                if phase != "action":
+                    display = reference_panel.attach(
+                        display, hidden_note="Target hidden until PERFORM NOW"
+                    )
+                elif args.mode == "hand":
+                    display = reference_panel.attach(display, highlight=(label,), large_label=label)
+                else:
+                    display = reference_panel.attach(
+                        display,
+                        highlight=ATTACK_SEALS[label],
+                        hidden_note=" > ".join(seal.upper() for seal in ATTACK_SEALS[label]),
+                    )
+            if not window_sized:
+                height, width = display.shape[:2]
+                scale = min(1.0, 1400 / width, 820 / height)
+                cv2.resizeWindow(window_name, int(width * scale), int(height * scale))
+                window_sized = True
             cv2.imshow(window_name, display)
             key = cv2.waitKey(1) & 0xFF
             if key in (ord("q"), 27):
