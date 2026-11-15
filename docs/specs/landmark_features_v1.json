@@ -1,0 +1,936 @@
+{
+  "spec_version": "1.0.1",
+  "dtype": "float32",
+  "feature_dim": 84,
+  "constants": {
+    "eps_palm": 1e-06,
+    "eps_axis_rel": 1e-06,
+    "facing_cos_min": 0.2,
+    "palm_size_landmarks": [
+      0,
+      9
+    ],
+    "pixel_scale": "x*width, y*height, z*width"
+  },
+  "features": [
+    {
+      "index": 0,
+      "name": "L.flex.thumb.0",
+      "formula": "bone_angle",
+      "landmarks": [
+        0,
+        1,
+        2
+      ],
+      "scope": "L"
+    },
+    {
+      "index": 1,
+      "name": "L.flex.thumb.1",
+      "formula": "bone_angle",
+      "landmarks": [
+        1,
+        2,
+        3
+      ],
+      "scope": "L"
+    },
+    {
+      "index": 2,
+      "name": "L.flex.thumb.2",
+      "formula": "bone_angle",
+      "landmarks": [
+        2,
+        3,
+        4
+      ],
+      "scope": "L"
+    },
+    {
+      "index": 3,
+      "name": "L.flex.index.0",
+      "formula": "bone_angle",
+      "landmarks": [
+        0,
+        5,
+        6
+      ],
+      "scope": "L"
+    },
+    {
+      "index": 4,
+      "name": "L.flex.index.1",
+      "formula": "bone_angle",
+      "landmarks": [
+        5,
+        6,
+        7
+      ],
+      "scope": "L"
+    },
+    {
+      "index": 5,
+      "name": "L.flex.index.2",
+      "formula": "bone_angle",
+      "landmarks": [
+        6,
+        7,
+        8
+      ],
+      "scope": "L"
+    },
+    {
+      "index": 6,
+      "name": "L.flex.middle.0",
+      "formula": "bone_angle",
+      "landmarks": [
+        0,
+        9,
+        10
+      ],
+      "scope": "L"
+    },
+    {
+      "index": 7,
+      "name": "L.flex.middle.1",
+      "formula": "bone_angle",
+      "landmarks": [
+        9,
+        10,
+        11
+      ],
+      "scope": "L"
+    },
+    {
+      "index": 8,
+      "name": "L.flex.middle.2",
+      "formula": "bone_angle",
+      "landmarks": [
+        10,
+        11,
+        12
+      ],
+      "scope": "L"
+    },
+    {
+      "index": 9,
+      "name": "L.flex.ring.0",
+      "formula": "bone_angle",
+      "landmarks": [
+        0,
+        13,
+        14
+      ],
+      "scope": "L"
+    },
+    {
+      "index": 10,
+      "name": "L.flex.ring.1",
+      "formula": "bone_angle",
+      "landmarks": [
+        13,
+        14,
+        15
+      ],
+      "scope": "L"
+    },
+    {
+      "index": 11,
+      "name": "L.flex.ring.2",
+      "formula": "bone_angle",
+      "landmarks": [
+        14,
+        15,
+        16
+      ],
+      "scope": "L"
+    },
+    {
+      "index": 12,
+      "name": "L.flex.pinky.0",
+      "formula": "bone_angle",
+      "landmarks": [
+        0,
+        17,
+        18
+      ],
+      "scope": "L"
+    },
+    {
+      "index": 13,
+      "name": "L.flex.pinky.1",
+      "formula": "bone_angle",
+      "landmarks": [
+        17,
+        18,
+        19
+      ],
+      "scope": "L"
+    },
+    {
+      "index": 14,
+      "name": "L.flex.pinky.2",
+      "formula": "bone_angle",
+      "landmarks": [
+        18,
+        19,
+        20
+      ],
+      "scope": "L"
+    },
+    {
+      "index": 15,
+      "name": "L.abd.thumb",
+      "formula": "abduction_angle",
+      "landmarks": [
+        2,
+        3
+      ],
+      "scope": "L"
+    },
+    {
+      "index": 16,
+      "name": "L.abd.index",
+      "formula": "abduction_angle",
+      "landmarks": [
+        5,
+        6
+      ],
+      "scope": "L"
+    },
+    {
+      "index": 17,
+      "name": "L.abd.middle",
+      "formula": "abduction_angle",
+      "landmarks": [
+        9,
+        10
+      ],
+      "scope": "L"
+    },
+    {
+      "index": 18,
+      "name": "L.abd.ring",
+      "formula": "abduction_angle",
+      "landmarks": [
+        13,
+        14
+      ],
+      "scope": "L"
+    },
+    {
+      "index": 19,
+      "name": "L.abd.pinky",
+      "formula": "abduction_angle",
+      "landmarks": [
+        17,
+        18
+      ],
+      "scope": "L"
+    },
+    {
+      "index": 20,
+      "name": "L.tip_palm.thumb",
+      "formula": "tip_palm_dist",
+      "landmarks": [
+        4
+      ],
+      "scope": "L",
+      "palm_center": [
+        0,
+        5,
+        9,
+        13,
+        17
+      ]
+    },
+    {
+      "index": 21,
+      "name": "L.tip_palm.index",
+      "formula": "tip_palm_dist",
+      "landmarks": [
+        8
+      ],
+      "scope": "L",
+      "palm_center": [
+        0,
+        5,
+        9,
+        13,
+        17
+      ]
+    },
+    {
+      "index": 22,
+      "name": "L.tip_palm.middle",
+      "formula": "tip_palm_dist",
+      "landmarks": [
+        12
+      ],
+      "scope": "L",
+      "palm_center": [
+        0,
+        5,
+        9,
+        13,
+        17
+      ]
+    },
+    {
+      "index": 23,
+      "name": "L.tip_palm.ring",
+      "formula": "tip_palm_dist",
+      "landmarks": [
+        16
+      ],
+      "scope": "L",
+      "palm_center": [
+        0,
+        5,
+        9,
+        13,
+        17
+      ]
+    },
+    {
+      "index": 24,
+      "name": "L.tip_palm.pinky",
+      "formula": "tip_palm_dist",
+      "landmarks": [
+        20
+      ],
+      "scope": "L",
+      "palm_center": [
+        0,
+        5,
+        9,
+        13,
+        17
+      ]
+    },
+    {
+      "index": 25,
+      "name": "R.flex.thumb.0",
+      "formula": "bone_angle",
+      "landmarks": [
+        0,
+        1,
+        2
+      ],
+      "scope": "R"
+    },
+    {
+      "index": 26,
+      "name": "R.flex.thumb.1",
+      "formula": "bone_angle",
+      "landmarks": [
+        1,
+        2,
+        3
+      ],
+      "scope": "R"
+    },
+    {
+      "index": 27,
+      "name": "R.flex.thumb.2",
+      "formula": "bone_angle",
+      "landmarks": [
+        2,
+        3,
+        4
+      ],
+      "scope": "R"
+    },
+    {
+      "index": 28,
+      "name": "R.flex.index.0",
+      "formula": "bone_angle",
+      "landmarks": [
+        0,
+        5,
+        6
+      ],
+      "scope": "R"
+    },
+    {
+      "index": 29,
+      "name": "R.flex.index.1",
+      "formula": "bone_angle",
+      "landmarks": [
+        5,
+        6,
+        7
+      ],
+      "scope": "R"
+    },
+    {
+      "index": 30,
+      "name": "R.flex.index.2",
+      "formula": "bone_angle",
+      "landmarks": [
+        6,
+        7,
+        8
+      ],
+      "scope": "R"
+    },
+    {
+      "index": 31,
+      "name": "R.flex.middle.0",
+      "formula": "bone_angle",
+      "landmarks": [
+        0,
+        9,
+        10
+      ],
+      "scope": "R"
+    },
+    {
+      "index": 32,
+      "name": "R.flex.middle.1",
+      "formula": "bone_angle",
+      "landmarks": [
+        9,
+        10,
+        11
+      ],
+      "scope": "R"
+    },
+    {
+      "index": 33,
+      "name": "R.flex.middle.2",
+      "formula": "bone_angle",
+      "landmarks": [
+        10,
+        11,
+        12
+      ],
+      "scope": "R"
+    },
+    {
+      "index": 34,
+      "name": "R.flex.ring.0",
+      "formula": "bone_angle",
+      "landmarks": [
+        0,
+        13,
+        14
+      ],
+      "scope": "R"
+    },
+    {
+      "index": 35,
+      "name": "R.flex.ring.1",
+      "formula": "bone_angle",
+      "landmarks": [
+        13,
+        14,
+        15
+      ],
+      "scope": "R"
+    },
+    {
+      "index": 36,
+      "name": "R.flex.ring.2",
+      "formula": "bone_angle",
+      "landmarks": [
+        14,
+        15,
+        16
+      ],
+      "scope": "R"
+    },
+    {
+      "index": 37,
+      "name": "R.flex.pinky.0",
+      "formula": "bone_angle",
+      "landmarks": [
+        0,
+        17,
+        18
+      ],
+      "scope": "R"
+    },
+    {
+      "index": 38,
+      "name": "R.flex.pinky.1",
+      "formula": "bone_angle",
+      "landmarks": [
+        17,
+        18,
+        19
+      ],
+      "scope": "R"
+    },
+    {
+      "index": 39,
+      "name": "R.flex.pinky.2",
+      "formula": "bone_angle",
+      "landmarks": [
+        18,
+        19,
+        20
+      ],
+      "scope": "R"
+    },
+    {
+      "index": 40,
+      "name": "R.abd.thumb",
+      "formula": "abduction_angle",
+      "landmarks": [
+        2,
+        3
+      ],
+      "scope": "R"
+    },
+    {
+      "index": 41,
+      "name": "R.abd.index",
+      "formula": "abduction_angle",
+      "landmarks": [
+        5,
+        6
+      ],
+      "scope": "R"
+    },
+    {
+      "index": 42,
+      "name": "R.abd.middle",
+      "formula": "abduction_angle",
+      "landmarks": [
+        9,
+        10
+      ],
+      "scope": "R"
+    },
+    {
+      "index": 43,
+      "name": "R.abd.ring",
+      "formula": "abduction_angle",
+      "landmarks": [
+        13,
+        14
+      ],
+      "scope": "R"
+    },
+    {
+      "index": 44,
+      "name": "R.abd.pinky",
+      "formula": "abduction_angle",
+      "landmarks": [
+        17,
+        18
+      ],
+      "scope": "R"
+    },
+    {
+      "index": 45,
+      "name": "R.tip_palm.thumb",
+      "formula": "tip_palm_dist",
+      "landmarks": [
+        4
+      ],
+      "scope": "R",
+      "palm_center": [
+        0,
+        5,
+        9,
+        13,
+        17
+      ]
+    },
+    {
+      "index": 46,
+      "name": "R.tip_palm.index",
+      "formula": "tip_palm_dist",
+      "landmarks": [
+        8
+      ],
+      "scope": "R",
+      "palm_center": [
+        0,
+        5,
+        9,
+        13,
+        17
+      ]
+    },
+    {
+      "index": 47,
+      "name": "R.tip_palm.middle",
+      "formula": "tip_palm_dist",
+      "landmarks": [
+        12
+      ],
+      "scope": "R",
+      "palm_center": [
+        0,
+        5,
+        9,
+        13,
+        17
+      ]
+    },
+    {
+      "index": 48,
+      "name": "R.tip_palm.ring",
+      "formula": "tip_palm_dist",
+      "landmarks": [
+        16
+      ],
+      "scope": "R",
+      "palm_center": [
+        0,
+        5,
+        9,
+        13,
+        17
+      ]
+    },
+    {
+      "index": 49,
+      "name": "R.tip_palm.pinky",
+      "formula": "tip_palm_dist",
+      "landmarks": [
+        20
+      ],
+      "scope": "R",
+      "palm_center": [
+        0,
+        5,
+        9,
+        13,
+        17
+      ]
+    },
+    {
+      "index": 50,
+      "name": "inter.wrist_vec.x",
+      "formula": "wrist_vec_shared_frame",
+      "landmarks": [
+        0
+      ],
+      "scope": "inter"
+    },
+    {
+      "index": 51,
+      "name": "inter.wrist_vec.y",
+      "formula": "wrist_vec_shared_frame",
+      "landmarks": [
+        0
+      ],
+      "scope": "inter"
+    },
+    {
+      "index": 52,
+      "name": "inter.wrist_vec.z",
+      "formula": "wrist_vec_shared_frame",
+      "landmarks": [
+        0
+      ],
+      "scope": "inter"
+    },
+    {
+      "index": 53,
+      "name": "inter.tip_dist.Lthumb_Rthumb",
+      "formula": "tip_tip_dist",
+      "landmarks": [
+        4,
+        4
+      ],
+      "scope": "inter"
+    },
+    {
+      "index": 54,
+      "name": "inter.tip_dist.Lthumb_Rindex",
+      "formula": "tip_tip_dist",
+      "landmarks": [
+        4,
+        8
+      ],
+      "scope": "inter"
+    },
+    {
+      "index": 55,
+      "name": "inter.tip_dist.Lthumb_Rmiddle",
+      "formula": "tip_tip_dist",
+      "landmarks": [
+        4,
+        12
+      ],
+      "scope": "inter"
+    },
+    {
+      "index": 56,
+      "name": "inter.tip_dist.Lthumb_Rring",
+      "formula": "tip_tip_dist",
+      "landmarks": [
+        4,
+        16
+      ],
+      "scope": "inter"
+    },
+    {
+      "index": 57,
+      "name": "inter.tip_dist.Lthumb_Rpinky",
+      "formula": "tip_tip_dist",
+      "landmarks": [
+        4,
+        20
+      ],
+      "scope": "inter"
+    },
+    {
+      "index": 58,
+      "name": "inter.tip_dist.Lindex_Rthumb",
+      "formula": "tip_tip_dist",
+      "landmarks": [
+        8,
+        4
+      ],
+      "scope": "inter"
+    },
+    {
+      "index": 59,
+      "name": "inter.tip_dist.Lindex_Rindex",
+      "formula": "tip_tip_dist",
+      "landmarks": [
+        8,
+        8
+      ],
+      "scope": "inter"
+    },
+    {
+      "index": 60,
+      "name": "inter.tip_dist.Lindex_Rmiddle",
+      "formula": "tip_tip_dist",
+      "landmarks": [
+        8,
+        12
+      ],
+      "scope": "inter"
+    },
+    {
+      "index": 61,
+      "name": "inter.tip_dist.Lindex_Rring",
+      "formula": "tip_tip_dist",
+      "landmarks": [
+        8,
+        16
+      ],
+      "scope": "inter"
+    },
+    {
+      "index": 62,
+      "name": "inter.tip_dist.Lindex_Rpinky",
+      "formula": "tip_tip_dist",
+      "landmarks": [
+        8,
+        20
+      ],
+      "scope": "inter"
+    },
+    {
+      "index": 63,
+      "name": "inter.tip_dist.Lmiddle_Rthumb",
+      "formula": "tip_tip_dist",
+      "landmarks": [
+        12,
+        4
+      ],
+      "scope": "inter"
+    },
+    {
+      "index": 64,
+      "name": "inter.tip_dist.Lmiddle_Rindex",
+      "formula": "tip_tip_dist",
+      "landmarks": [
+        12,
+        8
+      ],
+      "scope": "inter"
+    },
+    {
+      "index": 65,
+      "name": "inter.tip_dist.Lmiddle_Rmiddle",
+      "formula": "tip_tip_dist",
+      "landmarks": [
+        12,
+        12
+      ],
+      "scope": "inter"
+    },
+    {
+      "index": 66,
+      "name": "inter.tip_dist.Lmiddle_Rring",
+      "formula": "tip_tip_dist",
+      "landmarks": [
+        12,
+        16
+      ],
+      "scope": "inter"
+    },
+    {
+      "index": 67,
+      "name": "inter.tip_dist.Lmiddle_Rpinky",
+      "formula": "tip_tip_dist",
+      "landmarks": [
+        12,
+        20
+      ],
+      "scope": "inter"
+    },
+    {
+      "index": 68,
+      "name": "inter.tip_dist.Lring_Rthumb",
+      "formula": "tip_tip_dist",
+      "landmarks": [
+        16,
+        4
+      ],
+      "scope": "inter"
+    },
+    {
+      "index": 69,
+      "name": "inter.tip_dist.Lring_Rindex",
+      "formula": "tip_tip_dist",
+      "landmarks": [
+        16,
+        8
+      ],
+      "scope": "inter"
+    },
+    {
+      "index": 70,
+      "name": "inter.tip_dist.Lring_Rmiddle",
+      "formula": "tip_tip_dist",
+      "landmarks": [
+        16,
+        12
+      ],
+      "scope": "inter"
+    },
+    {
+      "index": 71,
+      "name": "inter.tip_dist.Lring_Rring",
+      "formula": "tip_tip_dist",
+      "landmarks": [
+        16,
+        16
+      ],
+      "scope": "inter"
+    },
+    {
+      "index": 72,
+      "name": "inter.tip_dist.Lring_Rpinky",
+      "formula": "tip_tip_dist",
+      "landmarks": [
+        16,
+        20
+      ],
+      "scope": "inter"
+    },
+    {
+      "index": 73,
+      "name": "inter.tip_dist.Lpinky_Rthumb",
+      "formula": "tip_tip_dist",
+      "landmarks": [
+        20,
+        4
+      ],
+      "scope": "inter"
+    },
+    {
+      "index": 74,
+      "name": "inter.tip_dist.Lpinky_Rindex",
+      "formula": "tip_tip_dist",
+      "landmarks": [
+        20,
+        8
+      ],
+      "scope": "inter"
+    },
+    {
+      "index": 75,
+      "name": "inter.tip_dist.Lpinky_Rmiddle",
+      "formula": "tip_tip_dist",
+      "landmarks": [
+        20,
+        12
+      ],
+      "scope": "inter"
+    },
+    {
+      "index": 76,
+      "name": "inter.tip_dist.Lpinky_Rring",
+      "formula": "tip_tip_dist",
+      "landmarks": [
+        20,
+        16
+      ],
+      "scope": "inter"
+    },
+    {
+      "index": 77,
+      "name": "inter.tip_dist.Lpinky_Rpinky",
+      "formula": "tip_tip_dist",
+      "landmarks": [
+        20,
+        20
+      ],
+      "scope": "inter"
+    },
+    {
+      "index": 78,
+      "name": "inter.normal_angle",
+      "formula": "palm_normal_angle",
+      "landmarks": [
+        0,
+        5,
+        9,
+        17
+      ],
+      "scope": "inter"
+    },
+    {
+      "index": 79,
+      "name": "inter.palms_facing",
+      "formula": "palm_facing",
+      "landmarks": [
+        0,
+        5,
+        9,
+        17
+      ],
+      "scope": "inter"
+    },
+    {
+      "index": 80,
+      "name": "meta.hand_count",
+      "formula": "hand_count",
+      "landmarks": [],
+      "scope": "meta"
+    },
+    {
+      "index": 81,
+      "name": "meta.present_L",
+      "formula": "presence_left",
+      "landmarks": [],
+      "scope": "meta"
+    },
+    {
+      "index": 82,
+      "name": "meta.present_R",
+      "formula": "presence_right",
+      "landmarks": [],
+      "scope": "meta"
+    },
+    {
+      "index": 83,
+      "name": "meta.mean_score",
+      "formula": "mean_handedness_score",
+      "landmarks": [],
+      "scope": "meta"
+    }
+  ]
+}

@@ -1,23 +1,50 @@
-# Python & Environment
+# Python & environment
 venv/
 .venv/
 .cache/
 *.pyc
 __pycache__/
 .pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+dist/
+build/
 
-# OS Files
+# OS files
 .DS_Store
 Thumbs.db
 
-# Raw Dataset & Large Archives (>100MB GitHub limit)
+# Raw dataset & large archives (>100MB GitHub limit)
 Pure Naruto Hand Sign Data/
 *.zip
 prepared_dataset.zip
-cv_model/data/prepared_dataset.zip
-cv_model/data/prepared_dataset/
+data/raw/
+data/prepared/
+data/prepared_dataset/
 
-# Local Training Runs & Temporary Outputs
-cv_model/training/runs/
-cv_model/training/dry_run_output/
+# Models fetched by `make fetch-models` (see models/manifest.yaml)
+models/*.task
+
+# Experiment tracking / data versioning caches
+mlruns/
+.dvc/cache
+
+# Generated outputs and local-only material
+artifacts/
+reports/
+notes/
+INTERVIEW_STUDY_GUIDE.md
+presentation_guide.md
+
+# Local training runs & temporary outputs
+training/runs/
+training/dry_run_output/
 *.log
+
+# Legacy pre-refactor directory: local untracked data (venvs, prepared_dataset*)
+# may still linger here in old checkouts. Never commit any of it.
+cv_model/
+
+# Claude Code agent worktrees / local settings
+.claude/

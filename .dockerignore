@@ -1,0 +1,27 @@
+# Keep the build context small and free of secrets/dev state.
+.git
+.github
+.claude
+.venv
+venv
+**/__pycache__
+**/*.pyc
+.pytest_cache
+.ruff_cache
+.mypy_cache
+**/node_modules
+apps
+docs
+tests
+tools
+training
+mlruns
+dist
+build
+*.zip
+*.md
+# Models are fetched and sha256-verified at build time from models/manifest.yaml;
+# keep the manifest and the git-tracked classifier, drop any local downloads.
+models/*.task
+data
+Pure Naruto Hand Sign Data

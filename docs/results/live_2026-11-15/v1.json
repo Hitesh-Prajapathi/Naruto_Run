@@ -1,0 +1,2804 @@
+{
+  "attempt_count": 39,
+  "attempts": [
+    {
+      "action_accepted_counts": {
+        "bird": 29,
+        "zero": 40
+      },
+      "action_events": [
+        "bird"
+      ],
+      "action_raw_counts": {
+        "bird": 33,
+        "snake": 4,
+        "tiger": 32
+      },
+      "action_stable_counts": {
+        "bird": 26,
+        "zero": 43
+      },
+      "attempt_index": 1,
+      "attempt_type": "label",
+      "detection_latency_ms": 2243,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "bird",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 33,
+        "max": 0.997517841201587,
+        "mean": 0.864413005882574,
+        "median": 0.9407139297461559,
+        "p95": 0.9950971518918068
+      },
+      "expected_label": "bird",
+      "expected_margin": {
+        "count": 33,
+        "max": 0.9962269952263267,
+        "mean": 0.8055997753067861,
+        "median": 0.9130663717054308,
+        "p95": 0.9930276431712213
+      },
+      "first_event_prediction": "bird",
+      "first_event_success": true,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "boar": 3,
+        "snake": 3,
+        "tiger": 25
+      },
+      "rejection_reasons": {
+        "decoder_below_tau_on": 6,
+        "model_zero": 3,
+        "no_hand_landmarks": 31
+      },
+      "success": true,
+      "system_prediction": "bird",
+      "target_emission_count": 1,
+      "target_event_detected": true,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "bird": 41,
+        "zero": 34
+      },
+      "action_events": [
+        "bird"
+      ],
+      "action_raw_counts": {
+        "bird": 46,
+        "tiger": 29
+      },
+      "action_stable_counts": {
+        "bird": 38,
+        "zero": 37
+      },
+      "attempt_index": 2,
+      "attempt_type": "label",
+      "detection_latency_ms": 1706,
+      "dominant_accepted_prediction": "bird",
+      "dominant_raw_prediction": "bird",
+      "dominant_stable_prediction": "bird",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 46,
+        "max": 0.9944156949086607,
+        "mean": 0.9304319827674542,
+        "median": 0.9844112643661365,
+        "p95": 0.9924239729388737
+      },
+      "expected_label": "bird",
+      "expected_margin": {
+        "count": 46,
+        "max": 0.9918609763547694,
+        "mean": 0.8845721551847308,
+        "median": 0.9769542362511334,
+        "p95": 0.9886263947334447
+      },
+      "first_event_prediction": "bird",
+      "first_event_success": true,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "boar": 1,
+        "monkey": 2,
+        "ox": 3,
+        "tiger": 27
+      },
+      "rejection_reasons": {
+        "decoder_below_tau_on": 6,
+        "model_zero": 2,
+        "no_hand_landmarks": 26
+      },
+      "success": true,
+      "system_prediction": "bird",
+      "target_emission_count": 1,
+      "target_event_detected": true,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "bird": 35,
+        "zero": 42
+      },
+      "action_events": [
+        "bird"
+      ],
+      "action_raw_counts": {
+        "bird": 37,
+        "tiger": 40
+      },
+      "action_stable_counts": {
+        "bird": 32,
+        "zero": 45
+      },
+      "attempt_index": 3,
+      "attempt_type": "label",
+      "detection_latency_ms": 2007,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "tiger",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 37,
+        "max": 0.9944419069323562,
+        "mean": 0.9337443024896962,
+        "median": 0.9606134443315303,
+        "p95": 0.9933070450283275
+      },
+      "expected_label": "bird",
+      "expected_margin": {
+        "count": 37,
+        "max": 0.991772654868337,
+        "mean": 0.9017185394313469,
+        "median": 0.9378355330500048,
+        "p95": 0.9901146890494271
+      },
+      "first_event_prediction": "bird",
+      "first_event_success": true,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "monkey": 4,
+        "rat": 8,
+        "tiger": 21
+      },
+      "rejection_reasons": {
+        "decoder_below_tau_on": 2,
+        "model_zero": 2,
+        "no_hand_landmarks": 38
+      },
+      "success": true,
+      "system_prediction": "bird",
+      "target_emission_count": 1,
+      "target_event_detected": true,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "boar": 15,
+        "zero": 57
+      },
+      "action_events": [
+        "boar"
+      ],
+      "action_raw_counts": {
+        "boar": 32,
+        "monkey": 1,
+        "ox": 17,
+        "tiger": 22
+      },
+      "action_stable_counts": {
+        "boar": 12,
+        "zero": 60
+      },
+      "attempt_index": 1,
+      "attempt_type": "label",
+      "detection_latency_ms": 2923,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "boar",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 32,
+        "max": 0.8223635996521061,
+        "mean": 0.6262278673267339,
+        "median": 0.6166762630120547,
+        "p95": 0.7966870996715925
+      },
+      "expected_label": "boar",
+      "expected_margin": {
+        "count": 32,
+        "max": 0.6914905325706808,
+        "mean": 0.3375897784156716,
+        "median": 0.26790171924507045,
+        "p95": 0.6496008949981962
+      },
+      "first_event_prediction": "boar",
+      "first_event_success": true,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "boar": 2,
+        "monkey": 2,
+        "ox": 4,
+        "tiger": 24,
+        "zero": 1
+      },
+      "rejection_reasons": {
+        "decoder_below_tau_on": 30,
+        "model_zero": 4,
+        "no_hand_landmarks": 23
+      },
+      "success": true,
+      "system_prediction": "boar",
+      "target_emission_count": 1,
+      "target_event_detected": true,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "boar": 3,
+        "zero": 69
+      },
+      "action_events": [],
+      "action_raw_counts": {
+        "boar": 52,
+        "ox": 8,
+        "ram": 1,
+        "tiger": 11
+      },
+      "action_stable_counts": {
+        "zero": 72
+      },
+      "attempt_index": 2,
+      "attempt_type": "label",
+      "detection_latency_ms": null,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "boar",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 52,
+        "max": 0.8567697047608602,
+        "mean": 0.5107798695443253,
+        "median": 0.5025373146491016,
+        "p95": 0.6548938136682988
+      },
+      "expected_label": "boar",
+      "expected_margin": {
+        "count": 52,
+        "max": 0.7401093961880545,
+        "mean": 0.18144949242160502,
+        "median": 0.1691750469629233,
+        "p95": 0.38023318395141265
+      },
+      "first_event_prediction": null,
+      "first_event_success": false,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "boar": 5,
+        "monkey": 1,
+        "snake": 2,
+        "tiger": 21,
+        "zero": 1
+      },
+      "rejection_reasons": {
+        "decoder_below_tau_on": 53,
+        "model_zero": 3,
+        "no_hand_landmarks": 13
+      },
+      "success": false,
+      "system_prediction": null,
+      "target_emission_count": 0,
+      "target_event_detected": false,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "boar": 45,
+        "zero": 32
+      },
+      "action_events": [
+        "boar"
+      ],
+      "action_raw_counts": {
+        "boar": 56,
+        "monkey": 1,
+        "ox": 1,
+        "ram": 7,
+        "snake": 1,
+        "tiger": 11
+      },
+      "action_stable_counts": {
+        "boar": 42,
+        "zero": 35
+      },
+      "attempt_index": 3,
+      "attempt_type": "label",
+      "detection_latency_ms": 1510,
+      "dominant_accepted_prediction": "boar",
+      "dominant_raw_prediction": "boar",
+      "dominant_stable_prediction": "boar",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 56,
+        "max": 0.9449651176527011,
+        "mean": 0.7191035004440586,
+        "median": 0.772168207981913,
+        "p95": 0.9070166528191533
+      },
+      "expected_label": "boar",
+      "expected_margin": {
+        "count": 56,
+        "max": 0.9237156461241167,
+        "mean": 0.5975182383033332,
+        "median": 0.6486569674651714,
+        "p95": 0.8697420824121559
+      },
+      "first_event_prediction": "boar",
+      "first_event_success": true,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "monkey": 1,
+        "ox": 12,
+        "ram": 6,
+        "snake": 6,
+        "tiger": 13
+      },
+      "rejection_reasons": {
+        "decoder_below_tau_on": 5,
+        "model_zero": 7,
+        "no_hand_landmarks": 20
+      },
+      "success": true,
+      "system_prediction": "boar",
+      "target_emission_count": 1,
+      "target_event_detected": true,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "ox": 21,
+        "zero": 52
+      },
+      "action_events": [
+        "ox",
+        "ox"
+      ],
+      "action_raw_counts": {
+        "dog": 9,
+        "monkey": 1,
+        "ox": 32,
+        "tiger": 31
+      },
+      "action_stable_counts": {
+        "ox": 21,
+        "zero": 52
+      },
+      "attempt_index": 1,
+      "attempt_type": "label",
+      "detection_latency_ms": null,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "ox",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 1,
+      "expected_confidence": {
+        "count": 9,
+        "max": 0.8179197888414181,
+        "mean": 0.5782820320648248,
+        "median": 0.5114800090988613,
+        "p95": 0.7852356703246675
+      },
+      "expected_label": "dog",
+      "expected_margin": {
+        "count": 9,
+        "max": 0.73065055408767,
+        "mean": 0.22815844540933294,
+        "median": 0.16015524572042944,
+        "p95": 0.6483553889488878
+      },
+      "first_event_prediction": "ox",
+      "first_event_success": false,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "boar": 7,
+        "hare": 1,
+        "ox": 14,
+        "snake": 2,
+        "tiger": 9
+      },
+      "rejection_reasons": {
+        "decoder_below_tau_on": 19,
+        "model_zero": 2,
+        "no_hand_landmarks": 31
+      },
+      "success": false,
+      "system_prediction": "ox",
+      "target_emission_count": 0,
+      "target_event_detected": false,
+      "unexpected_action_events": [
+        "ox",
+        "ox"
+      ]
+    },
+    {
+      "action_accepted_counts": {
+        "dog": 11,
+        "ox": 19,
+        "zero": 44
+      },
+      "action_events": [
+        "ox",
+        "dog"
+      ],
+      "action_raw_counts": {
+        "dog": 42,
+        "ox": 32
+      },
+      "action_stable_counts": {
+        "dog": 29,
+        "ox": 35,
+        "zero": 10
+      },
+      "attempt_index": 2,
+      "attempt_type": "label",
+      "detection_latency_ms": 2097,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "dog",
+      "dominant_stable_prediction": "ox",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 42,
+        "max": 0.742633101152993,
+        "mean": 0.5509546412996917,
+        "median": 0.5842787998744445,
+        "p95": 0.6745064389115337
+      },
+      "expected_label": "dog",
+      "expected_margin": {
+        "count": 42,
+        "max": 0.5423159887989051,
+        "mean": 0.21451466680228556,
+        "median": 0.23377725806648333,
+        "p95": 0.41470818439487533
+      },
+      "first_event_prediction": "ox",
+      "first_event_success": false,
+      "mode": "hand",
+      "prepare_false_positive_events": [
+        "ox"
+      ],
+      "prepare_raw_counts": {
+        "dog": 3,
+        "monkey": 1,
+        "ox": 23,
+        "tiger": 5
+      },
+      "rejection_reasons": {
+        "decoder_below_tau_on": 44
+      },
+      "success": false,
+      "system_prediction": "ox",
+      "target_emission_count": 1,
+      "target_event_detected": true,
+      "unexpected_action_events": [
+        "ox"
+      ]
+    },
+    {
+      "action_accepted_counts": {
+        "ox": 17,
+        "zero": 56
+      },
+      "action_events": [
+        "ox",
+        "ox"
+      ],
+      "action_raw_counts": {
+        "dog": 13,
+        "ox": 43,
+        "tiger": 17
+      },
+      "action_stable_counts": {
+        "ox": 21,
+        "zero": 52
+      },
+      "attempt_index": 3,
+      "attempt_type": "label",
+      "detection_latency_ms": null,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "ox",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 1,
+      "expected_confidence": {
+        "count": 13,
+        "max": 0.843957342198269,
+        "mean": 0.5192175238712831,
+        "median": 0.4706828513414647,
+        "p95": 0.7407902393228639
+      },
+      "expected_label": "dog",
+      "expected_margin": {
+        "count": 13,
+        "max": 0.7958975284131818,
+        "mean": 0.17989403473054782,
+        "median": 0.17214570491410847,
+        "p95": 0.5671215727948212
+      },
+      "first_event_prediction": "ox",
+      "first_event_success": false,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "boar": 7,
+        "monkey": 2,
+        "ram": 1,
+        "tiger": 24
+      },
+      "rejection_reasons": {
+        "decoder_below_tau_on": 37,
+        "model_zero": 2,
+        "no_hand_landmarks": 17
+      },
+      "success": false,
+      "system_prediction": "ox",
+      "target_emission_count": 0,
+      "target_event_detected": false,
+      "unexpected_action_events": [
+        "ox",
+        "ox"
+      ]
+    },
+    {
+      "action_accepted_counts": {
+        "zero": 74
+      },
+      "action_events": [],
+      "action_raw_counts": {
+        "dragon": 24,
+        "monkey": 1,
+        "ox": 17,
+        "tiger": 30,
+        "zero": 2
+      },
+      "action_stable_counts": {
+        "zero": 74
+      },
+      "attempt_index": 1,
+      "attempt_type": "label",
+      "detection_latency_ms": null,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "tiger",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 24,
+        "max": 0.5278715259872055,
+        "mean": 0.3042969224789721,
+        "median": 0.3026760084021922,
+        "p95": 0.3565072546634553
+      },
+      "expected_label": "dragon",
+      "expected_margin": {
+        "count": 24,
+        "max": 0.2591145029292529,
+        "mean": 0.14954708378748996,
+        "median": 0.1618129966608361,
+        "p95": 0.23842186277088961
+      },
+      "first_event_prediction": null,
+      "first_event_success": false,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "tiger": 32,
+        "zero": 8
+      },
+      "rejection_reasons": {
+        "decoder_below_tau_on": 40,
+        "model_zero": 4,
+        "no_hand_landmarks": 30
+      },
+      "success": false,
+      "system_prediction": null,
+      "target_emission_count": 0,
+      "target_event_detected": false,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "zero": 75
+      },
+      "action_events": [],
+      "action_raw_counts": {
+        "dragon": 15,
+        "horse": 2,
+        "ox": 42,
+        "tiger": 14,
+        "zero": 2
+      },
+      "action_stable_counts": {
+        "zero": 75
+      },
+      "attempt_index": 2,
+      "attempt_type": "label",
+      "detection_latency_ms": null,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "ox",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 15,
+        "max": 0.3420537411504497,
+        "mean": 0.23649104330887638,
+        "median": 0.23318679242795404,
+        "p95": 0.32600864804559515
+      },
+      "expected_label": "dragon",
+      "expected_margin": {
+        "count": 15,
+        "max": 0.17913994860720533,
+        "mean": 0.06198748993920316,
+        "median": 0.05815999324644111,
+        "p95": 0.15013115347932574
+      },
+      "first_event_prediction": null,
+      "first_event_success": false,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "monkey": 1,
+        "ox": 2,
+        "tiger": 28,
+        "zero": 1
+      },
+      "rejection_reasons": {
+        "decoder_below_tau_on": 59,
+        "model_zero": 3,
+        "no_hand_landmarks": 13
+      },
+      "success": false,
+      "system_prediction": null,
+      "target_emission_count": 0,
+      "target_event_detected": false,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "ox": 8,
+        "zero": 66
+      },
+      "action_events": [
+        "ox"
+      ],
+      "action_raw_counts": {
+        "dragon": 15,
+        "monkey": 2,
+        "ox": 48,
+        "tiger": 5,
+        "zero": 4
+      },
+      "action_stable_counts": {
+        "ox": 18,
+        "zero": 56
+      },
+      "attempt_index": 3,
+      "attempt_type": "label",
+      "detection_latency_ms": null,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "ox",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 15,
+        "max": 0.5714852683003353,
+        "mean": 0.4900496125295389,
+        "median": 0.4897005162781301,
+        "p95": 0.5591832563592555
+      },
+      "expected_label": "dragon",
+      "expected_margin": {
+        "count": 15,
+        "max": 0.30236513358767675,
+        "mean": 0.1318109202618919,
+        "median": 0.11144025195882556,
+        "p95": 0.23515294460145653
+      },
+      "first_event_prediction": "ox",
+      "first_event_success": false,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "tiger": 33
+      },
+      "rejection_reasons": {
+        "decoder_below_tau_on": 56,
+        "model_zero": 5,
+        "no_hand_landmarks": 5
+      },
+      "success": false,
+      "system_prediction": "ox",
+      "target_emission_count": 0,
+      "target_event_detected": false,
+      "unexpected_action_events": [
+        "ox"
+      ]
+    },
+    {
+      "action_accepted_counts": {
+        "hare": 5,
+        "ox": 16,
+        "zero": 57
+      },
+      "action_events": [
+        "ox"
+      ],
+      "action_raw_counts": {
+        "hare": 18,
+        "monkey": 1,
+        "ox": 24,
+        "tiger": 34,
+        "zero": 1
+      },
+      "action_stable_counts": {
+        "ox": 18,
+        "zero": 60
+      },
+      "attempt_index": 1,
+      "attempt_type": "label",
+      "detection_latency_ms": null,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "tiger",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 18,
+        "max": 0.857498931855762,
+        "mean": 0.6385206421342662,
+        "median": 0.5955563502493323,
+        "p95": 0.8291595254302161
+      },
+      "expected_label": "hare",
+      "expected_margin": {
+        "count": 18,
+        "max": 0.7286743945601061,
+        "mean": 0.29784128748739147,
+        "median": 0.2143330982407097,
+        "p95": 0.6800002980256556
+      },
+      "first_event_prediction": "ox",
+      "first_event_success": false,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "ox": 17,
+        "tiger": 22
+      },
+      "rejection_reasons": {
+        "decoder_below_tau_on": 21,
+        "model_zero": 2,
+        "no_hand_landmarks": 34
+      },
+      "success": false,
+      "system_prediction": "ox",
+      "target_emission_count": 0,
+      "target_event_detected": false,
+      "unexpected_action_events": [
+        "ox"
+      ]
+    },
+    {
+      "action_accepted_counts": {
+        "ox": 57,
+        "zero": 18
+      },
+      "action_events": [
+        "ox"
+      ],
+      "action_raw_counts": {
+        "hare": 1,
+        "ox": 61,
+        "tiger": 13
+      },
+      "action_stable_counts": {
+        "ox": 54,
+        "zero": 21
+      },
+      "attempt_index": 2,
+      "attempt_type": "label",
+      "detection_latency_ms": null,
+      "dominant_accepted_prediction": "ox",
+      "dominant_raw_prediction": "ox",
+      "dominant_stable_prediction": "ox",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 1,
+        "max": 0.35323091417356367,
+        "mean": 0.35323091417356367,
+        "median": 0.35323091417356367,
+        "p95": 0.35323091417356367
+      },
+      "expected_label": "hare",
+      "expected_margin": {
+        "count": 1,
+        "max": 0.17672728350566472,
+        "mean": 0.17672728350566472,
+        "median": 0.17672728350566472,
+        "p95": 0.17672728350566472
+      },
+      "first_event_prediction": "ox",
+      "first_event_success": false,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "boar": 2,
+        "tiger": 29
+      },
+      "rejection_reasons": {
+        "decoder_below_tau_on": 2,
+        "model_zero": 5,
+        "no_hand_landmarks": 11
+      },
+      "success": false,
+      "system_prediction": "ox",
+      "target_emission_count": 0,
+      "target_event_detected": false,
+      "unexpected_action_events": [
+        "ox"
+      ]
+    },
+    {
+      "action_accepted_counts": {
+        "ox": 43,
+        "zero": 31
+      },
+      "action_events": [
+        "ox"
+      ],
+      "action_raw_counts": {
+        "hare": 3,
+        "ox": 57,
+        "tiger": 14
+      },
+      "action_stable_counts": {
+        "ox": 54,
+        "zero": 20
+      },
+      "attempt_index": 3,
+      "attempt_type": "label",
+      "detection_latency_ms": null,
+      "dominant_accepted_prediction": "ox",
+      "dominant_raw_prediction": "ox",
+      "dominant_stable_prediction": "ox",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 3,
+        "max": 0.5211650898785047,
+        "mean": 0.5083303157660523,
+        "median": 0.5196078687093849,
+        "p95": 0.5210093677615928
+      },
+      "expected_label": "hare",
+      "expected_margin": {
+        "count": 3,
+        "max": 0.12067689501389223,
+        "mean": 0.09603790610440462,
+        "median": 0.11924820454158763,
+        "p95": 0.12053402596666177
+      },
+      "first_event_prediction": "ox",
+      "first_event_success": false,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "boar": 8,
+        "ox": 2,
+        "tiger": 23
+      },
+      "rejection_reasons": {
+        "decoder_below_tau_on": 16,
+        "model_zero": 4,
+        "no_hand_landmarks": 11
+      },
+      "success": false,
+      "system_prediction": "ox",
+      "target_emission_count": 0,
+      "target_event_detected": false,
+      "unexpected_action_events": [
+        "ox"
+      ]
+    },
+    {
+      "action_accepted_counts": {
+        "horse": 31,
+        "zero": 44
+      },
+      "action_events": [
+        "horse"
+      ],
+      "action_raw_counts": {
+        "horse": 39,
+        "monkey": 1,
+        "snake": 3,
+        "tiger": 31,
+        "zero": 1
+      },
+      "action_stable_counts": {
+        "horse": 28,
+        "zero": 47
+      },
+      "attempt_index": 1,
+      "attempt_type": "label",
+      "detection_latency_ms": 2148,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "horse",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 39,
+        "max": 0.7943825611847835,
+        "mean": 0.6680893825735738,
+        "median": 0.6873016152797043,
+        "p95": 0.7852618807849386
+      },
+      "expected_label": "horse",
+      "expected_margin": {
+        "count": 39,
+        "max": 0.7126473077614482,
+        "mean": 0.5285080968412377,
+        "median": 0.559292231833672,
+        "p95": 0.6946242975806747
+      },
+      "first_event_prediction": "horse",
+      "first_event_success": true,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "dragon": 1,
+        "monkey": 2,
+        "ox": 3,
+        "tiger": 26
+      },
+      "rejection_reasons": {
+        "decoder_below_tau_on": 8,
+        "model_zero": 5,
+        "no_hand_landmarks": 31
+      },
+      "success": true,
+      "system_prediction": "horse",
+      "target_emission_count": 1,
+      "target_event_detected": true,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "horse": 52,
+        "zero": 21
+      },
+      "action_events": [
+        "horse"
+      ],
+      "action_raw_counts": {
+        "boar": 6,
+        "horse": 59,
+        "tiger": 6,
+        "zero": 2
+      },
+      "action_stable_counts": {
+        "horse": 49,
+        "zero": 24
+      },
+      "attempt_index": 2,
+      "attempt_type": "label",
+      "detection_latency_ms": 1179,
+      "dominant_accepted_prediction": "horse",
+      "dominant_raw_prediction": "horse",
+      "dominant_stable_prediction": "horse",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 59,
+        "max": 0.8978247577403358,
+        "mean": 0.7840810008403298,
+        "median": 0.8268345270849922,
+        "p95": 0.8859419629509633
+      },
+      "expected_label": "horse",
+      "expected_margin": {
+        "count": 59,
+        "max": 0.8577576643860811,
+        "mean": 0.6827945733891746,
+        "median": 0.7439502721775677,
+        "p95": 0.8316505809198784
+      },
+      "first_event_prediction": "horse",
+      "first_event_success": true,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "boar": 5,
+        "monkey": 2,
+        "snake": 1,
+        "tiger": 22
+      },
+      "rejection_reasons": {
+        "decoder_below_tau_on": 7,
+        "model_zero": 8,
+        "no_hand_landmarks": 6
+      },
+      "success": true,
+      "system_prediction": "horse",
+      "target_emission_count": 1,
+      "target_event_detected": true,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "horse": 55,
+        "zero": 15
+      },
+      "action_events": [
+        "horse"
+      ],
+      "action_raw_counts": {
+        "horse": 61,
+        "monkey": 1,
+        "tiger": 8
+      },
+      "action_stable_counts": {
+        "horse": 52,
+        "zero": 18
+      },
+      "attempt_index": 3,
+      "attempt_type": "label",
+      "detection_latency_ms": 951,
+      "dominant_accepted_prediction": "horse",
+      "dominant_raw_prediction": "horse",
+      "dominant_stable_prediction": "horse",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 61,
+        "max": 0.8467080858071557,
+        "mean": 0.7340806479692387,
+        "median": 0.7599017243116483,
+        "p95": 0.8250887106458746
+      },
+      "expected_label": "horse",
+      "expected_margin": {
+        "count": 61,
+        "max": 0.7897882424382814,
+        "mean": 0.6431900385147618,
+        "median": 0.6690188475140305,
+        "p95": 0.7598538579168828
+      },
+      "first_event_prediction": "horse",
+      "first_event_success": true,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "boar": 11,
+        "dog": 1,
+        "monkey": 2,
+        "ram": 11,
+        "rat": 1,
+        "snake": 1,
+        "tiger": 5
+      },
+      "rejection_reasons": {
+        "decoder_below_tau_on": 4,
+        "model_zero": 3,
+        "no_hand_landmarks": 8
+      },
+      "success": true,
+      "system_prediction": "horse",
+      "target_emission_count": 1,
+      "target_event_detected": true,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "ox": 24,
+        "zero": 46
+      },
+      "action_events": [
+        "ox"
+      ],
+      "action_raw_counts": {
+        "boar": 1,
+        "monkey": 6,
+        "ox": 32,
+        "tiger": 31
+      },
+      "action_stable_counts": {
+        "ox": 22,
+        "zero": 48
+      },
+      "attempt_index": 1,
+      "attempt_type": "label",
+      "detection_latency_ms": null,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "ox",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 6,
+        "max": 0.722906733455451,
+        "mean": 0.6196395525591017,
+        "median": 0.6523545922112391,
+        "p95": 0.7130687675594751
+      },
+      "expected_label": "monkey",
+      "expected_margin": {
+        "count": 6,
+        "max": 0.5293757671640099,
+        "mean": 0.3247084721862888,
+        "median": 0.41145554280440566,
+        "p95": 0.5234095290299953
+      },
+      "first_event_prediction": "ox",
+      "first_event_success": false,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "boar": 2,
+        "ram": 1,
+        "tiger": 29
+      },
+      "rejection_reasons": {
+        "decoder_below_tau_on": 13,
+        "model_zero": 2,
+        "no_hand_landmarks": 31
+      },
+      "success": false,
+      "system_prediction": "ox",
+      "target_emission_count": 0,
+      "target_event_detected": false,
+      "unexpected_action_events": [
+        "ox"
+      ]
+    },
+    {
+      "action_accepted_counts": {
+        "monkey": 29,
+        "ox": 4,
+        "zero": 36
+      },
+      "action_events": [
+        "ox",
+        "monkey"
+      ],
+      "action_raw_counts": {
+        "hare": 8,
+        "monkey": 45,
+        "ox": 8,
+        "tiger": 8
+      },
+      "action_stable_counts": {
+        "monkey": 30,
+        "ox": 3,
+        "zero": 36
+      },
+      "attempt_index": 2,
+      "attempt_type": "label",
+      "detection_latency_ms": 1337,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "monkey",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 45,
+        "max": 0.9731247947335819,
+        "mean": 0.7223510604843201,
+        "median": 0.7272247662028917,
+        "p95": 0.9520230955754545
+      },
+      "expected_label": "monkey",
+      "expected_margin": {
+        "count": 45,
+        "max": 0.9618150613341512,
+        "mean": 0.5358172276384736,
+        "median": 0.5666647799196828,
+        "p95": 0.9302769555194255
+      },
+      "first_event_prediction": "ox",
+      "first_event_success": false,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "boar": 3,
+        "hare": 1,
+        "monkey": 3,
+        "ox": 9,
+        "snake": 3,
+        "tiger": 11
+      },
+      "rejection_reasons": {
+        "decoder_below_tau_on": 27,
+        "model_zero": 4,
+        "no_hand_landmarks": 5
+      },
+      "success": false,
+      "system_prediction": "ox",
+      "target_emission_count": 1,
+      "target_event_detected": true,
+      "unexpected_action_events": [
+        "ox"
+      ]
+    },
+    {
+      "action_accepted_counts": {
+        "monkey": 4,
+        "ox": 14,
+        "zero": 54
+      },
+      "action_events": [
+        "ox",
+        "monkey"
+      ],
+      "action_raw_counts": {
+        "hare": 3,
+        "monkey": 12,
+        "ox": 48,
+        "tiger": 9
+      },
+      "action_stable_counts": {
+        "monkey": 1,
+        "ox": 18,
+        "zero": 53
+      },
+      "attempt_index": 3,
+      "attempt_type": "label",
+      "detection_latency_ms": 3429,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "ox",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 12,
+        "max": 0.9687964650438765,
+        "mean": 0.7562504900786124,
+        "median": 0.7958872926639695,
+        "p95": 0.9610877228907141
+      },
+      "expected_label": "monkey",
+      "expected_margin": {
+        "count": 12,
+        "max": 0.9388456372080923,
+        "mean": 0.5284342460596835,
+        "median": 0.6476253979334251,
+        "p95": 0.9356507278151118
+      },
+      "first_event_prediction": "ox",
+      "first_event_success": false,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "boar": 4,
+        "ox": 5,
+        "tiger": 24
+      },
+      "rejection_reasons": {
+        "decoder_below_tau_on": 38,
+        "model_zero": 3,
+        "no_hand_landmarks": 13
+      },
+      "success": false,
+      "system_prediction": "ox",
+      "target_emission_count": 1,
+      "target_event_detected": true,
+      "unexpected_action_events": [
+        "ox"
+      ]
+    },
+    {
+      "action_accepted_counts": {
+        "monkey": 13,
+        "ox": 37,
+        "zero": 22
+      },
+      "action_events": [
+        "monkey",
+        "ox"
+      ],
+      "action_raw_counts": {
+        "boar": 2,
+        "monkey": 18,
+        "ox": 43,
+        "ram": 1,
+        "tiger": 8
+      },
+      "action_stable_counts": {
+        "monkey": 12,
+        "ox": 34,
+        "zero": 26
+      },
+      "attempt_index": 1,
+      "attempt_type": "label",
+      "detection_latency_ms": 1892,
+      "dominant_accepted_prediction": "ox",
+      "dominant_raw_prediction": "ox",
+      "dominant_stable_prediction": "ox",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 43,
+        "max": 0.9986653847462765,
+        "mean": 0.9127957114805035,
+        "median": 0.9958365850264728,
+        "p95": 0.9976837327661989
+      },
+      "expected_label": "ox",
+      "expected_margin": {
+        "count": 43,
+        "max": 0.9982244384616912,
+        "mean": 0.883275576788404,
+        "median": 0.9938046929315328,
+        "p95": 0.9967760319614319
+      },
+      "first_event_prediction": "monkey",
+      "first_event_success": false,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "boar": 11,
+        "monkey": 7,
+        "ox": 7,
+        "ram": 11,
+        "tiger": 1
+      },
+      "rejection_reasons": {
+        "decoder_below_tau_on": 6,
+        "model_zero": 3,
+        "no_hand_landmarks": 13
+      },
+      "success": false,
+      "system_prediction": "monkey",
+      "target_emission_count": 1,
+      "target_event_detected": true,
+      "unexpected_action_events": [
+        "monkey"
+      ]
+    },
+    {
+      "action_accepted_counts": {
+        "ox": 47,
+        "zero": 24
+      },
+      "action_events": [
+        "ox"
+      ],
+      "action_raw_counts": {
+        "boar": 2,
+        "ox": 48,
+        "snake": 6,
+        "tiger": 15
+      },
+      "action_stable_counts": {
+        "ox": 44,
+        "zero": 27
+      },
+      "attempt_index": 2,
+      "attempt_type": "label",
+      "detection_latency_ms": 1252,
+      "dominant_accepted_prediction": "ox",
+      "dominant_raw_prediction": "ox",
+      "dominant_stable_prediction": "ox",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 48,
+        "max": 0.9974441811940974,
+        "mean": 0.9779198744802554,
+        "median": 0.9826081036988261,
+        "p95": 0.9929659745012509
+      },
+      "expected_label": "ox",
+      "expected_margin": {
+        "count": 48,
+        "max": 0.9965526810561303,
+        "mean": 0.9710379940012451,
+        "median": 0.9789847510434159,
+        "p95": 0.9916223885178272
+      },
+      "first_event_prediction": "ox",
+      "first_event_success": true,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "boar": 11,
+        "monkey": 5,
+        "ram": 1,
+        "snake": 1,
+        "tiger": 19
+      },
+      "rejection_reasons": {
+        "decoder_below_tau_on": 1,
+        "model_zero": 2,
+        "no_hand_landmarks": 21
+      },
+      "success": true,
+      "system_prediction": "ox",
+      "target_emission_count": 1,
+      "target_event_detected": true,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "ox": 60,
+        "zero": 15
+      },
+      "action_events": [
+        "ox"
+      ],
+      "action_raw_counts": {
+        "boar": 1,
+        "monkey": 1,
+        "ox": 62,
+        "ram": 10,
+        "tiger": 1
+      },
+      "action_stable_counts": {
+        "ox": 57,
+        "zero": 18
+      },
+      "attempt_index": 3,
+      "attempt_type": "label",
+      "detection_latency_ms": 805,
+      "dominant_accepted_prediction": "ox",
+      "dominant_raw_prediction": "ox",
+      "dominant_stable_prediction": "ox",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 62,
+        "max": 0.9984615075271414,
+        "mean": 0.9810406909770074,
+        "median": 0.985874182821576,
+        "p95": 0.9959963783547621
+      },
+      "expected_label": "ox",
+      "expected_margin": {
+        "count": 62,
+        "max": 0.9977743471418192,
+        "mean": 0.9740212278668225,
+        "median": 0.9826518014550427,
+        "p95": 0.994580571473647
+      },
+      "first_event_prediction": "ox",
+      "first_event_success": true,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "boar": 22,
+        "monkey": 2,
+        "ox": 6,
+        "ram": 7,
+        "snake": 3,
+        "tiger": 2
+      },
+      "rejection_reasons": {
+        "decoder_below_tau_on": 1,
+        "model_zero": 3,
+        "no_hand_landmarks": 11
+      },
+      "success": true,
+      "system_prediction": "ox",
+      "target_emission_count": 1,
+      "target_event_detected": true,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "ram": 35,
+        "zero": 45
+      },
+      "action_events": [
+        "ram"
+      ],
+      "action_raw_counts": {
+        "ox": 1,
+        "ram": 42,
+        "tiger": 37
+      },
+      "action_stable_counts": {
+        "ram": 32,
+        "zero": 48
+      },
+      "attempt_index": 1,
+      "attempt_type": "label",
+      "detection_latency_ms": 1885,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "ram",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 42,
+        "max": 0.9225892011920248,
+        "mean": 0.7564256470691191,
+        "median": 0.8021025408580384,
+        "p95": 0.9091482209177701
+      },
+      "expected_label": "ram",
+      "expected_margin": {
+        "count": 42,
+        "max": 0.8606794705937943,
+        "mean": 0.5972344583365101,
+        "median": 0.6575888510896719,
+        "p95": 0.8426922654109965
+      },
+      "first_event_prediction": "ram",
+      "first_event_success": true,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "boar": 2,
+        "ram": 2,
+        "snake": 6,
+        "tiger": 23
+      },
+      "rejection_reasons": {
+        "decoder_below_tau_on": 5,
+        "model_zero": 3,
+        "no_hand_landmarks": 37
+      },
+      "success": true,
+      "system_prediction": "ram",
+      "target_emission_count": 1,
+      "target_event_detected": true,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "ram": 50,
+        "zero": 21
+      },
+      "action_events": [
+        "ram"
+      ],
+      "action_raw_counts": {
+        "bird": 2,
+        "monkey": 2,
+        "ram": 56,
+        "snake": 1,
+        "tiger": 10
+      },
+      "action_stable_counts": {
+        "ram": 47,
+        "zero": 24
+      },
+      "attempt_index": 2,
+      "attempt_type": "label",
+      "detection_latency_ms": 1151,
+      "dominant_accepted_prediction": "ram",
+      "dominant_raw_prediction": "ram",
+      "dominant_stable_prediction": "ram",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 56,
+        "max": 0.9913643919509055,
+        "mean": 0.8755214510602104,
+        "median": 0.9262512607723353,
+        "p95": 0.9876792656797678
+      },
+      "expected_label": "ram",
+      "expected_margin": {
+        "count": 56,
+        "max": 0.9839540547204249,
+        "mean": 0.7741364074119187,
+        "median": 0.8563481994504831,
+        "p95": 0.9768031844021814
+      },
+      "first_event_prediction": "ram",
+      "first_event_success": true,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "boar": 4,
+        "dog": 2,
+        "monkey": 1,
+        "ram": 3,
+        "snake": 1,
+        "tiger": 19,
+        "zero": 7
+      },
+      "rejection_reasons": {
+        "decoder_below_tau_on": 7,
+        "model_zero": 3,
+        "no_hand_landmarks": 11
+      },
+      "success": true,
+      "system_prediction": "ram",
+      "target_emission_count": 1,
+      "target_event_detected": true,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "ram": 60,
+        "zero": 10
+      },
+      "action_events": [
+        "ram"
+      ],
+      "action_raw_counts": {
+        "boar": 1,
+        "monkey": 2,
+        "ram": 64,
+        "rat": 1,
+        "snake": 2
+      },
+      "action_stable_counts": {
+        "ram": 57,
+        "zero": 13
+      },
+      "attempt_index": 3,
+      "attempt_type": "label",
+      "detection_latency_ms": 628,
+      "dominant_accepted_prediction": "ram",
+      "dominant_raw_prediction": "ram",
+      "dominant_stable_prediction": "ram",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 64,
+        "max": 0.9841667863626615,
+        "mean": 0.8480146320362256,
+        "median": 0.8716446849074867,
+        "p95": 0.9685452271109746
+      },
+      "expected_label": "ram",
+      "expected_margin": {
+        "count": 64,
+        "max": 0.9754577307362537,
+        "mean": 0.7223473266051912,
+        "median": 0.7540732515570685,
+        "p95": 0.9448429421681993
+      },
+      "first_event_prediction": "ram",
+      "first_event_success": true,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "boar": 5,
+        "monkey": 3,
+        "ram": 7,
+        "tiger": 19,
+        "zero": 1
+      },
+      "rejection_reasons": {
+        "decoder_below_tau_on": 4,
+        "model_zero": 4,
+        "no_hand_landmarks": 2
+      },
+      "success": true,
+      "system_prediction": "ram",
+      "target_emission_count": 1,
+      "target_event_detected": true,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "rat": 37,
+        "zero": 43
+      },
+      "action_events": [
+        "rat"
+      ],
+      "action_raw_counts": {
+        "boar": 14,
+        "ox": 2,
+        "ram": 1,
+        "rat": 43,
+        "snake": 1,
+        "tiger": 19
+      },
+      "action_stable_counts": {
+        "rat": 34,
+        "zero": 46
+      },
+      "attempt_index": 1,
+      "attempt_type": "label",
+      "detection_latency_ms": 1885,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "rat",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 43,
+        "max": 0.8097863146002281,
+        "mean": 0.7051961811048988,
+        "median": 0.7473289757692181,
+        "p95": 0.7906017623997437
+      },
+      "expected_label": "rat",
+      "expected_margin": {
+        "count": 43,
+        "max": 0.7158379929061529,
+        "mean": 0.5816198391708685,
+        "median": 0.6360993939168702,
+        "p95": 0.7027159716446069
+      },
+      "first_event_prediction": "rat",
+      "first_event_success": true,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "boar": 19,
+        "monkey": 1,
+        "ox": 2,
+        "ram": 4,
+        "snake": 2,
+        "tiger": 9,
+        "zero": 1
+      },
+      "rejection_reasons": {
+        "decoder_below_tau_on": 9,
+        "model_zero": 13,
+        "no_hand_landmarks": 21
+      },
+      "success": true,
+      "system_prediction": "rat",
+      "target_emission_count": 1,
+      "target_event_detected": true,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "rat": 24,
+        "zero": 48
+      },
+      "action_events": [
+        "rat"
+      ],
+      "action_raw_counts": {
+        "bird": 14,
+        "boar": 1,
+        "ox": 2,
+        "rat": 48,
+        "snake": 1,
+        "tiger": 6
+      },
+      "action_stable_counts": {
+        "rat": 21,
+        "zero": 51
+      },
+      "attempt_index": 2,
+      "attempt_type": "label",
+      "detection_latency_ms": 2489,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "rat",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 48,
+        "max": 0.880324763449779,
+        "mean": 0.6391622709914712,
+        "median": 0.6730221981216142,
+        "p95": 0.8363548679540033
+      },
+      "expected_label": "rat",
+      "expected_margin": {
+        "count": 48,
+        "max": 0.8364218245601371,
+        "mean": 0.47470805213340506,
+        "median": 0.5639807147930123,
+        "p95": 0.7759239560632738
+      },
+      "first_event_prediction": "rat",
+      "first_event_success": true,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "boar": 1,
+        "ram": 3,
+        "snake": 1,
+        "tiger": 32
+      },
+      "rejection_reasons": {
+        "decoder_below_tau_on": 40,
+        "model_zero": 2,
+        "no_hand_landmarks": 6
+      },
+      "success": true,
+      "system_prediction": "rat",
+      "target_emission_count": 1,
+      "target_event_detected": true,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "rat": 42,
+        "zero": 30
+      },
+      "action_events": [
+        "rat"
+      ],
+      "action_raw_counts": {
+        "boar": 1,
+        "monkey": 1,
+        "ram": 4,
+        "rat": 61,
+        "snake": 2,
+        "tiger": 3
+      },
+      "action_stable_counts": {
+        "rat": 39,
+        "zero": 33
+      },
+      "attempt_index": 3,
+      "attempt_type": "label",
+      "detection_latency_ms": 1629,
+      "dominant_accepted_prediction": "rat",
+      "dominant_raw_prediction": "rat",
+      "dominant_stable_prediction": "rat",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 61,
+        "max": 0.8623352786712923,
+        "mean": 0.6973607365442409,
+        "median": 0.7673541282730093,
+        "p95": 0.8409494579601913
+      },
+      "expected_label": "rat",
+      "expected_margin": {
+        "count": 61,
+        "max": 0.7838006542102908,
+        "mean": 0.4840889986152687,
+        "median": 0.572437330774794,
+        "p95": 0.7309253449921551
+      },
+      "first_event_prediction": "rat",
+      "first_event_success": true,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "boar": 1,
+        "monkey": 1,
+        "snake": 8,
+        "tiger": 23,
+        "zero": 2
+      },
+      "rejection_reasons": {
+        "decoder_below_tau_on": 23,
+        "model_zero": 3,
+        "no_hand_landmarks": 4
+      },
+      "success": true,
+      "system_prediction": "rat",
+      "target_emission_count": 1,
+      "target_event_detected": true,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "ox": 3,
+        "snake": 13,
+        "tiger": 2,
+        "zero": 64
+      },
+      "action_events": [
+        "snake"
+      ],
+      "action_raw_counts": {
+        "ox": 7,
+        "ram": 1,
+        "snake": 16,
+        "tiger": 54,
+        "zero": 4
+      },
+      "action_stable_counts": {
+        "snake": 10,
+        "zero": 72
+      },
+      "attempt_index": 1,
+      "attempt_type": "label",
+      "detection_latency_ms": 2983,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "tiger",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 16,
+        "max": 0.9478956510932425,
+        "mean": 0.8417211341794485,
+        "median": 0.877769559691294,
+        "p95": 0.9207097087938059
+      },
+      "expected_label": "snake",
+      "expected_margin": {
+        "count": 16,
+        "max": 0.9125722138763913,
+        "mean": 0.747303506285406,
+        "median": 0.8024663525070621,
+        "p95": 0.8655260603108096
+      },
+      "first_event_prediction": "snake",
+      "first_event_success": true,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "ox": 3,
+        "tiger": 35,
+        "zero": 1
+      },
+      "rejection_reasons": {
+        "decoder_below_tau_on": 9,
+        "model_zero": 6,
+        "no_hand_landmarks": 49
+      },
+      "success": true,
+      "system_prediction": "snake",
+      "target_emission_count": 1,
+      "target_event_detected": true,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "snake": 56,
+        "zero": 20
+      },
+      "action_events": [
+        "snake"
+      ],
+      "action_raw_counts": {
+        "dragon": 3,
+        "monkey": 1,
+        "ox": 2,
+        "snake": 62,
+        "tiger": 8
+      },
+      "action_stable_counts": {
+        "snake": 54,
+        "zero": 22
+      },
+      "attempt_index": 2,
+      "attempt_type": "label",
+      "detection_latency_ms": 891,
+      "dominant_accepted_prediction": "snake",
+      "dominant_raw_prediction": "snake",
+      "dominant_stable_prediction": "snake",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 62,
+        "max": 0.9740002919424469,
+        "mean": 0.8500287996340367,
+        "median": 0.9160175663063381,
+        "p95": 0.9412333401430034
+      },
+      "expected_label": "snake",
+      "expected_margin": {
+        "count": 62,
+        "max": 0.9667958055899708,
+        "mean": 0.7762256414964275,
+        "median": 0.8597904908164262,
+        "p95": 0.9157315452436051
+      },
+      "first_event_prediction": "snake",
+      "first_event_success": true,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "ox": 1,
+        "ram": 2,
+        "tiger": 31
+      },
+      "rejection_reasons": {
+        "decoder_below_tau_on": 6,
+        "model_zero": 2,
+        "no_hand_landmarks": 12
+      },
+      "success": true,
+      "system_prediction": "snake",
+      "target_emission_count": 1,
+      "target_event_detected": true,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "ox": 1,
+        "snake": 8,
+        "zero": 65
+      },
+      "action_events": [
+        "snake"
+      ],
+      "action_raw_counts": {
+        "bird": 20,
+        "dragon": 1,
+        "ox": 4,
+        "snake": 29,
+        "tiger": 20
+      },
+      "action_stable_counts": {
+        "snake": 44,
+        "zero": 30
+      },
+      "attempt_index": 3,
+      "attempt_type": "label",
+      "detection_latency_ms": 1395,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "snake",
+      "dominant_stable_prediction": "snake",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 29,
+        "max": 0.9327613532709887,
+        "mean": 0.5880614364634577,
+        "median": 0.5254104328680832,
+        "p95": 0.9267369596483959
+      },
+      "expected_label": "snake",
+      "expected_margin": {
+        "count": 29,
+        "max": 0.9063263163567871,
+        "mean": 0.2507696536993462,
+        "median": 0.10196750783359149,
+        "p95": 0.8867245563475321
+      },
+      "first_event_prediction": "snake",
+      "first_event_success": true,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "monkey": 1,
+        "snake": 2,
+        "tiger": 30
+      },
+      "rejection_reasons": {
+        "decoder_below_tau_on": 43,
+        "model_zero": 2,
+        "no_hand_landmarks": 20
+      },
+      "success": true,
+      "system_prediction": "snake",
+      "target_emission_count": 1,
+      "target_event_detected": true,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "ox": 5,
+        "tiger": 12,
+        "zero": 58
+      },
+      "action_events": [
+        "ox",
+        "tiger"
+      ],
+      "action_raw_counts": {
+        "boar": 1,
+        "monkey": 1,
+        "ox": 11,
+        "tiger": 62
+      },
+      "action_stable_counts": {
+        "ox": 3,
+        "tiger": 27,
+        "zero": 45
+      },
+      "attempt_index": 1,
+      "attempt_type": "label",
+      "detection_latency_ms": 2177,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "tiger",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 62,
+        "max": 0.7569558943471947,
+        "mean": 0.44419535335378685,
+        "median": 0.5030191152668588,
+        "p95": 0.7091998211065063
+      },
+      "expected_label": "tiger",
+      "expected_margin": {
+        "count": 62,
+        "max": 0.5662823238690403,
+        "mean": 0.18480355844536436,
+        "median": 0.13882108236456359,
+        "p95": 0.5097989132031451
+      },
+      "first_event_prediction": "ox",
+      "first_event_success": false,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "ram": 2,
+        "tiger": 34
+      },
+      "rejection_reasons": {
+        "decoder_below_tau_on": 23,
+        "model_zero": 3,
+        "no_hand_landmarks": 32
+      },
+      "success": false,
+      "system_prediction": "ox",
+      "target_emission_count": 1,
+      "target_event_detected": true,
+      "unexpected_action_events": [
+        "ox"
+      ]
+    },
+    {
+      "action_accepted_counts": {
+        "tiger": 42,
+        "zero": 32
+      },
+      "action_events": [
+        "tiger"
+      ],
+      "action_raw_counts": {
+        "horse": 1,
+        "monkey": 1,
+        "ox": 2,
+        "tiger": 68,
+        "zero": 2
+      },
+      "action_stable_counts": {
+        "tiger": 47,
+        "zero": 27
+      },
+      "attempt_index": 2,
+      "attempt_type": "label",
+      "detection_latency_ms": 1158,
+      "dominant_accepted_prediction": "tiger",
+      "dominant_raw_prediction": "tiger",
+      "dominant_stable_prediction": "tiger",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 68,
+        "max": 0.8358643832987849,
+        "mean": 0.5958269496792712,
+        "median": 0.6194721318732954,
+        "p95": 0.8052790511318655
+      },
+      "expected_label": "tiger",
+      "expected_margin": {
+        "count": 68,
+        "max": 0.7172357965958038,
+        "mean": 0.3716043194004102,
+        "median": 0.3524063620208474,
+        "p95": 0.6761681408300916
+      },
+      "first_event_prediction": "tiger",
+      "first_event_success": true,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "tiger": 33
+      },
+      "rejection_reasons": {
+        "decoder_below_tau_on": 15,
+        "model_zero": 4,
+        "no_hand_landmarks": 13
+      },
+      "success": true,
+      "system_prediction": "tiger",
+      "target_emission_count": 1,
+      "target_event_detected": true,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "zero": 72
+      },
+      "action_events": [],
+      "action_raw_counts": {
+        "bird": 7,
+        "horse": 1,
+        "ox": 6,
+        "ram": 2,
+        "snake": 1,
+        "tiger": 53,
+        "zero": 2
+      },
+      "action_stable_counts": {
+        "zero": 72
+      },
+      "attempt_index": 3,
+      "attempt_type": "label",
+      "detection_latency_ms": null,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "tiger",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 53,
+        "max": 0.602390352707211,
+        "mean": 0.43030464167328003,
+        "median": 0.4612562834186341,
+        "p95": 0.555796227439073
+      },
+      "expected_label": "tiger",
+      "expected_margin": {
+        "count": 53,
+        "max": 0.3936377094887623,
+        "mean": 0.16010898638840815,
+        "median": 0.1332450875698889,
+        "p95": 0.33723612796422736
+      },
+      "first_event_prediction": null,
+      "first_event_success": false,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "boar": 5,
+        "dog": 1,
+        "monkey": 3,
+        "ox": 2,
+        "tiger": 25
+      },
+      "rejection_reasons": {
+        "decoder_below_tau_on": 58,
+        "model_zero": 3,
+        "no_hand_landmarks": 11
+      },
+      "success": false,
+      "system_prediction": null,
+      "target_emission_count": 0,
+      "target_event_detected": false,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "zero": 84
+      },
+      "action_events": [],
+      "action_raw_counts": {
+        "dog": 3,
+        "snake": 7,
+        "tiger": 72,
+        "zero": 2
+      },
+      "action_stable_counts": {
+        "zero": 84
+      },
+      "attempt_index": 1,
+      "attempt_type": "label",
+      "detection_latency_ms": 53,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "tiger",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 2,
+        "max": 0.18284446571618213,
+        "mean": 0.1789419642548143,
+        "median": 0.1789419642548143,
+        "p95": 0.18245421557004535
+      },
+      "expected_label": "zero",
+      "expected_margin": {
+        "count": 2,
+        "max": 0.025323240675539732,
+        "mean": 0.02157803599389982,
+        "median": 0.02157803599389982,
+        "p95": 0.024948720207375742
+      },
+      "first_event_prediction": "zero",
+      "first_event_success": true,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "boar": 1,
+        "tiger": 36
+      },
+      "rejection_reasons": {
+        "model_zero": 2,
+        "no_hand_landmarks": 82
+      },
+      "success": true,
+      "system_prediction": "zero",
+      "target_emission_count": 0,
+      "target_event_detected": true,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "zero": 75
+      },
+      "action_events": [],
+      "action_raw_counts": {
+        "tiger": 75
+      },
+      "action_stable_counts": {
+        "zero": 75
+      },
+      "attempt_index": 2,
+      "attempt_type": "label",
+      "detection_latency_ms": 21,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "tiger",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 0,
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null
+      },
+      "expected_label": "zero",
+      "expected_margin": {
+        "count": 0,
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null
+      },
+      "first_event_prediction": "zero",
+      "first_event_success": true,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "boar": 1,
+        "dog": 1,
+        "tiger": 32
+      },
+      "rejection_reasons": {
+        "no_hand_landmarks": 75
+      },
+      "success": true,
+      "system_prediction": "zero",
+      "target_emission_count": 0,
+      "target_event_detected": true,
+      "unexpected_action_events": []
+    },
+    {
+      "action_accepted_counts": {
+        "zero": 96
+      },
+      "action_events": [],
+      "action_raw_counts": {
+        "snake": 95,
+        "tiger": 1
+      },
+      "action_stable_counts": {
+        "zero": 96
+      },
+      "attempt_index": 3,
+      "attempt_type": "label",
+      "detection_latency_ms": 33,
+      "dominant_accepted_prediction": "zero",
+      "dominant_raw_prediction": "snake",
+      "dominant_stable_prediction": "zero",
+      "duplicate_emissions": 0,
+      "expected_confidence": {
+        "count": 0,
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null
+      },
+      "expected_label": "zero",
+      "expected_margin": {
+        "count": 0,
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null
+      },
+      "first_event_prediction": "zero",
+      "first_event_success": true,
+      "mode": "hand",
+      "prepare_false_positive_events": [],
+      "prepare_raw_counts": {
+        "monkey": 3,
+        "ram": 3,
+        "snake": 31,
+        "zero": 4
+      },
+      "rejection_reasons": {
+        "no_hand_landmarks": 96
+      },
+      "success": true,
+      "system_prediction": "zero",
+      "target_emission_count": 0,
+      "target_event_detected": true,
+      "unexpected_action_events": []
+    }
+  ],
+  "confusion": {
+    "bird": {
+      "bird": 3
+    },
+    "boar": {
+      "boar": 2,
+      "no_detection": 1
+    },
+    "dog": {
+      "ox": 3
+    },
+    "dragon": {
+      "no_detection": 2,
+      "ox": 1
+    },
+    "hare": {
+      "ox": 3
+    },
+    "horse": {
+      "horse": 3
+    },
+    "monkey": {
+      "ox": 3
+    },
+    "ox": {
+      "monkey": 1,
+      "ox": 2
+    },
+    "ram": {
+      "ram": 3
+    },
+    "rat": {
+      "rat": 3
+    },
+    "snake": {
+      "snake": 3
+    },
+    "tiger": {
+      "no_detection": 1,
+      "ox": 1,
+      "tiger": 1
+    },
+    "zero": {
+      "zero": 3
+    }
+  },
+  "evaluation_version": "1.1.0",
+  "metrics": {
+    "bird": {
+      "action_event_count": 3,
+      "all_emitted_cross_label_false_positives": 0,
+      "attempts": 3,
+      "cross_label_false_positives": 0,
+      "detection_latency_ms": {
+        "count": 3,
+        "max": 2243.0,
+        "mean": 1985.3333333333333,
+        "median": 2007.0,
+        "p95": 2219.4
+      },
+      "duplicate_emissions": 0,
+      "eventual_recall": 1.0,
+      "eventual_true_positives": 3,
+      "false_event_rate": 0.0,
+      "false_negatives": 0,
+      "false_positives": 0,
+      "first_event_recall": 1.0,
+      "first_event_true_positives": 3,
+      "neutral_phase_false_positives": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "true_positives": 3,
+      "unexpected_action_event_count": 0
+    },
+    "boar": {
+      "action_event_count": 2,
+      "all_emitted_cross_label_false_positives": 0,
+      "attempts": 3,
+      "cross_label_false_positives": 0,
+      "detection_latency_ms": {
+        "count": 2,
+        "max": 2923.0,
+        "mean": 2216.5,
+        "median": 2216.5,
+        "p95": 2852.35
+      },
+      "duplicate_emissions": 0,
+      "eventual_recall": 0.6666666666666666,
+      "eventual_true_positives": 2,
+      "false_event_rate": 0.0,
+      "false_negatives": 1,
+      "false_positives": 0,
+      "first_event_recall": 0.6666666666666666,
+      "first_event_true_positives": 2,
+      "neutral_phase_false_positives": 0,
+      "precision": 1.0,
+      "recall": 0.6666666666666666,
+      "true_positives": 2,
+      "unexpected_action_event_count": 0
+    },
+    "dog": {
+      "action_event_count": 6,
+      "all_emitted_cross_label_false_positives": 0,
+      "attempts": 3,
+      "cross_label_false_positives": 0,
+      "detection_latency_ms": {
+        "count": 1,
+        "max": 2097.0,
+        "mean": 2097.0,
+        "median": 2097.0,
+        "p95": 2097.0
+      },
+      "duplicate_emissions": 2,
+      "eventual_recall": 0.3333333333333333,
+      "eventual_true_positives": 1,
+      "false_event_rate": 0.8333333333333334,
+      "false_negatives": 3,
+      "false_positives": 0,
+      "first_event_recall": 0.0,
+      "first_event_true_positives": 0,
+      "neutral_phase_false_positives": 0,
+      "precision": null,
+      "recall": 0.0,
+      "true_positives": 0,
+      "unexpected_action_event_count": 5
+    },
+    "dragon": {
+      "action_event_count": 1,
+      "all_emitted_cross_label_false_positives": 0,
+      "attempts": 3,
+      "cross_label_false_positives": 0,
+      "detection_latency_ms": {
+        "count": 0,
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null
+      },
+      "duplicate_emissions": 0,
+      "eventual_recall": 0.0,
+      "eventual_true_positives": 0,
+      "false_event_rate": 1.0,
+      "false_negatives": 3,
+      "false_positives": 0,
+      "first_event_recall": 0.0,
+      "first_event_true_positives": 0,
+      "neutral_phase_false_positives": 0,
+      "precision": null,
+      "recall": 0.0,
+      "true_positives": 0,
+      "unexpected_action_event_count": 1
+    },
+    "hare": {
+      "action_event_count": 3,
+      "all_emitted_cross_label_false_positives": 0,
+      "attempts": 3,
+      "cross_label_false_positives": 0,
+      "detection_latency_ms": {
+        "count": 0,
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null
+      },
+      "duplicate_emissions": 0,
+      "eventual_recall": 0.0,
+      "eventual_true_positives": 0,
+      "false_event_rate": 1.0,
+      "false_negatives": 3,
+      "false_positives": 0,
+      "first_event_recall": 0.0,
+      "first_event_true_positives": 0,
+      "neutral_phase_false_positives": 0,
+      "precision": null,
+      "recall": 0.0,
+      "true_positives": 0,
+      "unexpected_action_event_count": 3
+    },
+    "horse": {
+      "action_event_count": 3,
+      "all_emitted_cross_label_false_positives": 0,
+      "attempts": 3,
+      "cross_label_false_positives": 0,
+      "detection_latency_ms": {
+        "count": 3,
+        "max": 2148.0,
+        "mean": 1426.0,
+        "median": 1179.0,
+        "p95": 2051.1
+      },
+      "duplicate_emissions": 0,
+      "eventual_recall": 1.0,
+      "eventual_true_positives": 3,
+      "false_event_rate": 0.0,
+      "false_negatives": 0,
+      "false_positives": 0,
+      "first_event_recall": 1.0,
+      "first_event_true_positives": 3,
+      "neutral_phase_false_positives": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "true_positives": 3,
+      "unexpected_action_event_count": 0
+    },
+    "monkey": {
+      "action_event_count": 5,
+      "all_emitted_cross_label_false_positives": 1,
+      "attempts": 3,
+      "cross_label_false_positives": 1,
+      "detection_latency_ms": {
+        "count": 2,
+        "max": 3429.0,
+        "mean": 2383.0,
+        "median": 2383.0,
+        "p95": 3324.3999999999996
+      },
+      "duplicate_emissions": 0,
+      "eventual_recall": 0.6666666666666666,
+      "eventual_true_positives": 2,
+      "false_event_rate": 0.6,
+      "false_negatives": 3,
+      "false_positives": 1,
+      "first_event_recall": 0.0,
+      "first_event_true_positives": 0,
+      "neutral_phase_false_positives": 0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "true_positives": 0,
+      "unexpected_action_event_count": 3
+    },
+    "ox": {
+      "action_event_count": 4,
+      "all_emitted_cross_label_false_positives": 13,
+      "attempts": 3,
+      "cross_label_false_positives": 11,
+      "detection_latency_ms": {
+        "count": 3,
+        "max": 1892.0,
+        "mean": 1316.3333333333333,
+        "median": 1252.0,
+        "p95": 1828.0
+      },
+      "duplicate_emissions": 0,
+      "eventual_recall": 1.0,
+      "eventual_true_positives": 3,
+      "false_event_rate": 0.25,
+      "false_negatives": 1,
+      "false_positives": 12,
+      "first_event_recall": 0.6666666666666666,
+      "first_event_true_positives": 2,
+      "neutral_phase_false_positives": 1,
+      "precision": 0.14285714285714285,
+      "recall": 0.6666666666666666,
+      "true_positives": 2,
+      "unexpected_action_event_count": 1
+    },
+    "ram": {
+      "action_event_count": 3,
+      "all_emitted_cross_label_false_positives": 0,
+      "attempts": 3,
+      "cross_label_false_positives": 0,
+      "detection_latency_ms": {
+        "count": 3,
+        "max": 1885.0,
+        "mean": 1221.3333333333333,
+        "median": 1151.0,
+        "p95": 1811.6
+      },
+      "duplicate_emissions": 0,
+      "eventual_recall": 1.0,
+      "eventual_true_positives": 3,
+      "false_event_rate": 0.0,
+      "false_negatives": 0,
+      "false_positives": 0,
+      "first_event_recall": 1.0,
+      "first_event_true_positives": 3,
+      "neutral_phase_false_positives": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "true_positives": 3,
+      "unexpected_action_event_count": 0
+    },
+    "rat": {
+      "action_event_count": 3,
+      "all_emitted_cross_label_false_positives": 0,
+      "attempts": 3,
+      "cross_label_false_positives": 0,
+      "detection_latency_ms": {
+        "count": 3,
+        "max": 2489.0,
+        "mean": 2001.0,
+        "median": 1885.0,
+        "p95": 2428.6
+      },
+      "duplicate_emissions": 0,
+      "eventual_recall": 1.0,
+      "eventual_true_positives": 3,
+      "false_event_rate": 0.0,
+      "false_negatives": 0,
+      "false_positives": 0,
+      "first_event_recall": 1.0,
+      "first_event_true_positives": 3,
+      "neutral_phase_false_positives": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "true_positives": 3,
+      "unexpected_action_event_count": 0
+    },
+    "snake": {
+      "action_event_count": 3,
+      "all_emitted_cross_label_false_positives": 0,
+      "attempts": 3,
+      "cross_label_false_positives": 0,
+      "detection_latency_ms": {
+        "count": 3,
+        "max": 2983.0,
+        "mean": 1756.3333333333333,
+        "median": 1395.0,
+        "p95": 2824.2
+      },
+      "duplicate_emissions": 0,
+      "eventual_recall": 1.0,
+      "eventual_true_positives": 3,
+      "false_event_rate": 0.0,
+      "false_negatives": 0,
+      "false_positives": 0,
+      "first_event_recall": 1.0,
+      "first_event_true_positives": 3,
+      "neutral_phase_false_positives": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "true_positives": 3,
+      "unexpected_action_event_count": 0
+    },
+    "tiger": {
+      "action_event_count": 3,
+      "all_emitted_cross_label_false_positives": 0,
+      "attempts": 3,
+      "cross_label_false_positives": 0,
+      "detection_latency_ms": {
+        "count": 2,
+        "max": 2177.0,
+        "mean": 1667.5,
+        "median": 1667.5,
+        "p95": 2126.05
+      },
+      "duplicate_emissions": 0,
+      "eventual_recall": 0.6666666666666666,
+      "eventual_true_positives": 2,
+      "false_event_rate": 0.3333333333333333,
+      "false_negatives": 2,
+      "false_positives": 0,
+      "first_event_recall": 0.3333333333333333,
+      "first_event_true_positives": 1,
+      "neutral_phase_false_positives": 0,
+      "precision": 1.0,
+      "recall": 0.3333333333333333,
+      "true_positives": 1,
+      "unexpected_action_event_count": 1
+    },
+    "zero": {
+      "action_event_count": 0,
+      "all_emitted_cross_label_false_positives": 0,
+      "attempts": 3,
+      "cross_label_false_positives": 0,
+      "detection_latency_ms": {
+        "count": 3,
+        "max": 53.0,
+        "mean": 35.666666666666664,
+        "median": 33.0,
+        "p95": 51.0
+      },
+      "duplicate_emissions": 0,
+      "eventual_recall": 1.0,
+      "eventual_true_positives": 3,
+      "false_event_rate": 0.0,
+      "false_negatives": 0,
+      "false_positives": 0,
+      "first_event_recall": 1.0,
+      "first_event_true_positives": 3,
+      "neutral_phase_false_positives": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "true_positives": 3,
+      "unexpected_action_event_count": 0
+    }
+  },
+  "mode": "hand",
+  "overall": {
+    "duplicate_emissions": 2,
+    "eventual_target_detections": 28,
+    "first_event_successes": 23,
+    "unexpected_action_events": 14
+  },
+  "preparation": {
+    "attempts_with_false_events": 1,
+    "false_event_attempt_rate": 0.02564102564102564,
+    "false_event_count": 1,
+    "false_events_per_100_frames": 0.07418397626112759,
+    "frame_count": 1348
+  }
+}

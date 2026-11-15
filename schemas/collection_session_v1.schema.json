@@ -1,0 +1,195 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://narutocv.local/schemas/collection_session_v1.schema.json",
+  "title": "NarutoCV collection session (session.json) v1",
+  "description": "Metadata for one prompted recording session. All phase offsets are integer milliseconds from the start of the clip (anchored to the MediaRecorder 'start' event).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "subject", "session", "device", "protocol", "clips"],
+  "properties": {
+    "schema_version": { "const": "collection_session_v1" },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["subject_id", "camera_type", "lighting", "background", "distance_m", "dominant_hand", "monk_skin_tone", "consent"],
+      "properties": {
+        "subject_id": { "$ref": "#/$defs/id" },
+        "camera_type": { "enum": ["laptop", "external", "phone"] },
+        "lighting": { "enum": ["low", "normal", "backlit"] },
+        "background": { "enum": ["plain", "cluttered"] },
+        "distance_m": { "enum": [0.5, 1, 2] },
+        "dominant_hand": { "enum": ["L", "R"] },
+        "monk_skin_tone": {
+          "description": "Self-reported Monk Skin Tone bucket 1-10, or null for 'prefer not to say'.",
+          "oneOf": [{ "type": "integer", "minimum": 1, "maximum": 10 }, { "type": "null" }]
+        },
+        "consent": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["accepted", "accepted_at", "text_hash"],
+          "properties": {
+            "accepted": { "const": true },
+            "accepted_at": { "type": "string", "format": "date-time" },
+            "text_hash": { "type": "string", "description": "FNV-1a hash (hex) of the consent text shown, to detect which wording was accepted." }
+          }
+        }
+      }
+    },
+    "session": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["session_id", "started_at", "ended_at", "status"],
+      "properties": {
+        "session_id": { "$ref": "#/$defs/id" },
+        "started_at": { "type": "string", "format": "date-time" },
+        "ended_at": { "oneOf": [{ "type": "string", "format": "date-time" }, { "type": "null" }] },
+        "status": { "enum": ["in_progress", "complete"] }
+      }
+    },
+    "device": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["user_agent", "platform", "screen", "requested", "achieved", "mirrored_display"],
+      "properties": {
+        "user_agent": { "type": "string" },
+        "platform": { "type": "string" },
+        "screen": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["width", "height", "device_pixel_ratio"],
+          "properties": {
+            "width": { "type": "integer", "minimum": 0 },
+            "height": { "type": "integer", "minimum": 0 },
+            "device_pixel_ratio": { "type": "number", "minimum": 0 }
+          }
+        },
+        "camera_label": { "type": "string" },
+        "requested": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["width", "height", "fps"],
+          "properties": {
+            "width": { "type": "integer" },
+            "height": { "type": "integer" },
+            "fps": { "type": "number" }
+          }
+        },
+        "achieved": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["width", "height", "fps_measured"],
+          "properties": {
+            "width": { "type": "integer", "minimum": 0 },
+            "height": { "type": "integer", "minimum": 0 },
+            "fps_measured": { "type": "number", "minimum": 0 }
+          }
+        },
+        "mirrored_display": { "const": true, "description": "Preview was shown mirrored; recorded pixels are NOT mirrored." }
+      }
+    },
+    "protocol": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "seed", "config"],
+      "properties": {
+        "version": { "type": "string" },
+        "seed": { "type": "string" },
+        "config": { "type": "object", "description": "Snapshot of the ProtocolConfig used (durations, seals, combos)." }
+      }
+    },
+    "clips": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/clip" }
+    }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[A-Za-z0-9_-]{4,64}$" },
+    "seal": { "enum": ["bird", "boar", "dog", "dragon", "hare", "horse", "monkey", "ox", "ram", "rat", "snake", "tiger", "zero"] },
+    "ms": { "type": "integer", "minimum": 0 },
+    "segment_offsets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["form_start", "hold_start", "hold_end", "release_end"],
+      "properties": {
+        "form_start": { "$ref": "#/$defs/ms" },
+        "hold_start": { "$ref": "#/$defs/ms" },
+        "hold_end": { "$ref": "#/$defs/ms" },
+        "release_end": { "$ref": "#/$defs/ms" }
+      }
+    },
+    "clip": {
+      "type": "object",
+      "required": ["clip_id", "block", "take", "mime", "file", "duration_ms", "width", "height", "fps_measured", "size_bytes"],
+      "properties": {
+        "clip_id": { "$ref": "#/$defs/id" },
+        "block": { "enum": ["seal", "combo", "free"] },
+        "label": { "$ref": "#/$defs/seal" },
+        "sequence": { "type": "array", "minItems": 2, "items": { "$ref": "#/$defs/seal" } },
+        "take": { "type": "integer", "minimum": 1 },
+        "attempt": { "type": "integer", "minimum": 1, "description": "1 = first recording of this prompt; >1 means earlier attempts were retaken and discarded." },
+        "mime": { "type": "string" },
+        "file": { "type": "string", "pattern": "^clips/[A-Za-z0-9_-]+\\.(webm|mp4)$" },
+        "size_bytes": { "type": "integer", "minimum": 0 },
+        "duration_ms": { "type": "integer", "minimum": 0 },
+        "width": { "type": "integer", "minimum": 0 },
+        "height": { "type": "integer", "minimum": 0 },
+        "fps_measured": { "type": "number", "minimum": 0 },
+        "phase_offsets_ms": {
+          "description": "seal: the four phase boundaries. combo: span (form_start of first seal, hold_start of first seal, hold_end of last seal, release_end of last seal); per-seal detail in 'segments'. free: {free_start, free_end}.",
+          "oneOf": [
+            { "$ref": "#/$defs/segment_offsets" },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["free_start", "free_end"],
+              "properties": { "free_start": { "$ref": "#/$defs/ms" }, "free_end": { "$ref": "#/$defs/ms" } }
+            }
+          ]
+        },
+        "segments": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["label", "form_start", "hold_start", "hold_end", "release_end"],
+            "properties": {
+              "label": { "$ref": "#/$defs/seal" },
+              "form_start": { "$ref": "#/$defs/ms" },
+              "hold_start": { "$ref": "#/$defs/ms" },
+              "hold_end": { "$ref": "#/$defs/ms" },
+              "release_end": { "$ref": "#/$defs/ms" }
+            }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "block": { "const": "seal" } }, "required": ["block"] },
+          "then": {
+            "required": ["label", "phase_offsets_ms"],
+            "not": { "anyOf": [{ "required": ["sequence"] }, { "required": ["segments"] }] },
+            "properties": { "phase_offsets_ms": { "$ref": "#/$defs/segment_offsets" } }
+          }
+        },
+        {
+          "if": { "properties": { "block": { "const": "combo" } }, "required": ["block"] },
+          "then": {
+            "required": ["sequence", "segments", "phase_offsets_ms"],
+            "not": { "required": ["label"] },
+            "properties": { "phase_offsets_ms": { "$ref": "#/$defs/segment_offsets" } }
+          }
+        },
+        {
+          "if": { "properties": { "block": { "const": "free" } }, "required": ["block"] },
+          "then": {
+            "required": ["phase_offsets_ms"],
+            "not": { "anyOf": [{ "required": ["label"] }, { "required": ["sequence"] }, { "required": ["segments"] }] },
+            "properties": { "phase_offsets_ms": { "type": "object", "required": ["free_start", "free_end"] } }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    }
+  }
+}

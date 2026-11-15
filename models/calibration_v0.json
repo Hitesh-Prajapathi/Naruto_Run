@@ -1,0 +1,34 @@
+{
+  "temperature": 1.0,
+  "decoder": {
+    "labels": [
+      "bird",
+      "boar",
+      "dog",
+      "dragon",
+      "hare",
+      "horse",
+      "monkey",
+      "ox",
+      "ram",
+      "rat",
+      "snake",
+      "tiger",
+      "zero"
+    ],
+    "idle_label": "zero",
+    "smoother": "ema",
+    "half_life_ms": 80.0,
+    "tau_on": 0.6,
+    "tau_off": 0.4,
+    "tau_reject": 0.3,
+    "min_dwell_ms": 120.0,
+    "refractory_ms": 250.0,
+    "max_gap_ms": 200.0,
+    "prior_boost": 3.0,
+    "use_prior": false,
+    "hmm_p_stay": 0.95,
+    "hmm_ref_ms": 33.3
+  },
+  "provenance": "identity placeholder: the v0 model is contaminated on all legacy data, so no honest calibration set exists; refit with the v1 model on held-out subjects"
+}

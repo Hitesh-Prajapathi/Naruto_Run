@@ -1,0 +1,367 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://narutocv.local/schemas/transport_message_v1.schema.json",
+  "title": "NarutoCV Transport JSON Message V1",
+  "description": "Every JSON (text-frame) WebSocket message exchanged on GET /ws, in either direction, over the lifetime of one connection. The binary camera-frame envelope is a separate fixed binary layout, not JSON -- see FRAME_HEADER in src/narutocv/transport/protocol.py. Protocol 1.1.0 is additive over 1.0.0: client_hello may carry expected_model_id; server_ready adds model, classes and capabilities; error may carry details. Protocol 1.2.0 is additive over 1.1.0: server_ready.capabilities.hand_decoder, and the HAND_SEAL event payload (pipeline_event_v1) gains decoder, t_start_ms, t_emit_ms and decoder_confidence. A 1.0.0 or 1.1.0 peer that omits/ignores these still conforms.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/clientHello"
+    },
+    {
+      "$ref": "#/$defs/serverReady"
+    },
+    {
+      "$ref": "#/$defs/control"
+    },
+    {
+      "$ref": "#/$defs/ack"
+    },
+    {
+      "$ref": "#/$defs/error"
+    },
+    {
+      "$ref": "#/$defs/stateSnapshot"
+    },
+    {
+      "$ref": "#/$defs/pipelineEvent"
+    }
+  ],
+  "$defs": {
+    "clientHello": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "protocol_version"
+      ],
+      "properties": {
+        "type": {
+          "const": "client_hello"
+        },
+        "protocol_version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+          "description": "MAJOR.MINOR.PATCH. The server accepts any client with the same MAJOR; a different MAJOR is refused with error code protocol_version_mismatch and close code 4426."
+        },
+        "expected_model_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Optional (1.1.0). Model bundle id the client was built against (server_ready.model.id). A different bundle is refused with error code model_mismatch and close code 4412."
+        }
+      }
+    },
+    "serverReady": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "protocol_version",
+        "schema_version",
+        "session_id",
+        "supported_controls"
+      ],
+      "properties": {
+        "type": {
+          "const": "server_ready"
+        },
+        "protocol_version": {
+          "type": "string",
+          "pattern": "^1\\.[0-9]+\\.[0-9]+$"
+        },
+        "schema_version": {
+          "const": "1.0.0"
+        },
+        "session_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "supported_controls": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "reset",
+              "begin_calibration",
+              "finish_calibration",
+              "cancel_calibration",
+              "set_mode",
+              "ping"
+            ]
+          }
+        },
+        "model": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "sha256",
+            "files"
+          ],
+          "description": "Model bundle served. id = 'narutocv-' + first 12 hex of sha256; sha256 = sha256 of the sorted '<name>:<sha256>\\n' lines from models/manifest.yaml. id is 'unversioned' (sha256 null) if the manifest cannot be read.",
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "files": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "version",
+                  "sha256"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "version": {
+                    "type": "string"
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "classes": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "hand",
+            "body",
+            "attacks"
+          ],
+          "properties": {
+            "hand": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "body": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "attacks": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "capabilities": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Feature flags and limits. Unknown keys must be ignored by clients.",
+          "properties": {
+            "initial_mode": {
+              "enum": [
+                "body_only",
+                "hand_only",
+                "full"
+              ]
+            },
+            "recognition_modes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "geometry": {
+              "type": "boolean"
+            },
+            "calibration": {
+              "type": "boolean"
+            },
+            "max_fps": {
+              "type": "number"
+            },
+            "max_frame_bytes": {
+              "type": "integer"
+            },
+            "max_frame_width": {
+              "type": "integer"
+            },
+            "max_frame_height": {
+              "type": "integer"
+            },
+            "idle_timeout_s": {
+              "type": "number"
+            },
+            "heartbeat_s": {
+              "type": "number"
+            },
+            "hand_decoder": {
+              "enum": [
+                "legacy",
+                "v1"
+              ],
+              "description": "Optional (1.2.0). Decoder behind HAND_SEAL events: 'legacy' (per-class thresholds + 5-frame vote) or 'v1' (temperature calibration + SealDecoder). Absent on servers older than 1.2.0, which are legacy."
+            }
+          }
+        }
+      }
+    },
+    "control": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "command"
+      ],
+      "properties": {
+        "type": {
+          "const": "control"
+        },
+        "command": {
+          "enum": [
+            "reset",
+            "begin_calibration",
+            "finish_calibration",
+            "cancel_calibration",
+            "set_mode",
+            "ping"
+          ]
+        },
+        "request_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mode": {
+          "type": "string",
+          "maxLength": 32,
+          "description": "Only for command set_mode."
+        }
+      },
+      "description": "Duplicated inline from transport_control_v1.schema.json so this file validates standalone without a multi-file $ref resolver."
+    },
+    "ack": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "command",
+        "ok"
+      ],
+      "properties": {
+        "type": {
+          "const": "ack"
+        },
+        "command": {
+          "enum": [
+            "reset",
+            "begin_calibration",
+            "finish_calibration",
+            "cancel_calibration",
+            "set_mode",
+            "ping"
+          ]
+        },
+        "ok": {
+          "type": "boolean"
+        },
+        "request_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "error": {
+          "type": "string"
+        }
+      }
+    },
+    "error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "code",
+        "message"
+      ],
+      "properties": {
+        "type": {
+          "const": "error"
+        },
+        "code": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Known codes: handshake_failed, protocol_version_mismatch, model_mismatch, controller_already_connected, invalid_frame, invalid_control, rate_limited, frame_rejected."
+        },
+        "message": {
+          "type": "string"
+        },
+        "request_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "details": {
+          "type": "object",
+          "description": "Optional (1.1.0) machine-readable context, e.g. server_protocol_version for protocol_version_mismatch."
+        }
+      }
+    },
+    "stateSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "session_id",
+        "frame_id",
+        "captured_at_ms",
+        "output"
+      ],
+      "properties": {
+        "type": {
+          "const": "state_snapshot"
+        },
+        "session_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "frame_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "captured_at_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "output": {
+          "type": "object",
+          "description": "Conforms to schemas/pipeline_output_v1.schema.json. Not re-validated field-by-field here so this contract does not fork from that one; PipelineOutputSerializer remains the single producer."
+        }
+      }
+    },
+    "pipelineEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "event"
+      ],
+      "properties": {
+        "type": {
+          "const": "pipeline_event"
+        },
+        "event": {
+          "type": "object",
+          "description": "Conforms to schemas/pipeline_event_v1.schema.json, delivered immediately and in dispatcher order (HAND_SEAL, BODY_MOVEMENT, ATTACK_TRIGGERED, QUEUE_CLEARED per frame)."
+        }
+      }
+    }
+  }
+}

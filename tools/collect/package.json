@@ -1,0 +1,27 @@
+{
+  "name": "narutocv-collect",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Prompted multi-subject hand-seal video collection tool (static browser app).",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "smoke": "node tests/smoke.mjs"
+  },
+  "dependencies": {
+    "fflate": "^0.8.2"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
+    "fake-indexeddb": "^6.0.0",
+    "playwright": "^1.49.0",
+    "typescript": "^5.6.0",
+    "vite": "^5.4.0",
+    "vitest": "^2.1.0"
+  }
+}

@@ -1,0 +1,31 @@
+# Model artifacts used by NarutoCV. `python scripts/fetch_models.py` (make
+# fetch-models) downloads every entry that has a `url` into this directory and
+# verifies sha256 + size. Entries with `url: null` are tracked in git and are
+# only verified.
+models:
+  - name: best_model_A.onnx
+    version: v0
+    url: null # tracked in git (legacy v0 hand-sign classifier)
+    sha256: cead13da28c002322e198717e2fecd75848d8d3dd9de36616040a4401590a06f
+    size: 5835779
+
+  - name: hand_landmarker.task
+    version: float16/1
+    url: https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task
+    sha256: fbc2a30080c3c557093b5ddfc334698132eb341044ccee322ccf8bcf3607cde1
+    size: 7819105
+
+  - name: pose_landmarker.task
+    version: lite/float16/1
+    url: https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task
+    sha256: 59929e1d1ee95287735ddd833b19cf4ac46d29bc7afddbbf6753c459690d574a
+    size: 5777746
+
+  # Calibration + decoder configuration for the v1 hand decoder (hand_decoder: "v1").
+  # Part of the bundle identity: changing it changes the model-bundle id the
+  # transport advertises. Identity placeholder until a v1 model has a held-out set.
+  - name: calibration_v0.json
+    version: v0
+    url: null # tracked in git
+    sha256: 2416586722518b37613007813b6ce2557fdd7ce475dc8a625c7cdf6475afa0d6
+    size: 735

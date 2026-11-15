@@ -1,0 +1,62 @@
+name: model-gate
+
+# SKELETON. The real gate lives in `narutocv.eval.gate` (not written yet).
+#
+# Intended behaviour: evaluate the candidate model on a frozen mini test set
+# (~2 held-out subjects, DVC-pulled) and compare with the committed baseline.
+# FAIL the check when any of these hold:
+#   - macro-F1 drops by more than 2 points (absolute)
+#   - ECE (expected calibration error) rises by more than 0.02
+#   - the model bundle exceeds the size budget (to be set in the gate config)
+#   - the CPU latency benchmark regresses by more than 15%
+# See docs/plan/03_refinement_execution_plan.md, Phase 6 "CI/CD".
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/narutocv/models/**"
+      - "training/**"
+      - "models/manifest.yaml"
+      - ".github/workflows/model-gate.yml"
+  pull_request:
+    paths:
+      - "src/narutocv/models/**"
+      - "training/**"
+      - "models/manifest.yaml"
+      - ".github/workflows/model-gate.yml"
+
+concurrency:
+  group: model-gate-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+      - name: System libs for OpenCV/MediaPipe (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libgl1 libglib2.0-0
+      - run: uv sync --frozen --extra runtime --extra transport --extra eval --extra collect --extra dev
+      - name: Cache fetched models
+        uses: actions/cache@v4
+        with:
+          path: models
+          key: models-${{ hashFiles('models/manifest.yaml') }}
+      - run: make fetch-models
+      - name: Run model gate (placeholder)
+        run: |
+          if uv run python -c "import importlib.util, sys; sys.exit(0 if importlib.util.find_spec('narutocv.eval.gate') else 1)"; then
+            uv run python -m narutocv.eval.gate
+          else
+            echo "gate not yet implemented"
+          fi
