@@ -11,13 +11,13 @@ import addFormats from "ajv-formats";
 
 const PORT = 5199;
 const schema = JSON.parse(readFileSync(new URL("../../../schemas/collection_session_v1.schema.json", import.meta.url), "utf8"));
-const server = spawn("npx", ["vite", "preview", "--port", String(PORT), "--strictPort"], { stdio: "ignore" });
+const server = spawn("npx", ["vite", "preview", "--host", "127.0.0.1", "--port", String(PORT), "--strictPort"], { stdio: "ignore" });
 const kill = () => server.kill();
 process.on("exit", kill);
 
 async function waitForServer() {
-  for (let i = 0; i < 50; i++) {
-    try { if ((await fetch(`http://localhost:${PORT}/`)).ok) return; } catch {}
+  for (let i = 0; i < 150; i++) {
+    try { if ((await fetch(`http://127.0.0.1:${PORT}/`)).ok) return; } catch {}
     await new Promise((r) => setTimeout(r, 200));
   }
   throw new Error("preview server did not start");
@@ -34,7 +34,7 @@ try {
   const page = await ctx.newPage();
   pageRef = page;
   page.on("pageerror", (e) => { console.log("PAGE ERROR", e.message); failed = true; });
-  await page.goto(`http://localhost:${PORT}/?fast`);
+  await page.goto(`http://127.0.0.1:${PORT}/?fast`);
 
   await page.check("#consent");
   await page.getByRole("button", { name: "Continue", exact: true }).click();
